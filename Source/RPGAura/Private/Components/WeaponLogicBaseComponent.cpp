@@ -13,8 +13,7 @@ UWeaponLogicBaseComponent::UWeaponLogicBaseComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 
-
-	// TODO 待设置武器的碰撞为NoCollision
+	
 
 }
 
