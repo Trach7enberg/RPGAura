@@ -19,8 +19,6 @@ ABasePlayerController::ABasePlayerController()
 	DefaultMouseCursor = EMouseCursor::Type::Default;
 }
 
-void ABasePlayerController::Tick(float DeltaSeconds) { Super::Tick(DeltaSeconds); }
-
 void ABasePlayerController::BeginPlay()
 {
 	Super::BeginPlay();
