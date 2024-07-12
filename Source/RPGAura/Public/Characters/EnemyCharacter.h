@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Characters/CharacterBase.h"
-#include "GoblinCharacter.generated.h"
+#include "EnemyCharacter.generated.h"
 
 /**
- * 哥布林角色类
+ * 所有敌人的基类
  */
 UCLASS()
-class RPGAURA_API AGoblinCharacter : public ACharacterBase
+class RPGAURA_API AEnemyCharacter : public ACharacterBase
 {
 	GENERATED_BODY()
 	

@@ -14,5 +14,6 @@ class RPGAURA_API AAuraCharacter : public ACharacterBase
 {
 	GENERATED_BODY()
 
-
+public:
+	AAuraCharacter();
 };

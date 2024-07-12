@@ -12,14 +12,10 @@ ACharacterBase::ACharacterBase()
 
 	WeaponLogicBaseComponent = CreateDefaultSubobject<UWeaponLogicBaseComponent>("WeaponLogicComponent");
 
-	
+	if (GetMesh()) { GetMesh()->SetRelativeRotation(FRotator(0, -90, 0)); }
 }
 
-void ACharacterBase::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
+void ACharacterBase::BeginPlay() { Super::BeginPlay(); }
 
 void ACharacterBase::SetupPlayerInputComponent(UInputComponent *PlayerInputComponent)
 {
