@@ -6,6 +6,8 @@
 #include "Characters/CharacterBase.h"
 #include "AuraCharacter.generated.h"
 
+class USpringArmComponent;
+class UCameraComponent;
 /**
  * Aura人物类
  */
@@ -16,4 +18,11 @@ class RPGAURA_API AAuraCharacter : public ACharacterBase
 
 public:
 	AAuraCharacter();
+
+protected:
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Camera")
+	UCameraComponent * CameraComponent;
+
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Camera")
+	USpringArmComponent* SpringArmComponent;
 };

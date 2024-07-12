@@ -44,7 +44,7 @@ void ABasePlayerController::SetupInputComponent()
 	Super::SetupInputComponent();
 	if (!InputContext) { return; }
 
-
+	// 输入组件转换为增强输入组件
 	const auto Input = CastChecked<UEnhancedInputComponent>(InputComponent);
 
 	Input->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ABasePlayerController::Move);
