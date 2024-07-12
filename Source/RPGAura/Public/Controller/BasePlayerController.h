@@ -21,6 +21,8 @@ class RPGAURA_API ABasePlayerController : public APlayerController
 public:
 	ABasePlayerController();
 
+	virtual void Tick(float DeltaSeconds) override;
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
@@ -35,4 +37,5 @@ private:
 	TObjectPtr<UInputAction> MoveAction;
 
 	void Move(const FInputActionValue &InputActionValue);
+
 };

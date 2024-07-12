@@ -16,4 +16,5 @@ class RPGAURA_API AEnemyGoblinCharacter : public AEnemyCharacter
 
 public:
 	AEnemyGoblinCharacter();
+	
 };

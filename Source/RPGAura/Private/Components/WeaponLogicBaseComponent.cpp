@@ -9,12 +9,18 @@
 
 DEFINE_LOG_CATEGORY_STATIC(MyWeaponLogicBaseComponentLog, All, All);
 
-UWeaponLogicBaseComponent::UWeaponLogicBaseComponent()
+UWeaponLogicBaseComponent::UWeaponLogicBaseComponent() { PrimaryComponentTick.bCanEverTick = false; }
+
+void UWeaponLogicBaseComponent::HighLight() const
 {
-	PrimaryComponentTick.bCanEverTick = false;
+	if (!CurrentWeapon) { return; }
+	CurrentWeapon->HighLight();
+}
 
-	
-
+void UWeaponLogicBaseComponent::UnHighLight() const
+{
+	if (!CurrentWeapon) { return; }
+	CurrentWeapon->UnHighLight();
 }
 
 void UWeaponLogicBaseComponent::BeginPlay()

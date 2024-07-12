@@ -25,6 +25,12 @@ class RPGAURA_API UWeaponLogicBaseComponent : public UActorComponent
 public:
 	UWeaponLogicBaseComponent();
 
+	/// 高亮武器
+	void HighLight() const;
+
+	/// 解除高亮武器
+	void UnHighLight() const;
+
 protected:
 	virtual void BeginPlay() override;
 

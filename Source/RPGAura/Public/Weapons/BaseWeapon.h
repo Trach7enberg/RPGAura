@@ -19,6 +19,8 @@ public:
 	ABaseWeapon();
 
 	void SetWeaponMeshCollision(bool Enabled) const;
+	virtual void HighLight();
+	virtual void UnHighLight();
 
 protected:
 	virtual void BeginPlay() override;
@@ -26,5 +28,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Weapon")
 	TObjectPtr<USkeletalMeshComponent> WeaponMesh;
 
-
+	/// 当前武器能否被高亮
+	/// @return 可以则是true
+	virtual bool CanHighLight();
 };

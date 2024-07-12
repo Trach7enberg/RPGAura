@@ -19,6 +19,11 @@ class RPGAURA_API ACharacterBase : public ACharacter
 public:
 	ACharacterBase();
 
+	/// 高亮当前角色
+	virtual void HighLight();
+
+	/// 解除高亮当前角色
+	virtual void UnHighLight();
 
 protected:
 	virtual void BeginPlay() override;
@@ -26,7 +31,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Weapon")
 	TObjectPtr<UWeaponLogicBaseComponent> WeaponLogicBaseComponent;
 
-public:
-	virtual void SetupPlayerInputComponent(class UInputComponent *PlayerInputComponent) override;
+	/// 当前角色能否被高亮
+	/// @return 能高亮则返回true
+	virtual bool CanHighLight();
 
 };
