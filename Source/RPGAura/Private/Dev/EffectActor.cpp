@@ -20,6 +20,7 @@ AEffectActor::AEffectActor()
 	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
 	SphereComponent->SetupAttachment(GetRootComponent());
 	SphereComponent->InitSphereRadius(250.0f);
+	SphereComponent->SetHiddenInGame(false);
 
 }
 
@@ -40,8 +41,10 @@ void AEffectActor::OnBeginOverBegin(UPrimitiveComponent *OverlappedComponent, AA
 
 	const auto AbilitySystemComponent = AbilitySystem->GetAbilitySystemComponent();
 	if (!AbilitySystemComponent) { return; }
-	
-	
+
+
+	if (!AbilitySystemComponent->GetAttributeSet(UBaseAttributeSet::StaticClass())) { return; }
+
 	const auto MyAttributeSet = Cast<UBaseAttributeSet>(
 		AbilitySystemComponent->GetAttributeSet(UBaseAttributeSet::StaticClass()));
 	if (!MyAttributeSet) { return; }
@@ -51,9 +54,10 @@ void AEffectActor::OnBeginOverBegin(UPrimitiveComponent *OverlappedComponent, AA
 	auto MutableAs = const_cast<UBaseAttributeSet *>(MyAttributeSet);
 
 	if (!MutableAs) { return; }
-	MutableAs->SetCurrentHealth(MyAttributeSet->GetCurrentHealth() + (-10.0f));
+	MutableAs->SetCurrentHealth(MyAttributeSet->GetCurrentHealth() + (10.0f));
 
 	UE_LOG(AEffectActorLog, Warning, TEXT("Effect"));
+	Destroy();
 
 }
 
