@@ -2,11 +2,17 @@
 
 
 #include "GAS/AttributeSet/BaseAttributeSet.h"
-
-#include "AbilitySystemComponent.h"
 #include "Net/UnrealNetwork.h"
 
-UBaseAttributeSet::UBaseAttributeSet() {}
+UBaseAttributeSet::UBaseAttributeSet()
+{
+	InitCurrentHealth(100.f);
+	InitMaxHealth(100.f);
+	InitMaxMana(100.f);
+	InitCurrentMana(100.f);
+
+	
+}
 
 void UBaseAttributeSet::OnRep_CurrentHealth(const FGameplayAttributeData &OldHealth) const
 {

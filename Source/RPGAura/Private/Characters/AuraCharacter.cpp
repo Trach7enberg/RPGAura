@@ -49,17 +49,22 @@ UAbilitySystemComponent *AAuraCharacter::GetAbilitySystemComponent() const { ret
 void AAuraCharacter::InitAbilityActorInfo()
 {
 	const auto MyPlayerState = GetPlayerState<ABasePlayerState>();
-	check(MyPlayerState);
+	if (!MyPlayerState)
+	{
+		UE_LOG(AAuraCharacterLog, Error, TEXT("%s:MyPlayerState Cant be null"), *GetName());
+		return;
+	}
 
-	AbilitySystemComponent->InitAbilityActorInfo(MyPlayerState, this);
 	AbilitySystemComponent = MyPlayerState->GetAbilitySystemComponent();
 	AttributeSet = MyPlayerState->GetAttributeSet();
+	AbilitySystemComponent->InitAbilityActorInfo(MyPlayerState, this);
+
+
 }
 
 void AAuraCharacter::PossessedBy(AController *NewController)
 {
 	Super::PossessedBy(NewController);
-
 	// 为服务器初始化能力角色信息
 	InitAbilityActorInfo();
 }
@@ -67,8 +72,7 @@ void AAuraCharacter::PossessedBy(AController *NewController)
 void AAuraCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
-
 	// 为客户端初始化能力角色信息
 	InitAbilityActorInfo();
-	UE_LOG(AAuraCharacterLog, Warning, TEXT("OnRep_PlayerState"));
+
 }

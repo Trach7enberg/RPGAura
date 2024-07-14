@@ -20,6 +20,7 @@ AEnemyCharacter::AEnemyCharacter()
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
 
 	AttributeSet = CreateDefaultSubobject<UBaseAttributeSet>("AttributeSet");
+	AutoPossessAI = EAutoPossessAI::Disabled;
 }
 
 
