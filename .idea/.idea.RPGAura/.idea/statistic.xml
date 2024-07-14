@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Statistic">
+    <option name="fileTypesIncluded" value="cpp;h" />
+    <option name="excludeDotArtifactDirectory" value="true" />
+    <option name="excludedDirectories">
+      <list>
+        <option value="$PROJECT_DIR$/.git" />
+        <option value="$PROJECT_DIR$/.idea" />
+        <option value="$PROJECT_DIR$/.vs" />
+        <option value="$PROJECT_DIR$/Binaries" />
+        <option value="$PROJECT_DIR$/Config" />
+        <option value="$PROJECT_DIR$/Content" />
+        <option value="$PROJECT_DIR$/DerivedDataCache" />
+        <option value="$PROJECT_DIR$/Intermediate" />
+        <option value="$PROJECT_DIR$/Saved" />
+        <option value="$PROJECT_DIR$/.git" />
+        <option value="$PROJECT_DIR$/.idea" />
+        <option value="$PROJECT_DIR$/.vs" />
+        <option value="$PROJECT_DIR$/Binaries" />
+        <option value="$PROJECT_DIR$/Config" />
+        <option value="$PROJECT_DIR$/Content" />
+        <option value="$PROJECT_DIR$/DerivedDataCache" />
+        <option value="$PROJECT_DIR$/Intermediate" />
+        <option value="$PROJECT_DIR$/Saved" />
+      </list>
+    </option>
+  </component>
+</project>
