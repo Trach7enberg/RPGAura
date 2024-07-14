@@ -13,9 +13,9 @@ ACharacterBase::ACharacterBase()
 
 	WeaponLogicBaseComponent = CreateDefaultSubobject<UWeaponLogicBaseComponent>("WeaponLogicComponent");
 
+
 	if (GetMesh()) { GetMesh()->SetRelativeRotation(FRotator(0, -90, 0)); }
 }
-
 
 
 void ACharacterBase::BeginPlay() { Super::BeginPlay(); }
@@ -26,6 +26,7 @@ bool ACharacterBase::CanHighLight()
 
 	return (Can) ? true : false;
 }
+
 void ACharacterBase::HighLight()
 {
 	if (!CanHighLight()) { return; }
@@ -37,3 +38,5 @@ void ACharacterBase::UnHighLight()
 	if (!CanHighLight()) { return; }
 	Cast<IHighLightInterface>(this)->UnHighLightActor();
 }
+
+UAbilitySystemComponent *ACharacterBase::GetAbilitySystemComponent() const { return AbilitySystemComponent; }

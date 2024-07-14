@@ -12,7 +12,7 @@ DEFINE_LOG_CATEGORY_STATIC(MyABasePlayerController,All,All);
 ABasePlayerController::ABasePlayerController()
 {
 	// 启用复制
-	bReplicates = true;
+	bReplicates = true; 
 	bShowMouseCursor = true;
 
 	// 设置鼠标的样式
