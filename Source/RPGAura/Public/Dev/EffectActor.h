@@ -7,7 +7,7 @@
 #include "EffectActor.generated.h"
 
 /**
-* 
+* 测试影响角色GAS的属性
 */
 
 class USphereComponent;
