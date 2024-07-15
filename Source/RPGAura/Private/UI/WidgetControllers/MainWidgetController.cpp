@@ -22,6 +22,8 @@ void UMainWidgetController::BroadcastInitialValues()
 
 	OnHealthChangedSignature.Broadcast(MyAs->GetCurrentHealth(), false);
 	OnMaxHealthChangedSignature.Broadcast(MyAs->GetMaxHealth(), false);
+	OnManaChangedSignature.Broadcast(MyAs->GetCurrentMana(), false);
+	OnMaxManaChangedSignature.Broadcast(MyAs->GetMaxMana(), false);
 
 }
 
@@ -46,6 +48,13 @@ void UMainWidgetController::BindCallBackToGas()
 	GetWidgetControllerParams().CurrentAbilitySystemComponent->
 	                            GetGameplayAttributeValueChangeDelegate(MyAs->GetMaxHealthAttribute()).AddUObject(
 		                            this, &UMainWidgetController::MaxHealthChanged);
+
+	GetWidgetControllerParams().CurrentAbilitySystemComponent->
+	                            GetGameplayAttributeValueChangeDelegate(MyAs->GetCurrentManaAttribute()).AddUObject(
+		                            this, &UMainWidgetController::ManaChanged);
+	GetWidgetControllerParams().CurrentAbilitySystemComponent->
+	                            GetGameplayAttributeValueChangeDelegate(MyAs->GetMaxManaAttribute()).AddUObject(
+		                            this, &UMainWidgetController::MaxManaChanged);
 }
 
 void UMainWidgetController::HealthChanged(const FOnAttributeChangeData &Data) const
@@ -58,4 +67,16 @@ void UMainWidgetController::MaxHealthChanged(const FOnAttributeChangeData &Data)
 {
 	OnMaxHealthChangedSignature.Broadcast(Data.NewValue,
 	                                      Data.NewValue > Data.OldValue);
+}
+
+void UMainWidgetController::ManaChanged(const FOnAttributeChangeData &Data) const
+{
+	OnManaChangedSignature.Broadcast(Data.NewValue,
+	                                 Data.NewValue > Data.OldValue);
+}
+
+void UMainWidgetController::MaxManaChanged(const FOnAttributeChangeData &Data) const
+{
+	OnMaxManaChangedSignature.Broadcast(Data.NewValue,
+	                                    Data.NewValue > Data.OldValue);
 }

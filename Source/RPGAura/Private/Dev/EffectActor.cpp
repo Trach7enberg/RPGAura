@@ -9,7 +9,6 @@
 #include "Components/SphereComponent.h"
 #include "GAS/AttributeSet/BaseAttributeSet.h"
 #include "UI/HUD/BaseHUD.h"
-#include "UI/WidgetControllers/MainWidgetController.h"
 
 DEFINE_LOG_CATEGORY_STATIC(AEffectActorLog, All, All);
 
@@ -66,6 +65,7 @@ void AEffectActor::OnBeginOverBegin(UPrimitiveComponent *OverlappedComponent, AA
 
 	if (!MutableAs) { return; }
 	MutableAs->SetCurrentHealth(MyAttributeSet->GetCurrentHealth() + (-10.0f));
+	MutableAs->SetCurrentMana(MyAttributeSet->GetCurrentMana() + (-10.0f));
 
 	UE_LOG(AEffectActorLog, Warning, TEXT("Effect"));
 

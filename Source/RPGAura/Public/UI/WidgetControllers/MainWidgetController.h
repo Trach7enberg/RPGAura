@@ -24,7 +24,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMaxManaChangedSignature, float, 
  * 主要widget的控制器类
  */
 UCLASS()
-class RPGAURA_API UMainWidgetController : public UBaseWidgetController
+class RPGAURA_API UMainWidgetController  : public UBaseWidgetController
 {
 	GENERATED_BODY()
 
