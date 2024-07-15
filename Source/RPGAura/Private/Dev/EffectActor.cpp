@@ -66,7 +66,6 @@ void AEffectActor::OnBeginOverBegin(UPrimitiveComponent *OverlappedComponent, AA
 
 	if (!MutableAs) { return; }
 	MutableAs->SetCurrentHealth(MyAttributeSet->GetCurrentHealth() + (-10.0f));
-	HUD->GetMainWidgetController()->BroadcastInitialValues();
 
 	UE_LOG(AEffectActorLog, Warning, TEXT("Effect"));
 

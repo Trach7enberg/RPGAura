@@ -25,7 +25,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="HUD")
 	UMainWidgetController *GetMainWidgetController() const;
 
-	/// 初始化HUD的主要widget、并设置主要widget的控制器
+	/// 初始化HUD的主要widget、并设置主要widget的控制器、初始化所有UI的默认值
 	void InitHudMainWidget();
 
 protected:

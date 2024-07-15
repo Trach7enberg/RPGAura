@@ -62,6 +62,9 @@ public:
 	/// @return 有效则为true
 	bool IsWidgetControllerParamsValid() const;
 
+	/// 绑定回调到GAS系统
+	virtual void BindCallBackToGas();
+
 private:
 	FWidgetControllerParams WidgetControllerParams;
 

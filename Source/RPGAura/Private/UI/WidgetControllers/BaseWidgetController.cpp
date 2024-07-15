@@ -10,3 +10,5 @@ bool UBaseWidgetController::IsWidgetControllerParamsValid() const
 	return GetWidgetControllerParams().CurrentPlayerController && GetWidgetControllerParams().CurrentPlayerState &&
 		GetWidgetControllerParams().CurrentAbilitySystemComponent && GetWidgetControllerParams().CurrentAttributeSet;
 }
+
+void UBaseWidgetController::BindCallBackToGas() {}

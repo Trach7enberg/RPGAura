@@ -44,6 +44,7 @@ UMainWidgetController *ABaseHUD::CreateMainWidgetController()
 		{
 			UE_LOG(ABaseHUDLog, Error, TEXT("WidgetControllerParams 不能为 null"));
 		}
+		MWidgetController->BindCallBackToGas();
 
 		if (!MWidgetController) { UE_LOG(ABaseHUDLog, Error, TEXT("MainWidgetController 不能为 null")); }
 	}
@@ -77,8 +78,8 @@ void ABaseHUD::InitHudMainWidget()
 	CurrentMainWidget->SetWidgetController(CreateMainWidgetController());
 
 	if (!CurrentMainWidget->GetWidgetController()) { return; }
-	
-	
+
+
 	CurrentMainWidget->GetWidgetController()->BroadcastInitialValues();
 
 	CurrentMainWidget->AddToViewport();
