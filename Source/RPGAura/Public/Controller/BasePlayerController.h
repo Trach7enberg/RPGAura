@@ -20,11 +20,14 @@ class RPGAURA_API ABasePlayerController : public APlayerController
 
 public:
 	ABasePlayerController();
-
+	
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
+	
 
+	
 private:
 	/// 输入上下文
 	UPROPERTY(EditAnywhere, Category="Input")

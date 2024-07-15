@@ -5,8 +5,11 @@
 
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
+#include "Characters/AuraCharacter.h"
 #include "Components/SphereComponent.h"
 #include "GAS/AttributeSet/BaseAttributeSet.h"
+#include "UI/HUD/BaseHUD.h"
+#include "UI/WidgetControllers/MainWidgetController.h"
 
 DEFINE_LOG_CATEGORY_STATIC(AEffectActorLog, All, All);
 
@@ -35,6 +38,14 @@ void AEffectActor::OnBeginOverBegin(UPrimitiveComponent *OverlappedComponent, AA
                                     UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep,
                                     const FHitResult &SweepResult)
 {
+	const auto Character = Cast<AAuraCharacter>(OtherActor);
+	if (!Character) { return; }
+
+	const auto Controller = Cast<APlayerController>(Character->GetController());
+	if (!Controller) { return; }
+
+	const auto HUD = Cast<ABaseHUD>(Controller->GetHUD());
+	if (!HUD) { return; }
 
 	const auto AbilitySystem = Cast<IAbilitySystemInterface>(OtherActor);
 	if (!AbilitySystem) { return; }
@@ -54,10 +65,13 @@ void AEffectActor::OnBeginOverBegin(UPrimitiveComponent *OverlappedComponent, AA
 	auto MutableAs = const_cast<UBaseAttributeSet *>(MyAttributeSet);
 
 	if (!MutableAs) { return; }
-	MutableAs->SetCurrentHealth(MyAttributeSet->GetCurrentHealth() + (10.0f));
+	MutableAs->SetCurrentHealth(MyAttributeSet->GetCurrentHealth() + (-10.0f));
+	HUD->GetMainWidgetController()->BroadcastInitialValues();
 
 	UE_LOG(AEffectActorLog, Warning, TEXT("Effect"));
-	Destroy();
+
+
+	// Destroy();
 
 }
 

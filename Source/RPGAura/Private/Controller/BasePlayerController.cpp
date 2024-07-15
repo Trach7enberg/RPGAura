@@ -7,12 +7,12 @@
 #include "Components/InputComponent.h"
 #include "EnhancedInputComponent.h"
 
-DEFINE_LOG_CATEGORY_STATIC(MyABasePlayerController,All,All);
+DEFINE_LOG_CATEGORY_STATIC(ABasePlayerControllerLog, All, All);
 
 ABasePlayerController::ABasePlayerController()
 {
 	// 启用复制
-	bReplicates = true; 
+	bReplicates = true;
 	bShowMouseCursor = true;
 
 	// 设置鼠标的样式
@@ -26,11 +26,15 @@ void ABasePlayerController::BeginPlay()
 
 	// 获得增强输入的本地玩家子系统,通过这个根据添加我们的上下文映射
 	const auto SubSystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
-	check(SubSystem);
+	if (!SubSystem)
+	{
+		UE_LOG(ABasePlayerControllerLog, Error, TEXT("本地玩家子系统为null!"));
+		return;
+	}
 
 	// 添加输入上下文映射,由于可以添加多个,它们之间的优先级用优先级数字来表示
 	SubSystem->AddMappingContext(InputContext, 0);
-	
+
 	// 输入模式,可以键盘和鼠标同时输入,并且输入可以影响UI
 	FInputModeGameAndUI InputModeGameAndUI;
 	// 鼠标不会被锁定到视口内,意味着可以移出视口
@@ -60,4 +64,3 @@ void ABasePlayerController::Move(const FInputActionValue &InputActionValue)
 		GetPawn()->AddMovementInput(GetControlRotation().Euler().RightVector, InputAxisValue.X);
 	}
 }
-

@@ -3,11 +3,11 @@
 
 #include "UI/Widgets/BaseUserWidget.h"
 
-void UBaseUserWidget::NativeOnInitialized()
-{
-	//
-	Super::NativeOnInitialized();
-}
+#include "Controller/BasePlayerController.h"
+
+DEFINE_LOG_CATEGORY_STATIC(UBaseUserWidgetLog, All, All);
+
+void UBaseUserWidget::NativeOnInitialized() { Super::NativeOnInitialized(); }
 
 void UBaseUserWidget::SetWidgetController(UBaseWidgetController *NewWidgetController)
 {

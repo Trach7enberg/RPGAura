@@ -21,9 +21,15 @@ public:
 	virtual UAbilitySystemComponent *GetAbilitySystemComponent() const override;
 
 
+	/// 服务器调用的函数,在此之前已经设置好玩家的控制器
+	/// @param NewController 
 	virtual void PossessedBy(AController *NewController) override;
+
+	/// 客户端调用的函数,当PlayerState已经被复制
 	virtual void OnRep_PlayerState() override;
 
+	/// 初始化HUD的主要widget
+	void InitHUD() const;
 protected:
 	virtual void BeginPlay() override;
 

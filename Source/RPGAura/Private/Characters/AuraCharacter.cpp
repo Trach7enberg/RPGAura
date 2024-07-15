@@ -8,6 +8,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "PlayerStates/BasePlayerState.h"
+#include "UI/HUD/BaseHUD.h"
 
 DEFINE_LOG_CATEGORY_STATIC(AAuraCharacterLog, All, All);
 
@@ -67,6 +68,9 @@ void AAuraCharacter::PossessedBy(AController *NewController)
 	Super::PossessedBy(NewController);
 	// 为服务器初始化能力角色信息
 	InitAbilityActorInfo();
+
+	InitHUD();
+
 }
 
 void AAuraCharacter::OnRep_PlayerState()
@@ -75,4 +79,20 @@ void AAuraCharacter::OnRep_PlayerState()
 	// 为客户端初始化能力角色信息
 	InitAbilityActorInfo();
 
+	InitHUD();
+
+
+}
+
+void AAuraCharacter::InitHUD() const
+{
+	const auto Pc = Cast<APlayerController>(GetController());
+	if (!Pc)
+	{
+		UE_LOG(AAuraCharacterLog, Error, TEXT("控制器无效!"));
+		return;
+	}
+	const auto Hud = Cast<ABaseHUD>(Pc->GetHUD());
+	if (!Hud) { return; }
+	Hud->InitHudMainWidget();
 }
