@@ -6,10 +6,10 @@
 
 UBaseAttributeSet::UBaseAttributeSet()
 {
-	InitCurrentHealth(100.f);
+	InitCurrentHealth(50.f);
 	InitMaxHealth(100.f);
 	InitMaxMana(100.f);
-	InitCurrentMana(100.f);
+	InitCurrentMana(50.f);
 
 	
 }
