@@ -70,7 +70,7 @@ void AEffectActor::OnBeginOverBegin(UPrimitiveComponent *OverlappedComponent, AA
 	UE_LOG(AEffectActorLog, Warning, TEXT("Effect"));
 
 
-	// Destroy();
+	// Destroy(); 
 
 }
 
