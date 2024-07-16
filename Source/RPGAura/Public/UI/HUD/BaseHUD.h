@@ -33,7 +33,7 @@ protected:
 
 	/// 用于生成主要widget的Class
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="WidgetClass")
-	TSubclassOf<UBaseUserWidget> MainWidgetClass;
+	TSubclassOf<UBaseUserWidget> MainWidgetClass = nullptr;
 
 	/// 用于生成主要widget控制器的Class
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="WidgetClass")
