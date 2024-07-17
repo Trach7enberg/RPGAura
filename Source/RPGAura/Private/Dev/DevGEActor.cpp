@@ -11,8 +11,6 @@ ADevGEActor::ADevGEActor() { PrimaryActorTick.bCanEverTick = false; }
 
 void ADevGEActor::BeginPlay() { Super::BeginPlay(); }
 
-void ADevGEActor::Tick(float DeltaTime) { Super::Tick(DeltaTime); }
-
 void ADevGEActor::ApplyGEToTarget(AActor *Actor, TSubclassOf<UGameplayEffect> GeClass) const
 {
 	const auto ActorAsc = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor);
@@ -32,3 +30,7 @@ void ADevGEActor::ApplyGEToTarget(AActor *Actor, TSubclassOf<UGameplayEffect> Ge
 
 
 }
+
+void ADevGEActor::OnOverLap(AActor *TargetActor) {}
+
+void ADevGEActor::EndOverLap(AActor *TargetActor, bool DestroyActor) {}
