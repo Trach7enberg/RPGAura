@@ -4,8 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "GameplayEffectTypes.h"
 #include "DevGEActor.generated.h"
 
+class UAbilitySystemComponent; 
 class UGameplayEffect;
 
 UENUM(BlueprintType)
@@ -35,37 +37,28 @@ public:
 	/// @param Actor 目标对象
 	/// @param Ge 游戏效果类
 	UFUNCTION(BlueprintCallable, Category="Dev GE")
-	void ApplyGEToTarget(AActor *Actor, TSubclassOf<UGameplayEffect> Ge) const;
+	void ApplyGEToTarget(AActor *Actor, TSubclassOf<UGameplayEffect> Ge) ;
 
 	UFUNCTION(BlueprintCallable, Category="Dev GE")
-	void OnOverLap(AActor *TargetActor);
+	void OnOverLap(AActor *TargetActor) ;
 
 	UFUNCTION(BlueprintCallable, Category="Dev GE")
-	void EndOverLap(AActor *TargetActor, bool DestroyActor = false);
+	void EndOverLap(AActor *TargetActor, bool DestroyActor = false) ;
 
 protected:
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Dev GE")
-	TSubclassOf<UGameplayEffect> InstantGameplayEffectClass = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Dev GE")
-	TSubclassOf<UGameplayEffect> DurationGameplayEffectClass = nullptr;
+	TSubclassOf<UGameplayEffect> CurrentGameplayEffectClass = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Dev GE")
-	TSubclassOf<UGameplayEffect> InfinityGameplayEffectClass = nullptr;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Dev GE")
-	EGeApplicationPolicy InstantApplicationPolicy = EGeApplicationPolicy::ApplyOnOverlap;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Dev GE")
-	EGeApplicationPolicy DurationApplicationPolicy = EGeApplicationPolicy::ApplyOnOverlap;;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Dev GE")
-	EGeApplicationPolicy InfinityApplicationPolicy = EGeApplicationPolicy::ApplyOnOverlap;;
+	EGeApplicationPolicy CurrentApplicationPolicy = EGeApplicationPolicy::ApplyOnOverlap;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Dev GE")
 	EGeRemovalPolicy InfinityRemovalPolicy = EGeRemovalPolicy::RemoveOnEndOverlap;
 
-
+	
+	/// 存储当前正在启用的GameplayEffect
+	TMap<UAbilitySystemComponent *,TSet<FActiveGameplayEffectHandle>> ActiveGeMap;
 };
