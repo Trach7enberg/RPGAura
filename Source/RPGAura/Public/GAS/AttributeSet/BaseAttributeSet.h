@@ -102,7 +102,7 @@ public:
 
 
 	/// 初始化FEffectProp
-	void InitCurrentGeProp(const FGameplayEffectModCallbackData &Data);
+	void InitCurrentGeProp(const FGameplayEffectModCallbackData &Data, FEffectProp &EffectProp);
 
 	virtual void PreAttributeChange(const FGameplayAttribute &Attribute, float &NewValue) override;
 
@@ -118,5 +118,5 @@ private:
 	float DefaultMaxMana = 100.f;
 
 	/// 用于存前某个GE影响当前角色属性集的相关上下文数据
-	FEffectProp EffectProp{};
+	FEffectProp EffectProperties{};
 };

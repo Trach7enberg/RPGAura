@@ -7,7 +7,7 @@
 #include "GameplayEffectTypes.h"
 #include "DevGEActor.generated.h"
 
-class UAbilitySystemComponent; 
+class UAbilitySystemComponent;
 class UGameplayEffect;
 
 UENUM(BlueprintType)
@@ -37,17 +37,20 @@ public:
 	/// @param Actor 目标对象
 	/// @param Ge 游戏效果类
 	UFUNCTION(BlueprintCallable, Category="Dev GE")
-	void ApplyGEToTarget(AActor *Actor, TSubclassOf<UGameplayEffect> Ge) ;
+	void ApplyGEToTarget(AActor *Actor, TSubclassOf<UGameplayEffect> Ge);
 
 	UFUNCTION(BlueprintCallable, Category="Dev GE")
-	void OnOverLap(AActor *TargetActor) ;
+	void OnOverLap(AActor *TargetActor);
 
 	UFUNCTION(BlueprintCallable, Category="Dev GE")
-	void EndOverLap(AActor *TargetActor, bool DestroyActor = false) ;
+	void EndOverLap(AActor *TargetActor, bool DestroyActor = false);
 
 protected:
 	virtual void BeginPlay() override;
 
+	/// 当前Actor的等级,配合曲线表使用
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Dev GE")
+	float ActorLevel = 1.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Dev GE")
 	TSubclassOf<UGameplayEffect> CurrentGameplayEffectClass = nullptr;
@@ -58,7 +61,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Dev GE")
 	EGeRemovalPolicy InfinityRemovalPolicy = EGeRemovalPolicy::RemoveOnEndOverlap;
 
-	
+
 	/// 存储当前正在启用的GameplayEffect,一个角色的ASC可以存在多个不同已经启用的效果
-	TMap<UAbilitySystemComponent *,TSet<FActiveGameplayEffectHandle>> ActiveGeMap;
+	TMap<UAbilitySystemComponent *, TSet<FActiveGameplayEffectHandle>> ActiveGeMap;
 };

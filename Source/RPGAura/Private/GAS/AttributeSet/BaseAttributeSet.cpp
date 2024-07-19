@@ -75,7 +75,7 @@ void UBaseAttributeSet::PreAttributeChange(const FGameplayAttribute &Attribute, 
 
 }
 
-void UBaseAttributeSet::InitCurrentGeProp(const FGameplayEffectModCallbackData &Data)
+void UBaseAttributeSet::InitCurrentGeProp(const FGameplayEffectModCallbackData &Data, FEffectProp &EffectProp)
 {
 	const auto Context = Data.EffectSpec.GetContext().Get();
 	if (!Context)
@@ -119,5 +119,5 @@ void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 {
 	Super::PostGameplayEffectExecute(Data);
 
-	InitCurrentGeProp(Data);
+	InitCurrentGeProp(Data, EffectProperties);
 }
