@@ -14,6 +14,43 @@
  		GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName) \
  		GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
 
+
+/// 用于存前某个GE影响当前角色属性集的相关上下文数据
+USTRUCT(BlueprintType)
+struct FEffectProp
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Effect")
+	FGameplayEffectContextHandle EffectContextHandle;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Effect")
+	UAbilitySystemComponent *SourceAsc = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Effect")
+	AActor *SourceAvatar = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Effect")
+	AController *SourceController = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Effect")
+	ACharacter *SourceCharacter = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Effect")
+	UAbilitySystemComponent *TargetAsc = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Effect")
+	AActor *TargetAvatar = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Effect")
+	AController *TargetController = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Effect")
+	ACharacter *TargetCharacter = nullptr;
+
+
+};
+
 /**
  * 基础属性集
  */
@@ -41,6 +78,7 @@ public:
 
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentMana, BlueprintReadOnly, Category = "Mp")
 	FGameplayAttributeData CurrentMana;
+
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, CurrentMana);
 
 	UPROPERTY(ReplicatedUsing = OnRep_MaxMana, BlueprintReadOnly, Category = "Mp")
@@ -63,4 +101,22 @@ public:
 	void OnRep_MaxMana(const FGameplayAttributeData &OldMaxMana) const;
 
 
+	/// 初始化FEffectProp
+	void InitCurrentGeProp(const FGameplayEffectModCallbackData &Data);
+
+	virtual void PreAttributeChange(const FGameplayAttribute &Attribute, float &NewValue) override;
+
+	/// 这个函数在游戏效果改变一个属性之后被执行
+	/// @param Data 
+	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData &Data) override;
+
+private:
+	float DefaultCurrentMana = 50.f;
+	float DefaultCurrentHealth = 50.f;
+
+	float DefaultMaxHealth = 100.f;
+	float DefaultMaxMana = 100.f;
+
+	/// 用于存前某个GE影响当前角色属性集的相关上下文数据
+	FEffectProp EffectProp{};
 };

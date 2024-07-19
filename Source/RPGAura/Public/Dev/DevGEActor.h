@@ -59,6 +59,6 @@ protected:
 	EGeRemovalPolicy InfinityRemovalPolicy = EGeRemovalPolicy::RemoveOnEndOverlap;
 
 	
-	/// 存储当前正在启用的GameplayEffect
+	/// 存储当前正在启用的GameplayEffect,一个角色的ASC可以存在多个不同已经启用的效果
 	TMap<UAbilitySystemComponent *,TSet<FActiveGameplayEffectHandle>> ActiveGeMap;
 };
