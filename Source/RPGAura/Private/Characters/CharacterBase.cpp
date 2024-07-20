@@ -27,6 +27,10 @@ bool ACharacterBase::CanHighLight()
 	return (Can) ? true : false;
 }
 
+void ACharacterBase::InitAbilityActorInfo()
+{
+}
+
 void ACharacterBase::HighLight()
 {
 	if (!CanHighLight()) { return; }

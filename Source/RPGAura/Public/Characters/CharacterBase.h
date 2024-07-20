@@ -51,4 +51,6 @@ protected:
 	/// @return 能高亮则返回true
 	virtual bool CanHighLight();
 
+	virtual void  InitAbilityActorInfo();
+
 };

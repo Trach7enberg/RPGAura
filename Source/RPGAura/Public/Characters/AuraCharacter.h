@@ -39,9 +39,8 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Camera")
 	USpringArmComponent *SpringArmComponent;
-
-private:
+	
 	/// 初始化当前ACS的能力组件、属性集和ACS的AbilityActorInfo
-	void InitAbilityActorInfo();
+	virtual void InitAbilityActorInfo() override;
 
 };

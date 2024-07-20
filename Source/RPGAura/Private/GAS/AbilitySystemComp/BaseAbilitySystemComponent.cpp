@@ -3,3 +3,34 @@
 
 #include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
 
+DEFINE_LOG_CATEGORY_STATIC(UBaseAbilitySystemComponentLog, All, All);
+
+void UBaseAbilitySystemComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+
+}
+
+void UBaseAbilitySystemComponent::InitSetting()
+{
+	OnGameplayEffectAppliedDelegateToSelf.AddUObject(this, &UBaseAbilitySystemComponent::OnGEAppliedToSelf);
+}
+
+void UBaseAbilitySystemComponent::OnGEAppliedToSelf(UAbilitySystemComponent *AbilitySystemComponent,
+                                                    const FGameplayEffectSpec &GameplayEffectSpec,
+                                                    FActiveGameplayEffectHandle ActiveEffectHandle)
+{
+
+	FGameplayTagContainer AssetTags;
+
+	// 获取资产标签的容器
+	GameplayEffectSpec.GetAllAssetTags(AssetTags);
+	
+
+	for (const auto &AssetTag : AssetTags)
+	{
+		// TODO 把标签广播到UI控制器,以便显示相应信息
+		UE_LOG(UBaseAbilitySystemComponentLog, Log, TEXT("AssetTag: %s"), *AssetTag.ToString());
+	}
+}

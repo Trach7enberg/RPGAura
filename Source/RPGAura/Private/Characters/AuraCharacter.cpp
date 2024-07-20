@@ -5,6 +5,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "Camera/CameraComponent.h"
+#include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "PlayerStates/BasePlayerState.h"
@@ -40,12 +41,21 @@ AAuraCharacter::AAuraCharacter()
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 
-	if (GetMesh()) { GetMesh()->SetRelativeLocation(FVector(0, 0, -85)); }
+	if (GetMesh())
+	{
+		GetMesh()->SetRelativeLocation(FVector(0, 0, -85));
+	}
 }
 
-void AAuraCharacter::BeginPlay() { Super::BeginPlay(); }
+void AAuraCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+}
 
-UAbilitySystemComponent *AAuraCharacter::GetAbilitySystemComponent() const { return AbilitySystemComponent; }
+UAbilitySystemComponent *AAuraCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}
 
 void AAuraCharacter::InitAbilityActorInfo()
 {
@@ -58,9 +68,33 @@ void AAuraCharacter::InitAbilityActorInfo()
 
 	AbilitySystemComponent = MyPlayerState->GetAbilitySystemComponent();
 	AttributeSet = MyPlayerState->GetAttributeSet();
-	AbilitySystemComponent->InitAbilityActorInfo(MyPlayerState, this);
+
+	const auto MyAsc = Cast<UBaseAbilitySystemComponent>(AbilitySystemComponent);
+	if (!MyAsc)
+	{
+		UE_LOG(AAuraCharacterLog, Error, TEXT("MyAsc Cant be null"));
+		return;
+	}
+	MyAsc->InitAbilityActorInfo(MyPlayerState, this);
+	MyAsc->InitSetting();
 
 
+}
+
+void AAuraCharacter::InitHUD() const
+{
+	const auto Pc = Cast<APlayerController>(GetController());
+	if (!Pc)
+	{
+		UE_LOG(AAuraCharacterLog, Error, TEXT("控制器无效!"));
+		return;
+	}
+	const auto Hud = Cast<ABaseHUD>(Pc->GetHUD());
+	if (!Hud)
+	{
+		return;
+	}
+	Hud->InitHudMainWidget();
 }
 
 void AAuraCharacter::PossessedBy(AController *NewController)
@@ -82,17 +116,4 @@ void AAuraCharacter::OnRep_PlayerState()
 	InitHUD();
 
 
-}
-
-void AAuraCharacter::InitHUD() const
-{
-	const auto Pc = Cast<APlayerController>(GetController());
-	if (!Pc)
-	{
-		UE_LOG(AAuraCharacterLog, Error, TEXT("控制器无效!"));
-		return;
-	}
-	const auto Hud = Cast<ABaseHUD>(Pc->GetHUD());
-	if (!Hud) { return; }
-	Hud->InitHudMainWidget();
 }
