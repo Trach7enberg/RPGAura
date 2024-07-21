@@ -44,7 +44,7 @@ UMainWidgetController *ABaseHUD::CreateMainWidgetController()
 		{
 			UE_LOG(ABaseHUDLog, Error, TEXT("WidgetControllerParams 不能为 null"));
 		}
-		MWidgetController->BindCallBackToGas();
+		MWidgetController->BindCallBack();
 
 		if (!MWidgetController) { UE_LOG(ABaseHUDLog, Error, TEXT("MainWidgetController 不能为 null")); }
 	}
