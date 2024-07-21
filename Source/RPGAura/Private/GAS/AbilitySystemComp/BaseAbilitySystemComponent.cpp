@@ -26,11 +26,10 @@ void UBaseAbilitySystemComponent::OnGEAppliedToSelf(UAbilitySystemComponent *Abi
 
 	// 获取资产标签的容器
 	GameplayEffectSpec.GetAllAssetTags(AssetTags);
-	
 
-	for (const auto &AssetTag : AssetTags)
+	if (AssetTags.Num())
 	{
-		// TODO 把标签广播到UI控制器,以便显示相应信息
-		UE_LOG(UBaseAbilitySystemComponentLog, Log, TEXT("AssetTag: %s"), *AssetTag.ToString());
+		// 广播资产标签给UI的main控制器
+		OnGetAssetTagsDelegate.Broadcast(AssetTags);
 	}
 }
