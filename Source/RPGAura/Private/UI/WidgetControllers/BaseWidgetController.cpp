@@ -11,4 +11,4 @@ bool UBaseWidgetController::IsWidgetControllerParamsValid() const
 		GetWidgetControllerParams().CurrentAbilitySystemComponent && GetWidgetControllerParams().CurrentAttributeSet;
 }
 
-void UBaseWidgetController::BindCallBackToGas() {}
+void UBaseWidgetController::BindCallBack() {}

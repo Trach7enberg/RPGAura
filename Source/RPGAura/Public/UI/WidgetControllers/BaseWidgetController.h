@@ -17,14 +17,18 @@ struct FWidgetControllerParams
 {
 	GENERATED_BODY()
 
-	FWidgetControllerParams() {}
+	FWidgetControllerParams()
+	{
+	}
 
 	FWidgetControllerParams(APlayerController *Pc,
 	                        APlayerState *Ps,
 	                        UAbilitySystemComponent *Asc,
 	                        UAttributeSet *As) :
 		CurrentPlayerController(Pc), CurrentPlayerState(Ps),
-		CurrentAbilitySystemComponent(Asc), CurrentAttributeSet(As) {}
+		CurrentAbilitySystemComponent(Asc), CurrentAttributeSet(As)
+	{
+	}
 
 	UPROPERTY(BlueprintReadOnly, Category="WidgetController")
 	TObjectPtr<APlayerController> CurrentPlayerController = nullptr;
@@ -49,10 +53,16 @@ class RPGAURA_API UBaseWidgetController : public UObject
 
 public:
 	UFUNCTION(BlueprintCallable, Category="ControllerParas")
-	void SetWidgetControllerParams(const FWidgetControllerParams &Params) { WidgetControllerParams = Params; }
+	void SetWidgetControllerParams(const FWidgetControllerParams &Params)
+	{
+		WidgetControllerParams = Params;
+	}
 
 	UFUNCTION(BlueprintCallable, Category="ControllerParas")
-	FWidgetControllerParams GetWidgetControllerParams() const { return WidgetControllerParams; }
+	FWidgetControllerParams GetWidgetControllerParams() const
+	{
+		return WidgetControllerParams;
+	}
 
 	/// 广播初始值
 	UFUNCTION(BlueprintCallable, Category="Broadcast")
@@ -62,8 +72,8 @@ public:
 	/// @return 有效则为true
 	bool IsWidgetControllerParamsValid() const;
 
-	/// 绑定回调到GAS系统
-	virtual void BindCallBackToGas();
+	/// 绑定一系列的回调函数
+	virtual void BindCallBack();
 
 private:
 	FWidgetControllerParams WidgetControllerParams;
