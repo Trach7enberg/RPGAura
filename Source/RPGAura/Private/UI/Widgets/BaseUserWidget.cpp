@@ -11,6 +11,7 @@ void UBaseUserWidget::NativeOnInitialized() { Super::NativeOnInitialized(); }
 
 void UBaseUserWidget::SetWidgetController(UBaseWidgetController *NewWidgetController)
 {
+	
 	WidgetController = NewWidgetController;
 	WidgetControllerSet();
 }
