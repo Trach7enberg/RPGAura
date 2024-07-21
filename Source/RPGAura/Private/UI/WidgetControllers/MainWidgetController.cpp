@@ -18,7 +18,10 @@ void UMainWidgetController::BroadcastInitialValues()
 	}
 
 	const auto MyAs = Cast<UBaseAttributeSet>(GetWidgetControllerParams().CurrentAttributeSet);
-	if (!MyAs) { return; }
+	if (!MyAs)
+	{
+		return;
+	}
 
 	OnHealthChangedSignature.Broadcast(MyAs->GetCurrentHealth(), false);
 	OnMaxHealthChangedSignature.Broadcast(MyAs->GetMaxHealth(), false);
@@ -27,7 +30,7 @@ void UMainWidgetController::BroadcastInitialValues()
 
 }
 
-void UMainWidgetController::BindCallBackToGas()
+void UMainWidgetController::BindCallBack()
 {
 	if (!IsWidgetControllerParamsValid())
 	{
@@ -35,11 +38,23 @@ void UMainWidgetController::BindCallBackToGas()
 		return;
 	}
 
-	const auto MyAsc = Cast<UBaseAbilitySystemComponent>(GetWidgetControllerParams().CurrentAbilitySystemComponent);
-	if (!MyAsc) { return; }
+	const auto Asc = Cast<UBaseAbilitySystemComponent>(GetWidgetControllerParams().CurrentAbilitySystemComponent);
+	if (!Asc)
+	{
+		return;
+	}
+
+	const auto MyAsc = Cast<UBaseAbilitySystemComponent>(Asc);
+	if (!MyAsc)
+	{
+		return;
+	}
 
 	const auto MyAs = Cast<UBaseAttributeSet>(GetWidgetControllerParams().CurrentAttributeSet);
-	if (!MyAs) { return; }
+	if (!MyAs)
+	{
+		return;
+	}
 
 	// 每当CurrentHealth属性的值改变,就会调用回调函数
 	GetWidgetControllerParams().CurrentAbilitySystemComponent->
@@ -55,6 +70,38 @@ void UMainWidgetController::BindCallBackToGas()
 	GetWidgetControllerParams().CurrentAbilitySystemComponent->
 	                            GetGameplayAttributeValueChangeDelegate(MyAs->GetMaxManaAttribute()).AddUObject(
 		                            this, &UMainWidgetController::MaxManaChanged);
+
+
+	// 绑定委托
+	MyAsc->OnGetAssetTagsDelegate.AddUObject(this, &UMainWidgetController::OnGetAssetTags);
+}
+
+void UMainWidgetController::OnGetAssetTags(const FGameplayTagContainer &AssetTags)
+{
+	for (auto AssetTag : AssetTags)
+	{
+
+		const auto MessageTag = FGameplayTag::RequestGameplayTag(FName("Message"));
+
+		// 如果当前获得的资产Tag不是Message开头的标签的话就跳过
+		if (!AssetTag.MatchesTag(MessageTag))
+		{
+			continue;
+		}
+
+		const auto Row = GetDataTableRowByTag<FUIWidgetRow>(MessageWidgetDataTable, AssetTag);
+
+
+		if (!Row)
+		{
+			continue;
+		}
+
+		// 广播当前数据表中的表行
+		OnMessageWidgetRow.Broadcast(*Row);
+
+	}
+
 }
 
 void UMainWidgetController::HealthChanged(const FOnAttributeChangeData &Data) const

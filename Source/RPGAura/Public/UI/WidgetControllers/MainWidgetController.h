@@ -3,10 +3,39 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "UI/WidgetControllers/BaseWidgetController.h"
 #include "MainWidgetController.generated.h"
 
+class UBaseUserWidget;
+struct FGameplayTag;
+struct FGameplayTagContainer;
 struct FOnAttributeChangeData;
+
+/// 用于显示当角色应用GE时的一个结构体
+USTRUCT(BlueprintType)
+struct FUIWidgetRow : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	// 要显示的标签
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	FGameplayTag Tag = FGameplayTag();
+
+	// 要显示的消息
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	FText Message = FText();
+
+	// 要显示的UI
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TSubclassOf<UBaseUserWidget> MessageWidget;
+
+	// 要显示的图片
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UTexture2D *Image = nullptr;
+
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthChangedSignature, float, NewHealth, bool,
                                              /* Health增加还是减少,增加则为true */
                                              BIsIncreased);
@@ -20,11 +49,13 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnManaChangedSignature, float, New
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMaxManaChangedSignature, float, NewMaxMana,
                                              bool, /* MaxMana增加还是减少,增加则为true */ BIsIncreased);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMessageWidgetRowSignature, const FUIWidgetRow, Row);
+
 /**
  * 主要widget的控制器类
  */
 UCLASS()
-class RPGAURA_API UMainWidgetController  : public UBaseWidgetController
+class RPGAURA_API UMainWidgetController : public UBaseWidgetController
 {
 	GENERATED_BODY()
 
@@ -45,11 +76,35 @@ public:
 	UPROPERTY(BlueprintAssignable, Category="GAS | Attributes")
 	FOnMaxManaChangedSignature OnMaxManaChangedSignature;
 
+	/// 广播 数据表中的表行,表行的类型为FUIWidgetRow
+	UPROPERTY(BlueprintAssignable, Category="GAS | Messages")
+	FOnMessageWidgetRowSignature OnMessageWidgetRow;
+
 	/// 广播初始值,以便UI做出相应的响应
 	virtual void BroadcastInitialValues() override;
 
 	/// 绑定回调到GAS系统
-	virtual void BindCallBackToGas() override;
+	virtual void BindCallBack() override;
+
+protected:
+	// 消息数据表,不同的Tag对应不同的消息
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="DataTable")
+	TObjectPtr<UDataTable> MessageWidgetDataTable = nullptr;
+
+	/// 在GAS当中GE应用到玩家身上,并且获取资产标签时触发的回调函数
+	/// @param AssetTags 
+	void OnGetAssetTags(const FGameplayTagContainer &AssetTags);
+
+	/// 通过标签获得数据表中的表行
+	/// @tparam T 数据表的类型
+	/// @param DataTable 要查询的数据表
+	/// @param Tag 标签
+	/// @return T类型的数据表 
+	template <typename T>
+	T *GetDataTableRowByTag(UDataTable *DataTable, const FGameplayTag &Tag)
+	{
+		return DataTable->FindRow<T>(Tag.GetTagName(), TEXT(""));
+	}
 
 private:
 	void HealthChanged(const FOnAttributeChangeData &Data) const;
