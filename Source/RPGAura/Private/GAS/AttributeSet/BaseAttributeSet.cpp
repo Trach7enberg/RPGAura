@@ -8,12 +8,14 @@
 #include "GameFramework/Character.h"
 #include "Net/UnrealNetwork.h"
 
+DEFINE_LOG_CATEGORY_STATIC(UBaseAttributeSetLog, All, All);
+
 UBaseAttributeSet::UBaseAttributeSet()
 {
 	InitCurrentHealth(DefaultCurrentHealth);
 	InitMaxHealth(DefaultMaxHealth);
 	InitMaxMana(DefaultMaxMana);
-	InitCurrentMana(DefaultCurrentMana);
+	InitCurrentMana(DefaultCurrentMana / 2.f);
 
 
 }
@@ -58,11 +60,18 @@ void UBaseAttributeSet::PreAttributeChange(const FGameplayAttribute &Attribute, 
 
 	if (Attribute == GetCurrentHealthAttribute())
 	{
+		const auto temp = NewValue;
 		NewValue = FMath::Clamp(NewValue, 0.f, GetMaxHealth());
+		//TODO 待修复Bug,血量满了之后 ,获取显示的值没溢出,但实际的值是溢出了的,导致扣血没有反应 
+		// TODO  (血量、蓝量已修复Clamp失败的问题还是会有小bug,当药水溢出的持续时间没有结束又扣血会造成血量短暂的反复弹跳)
+		// UE_LOG(UBaseAttributeSetLog, Error, TEXT("Old:%.1f , Current :%.1f"), temp, GetCurrentHealth());
 	}
 	else if (Attribute == GetCurrentManaAttribute())
 	{
+		const auto temp = NewValue;
 		NewValue = FMath::Clamp(NewValue, 0.f, GetMaxMana());
+		
+		// UE_LOG(UBaseAttributeSetLog, Error, TEXT("Old:%.1f , Current :%.1f"), temp, GetCurrentMana());
 	}
 	else if (Attribute == GetMaxHealthAttribute())
 	{
@@ -120,4 +129,24 @@ void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 	Super::PostGameplayEffectExecute(Data);
 
 	InitCurrentGeProp(Data, EffectProperties);
+
+	if (Data.EvaluatedData.Attribute == GetCurrentHealthAttribute())
+	{
+		SetCurrentHealth(FMath::Clamp(GetCurrentHealth(), 0.f, GetMaxHealth()));
+	}
+
+	if (Data.EvaluatedData.Attribute == GetMaxHealthAttribute())
+	{
+		SetMaxHealth(FMath::Clamp(GetMaxHealth(), DefaultMaxHealth, GetMaxHealth()));
+	}
+
+	if (Data.EvaluatedData.Attribute == GetCurrentManaAttribute())
+	{
+		SetCurrentMana(FMath::Clamp(GetCurrentMana(), 0.f, GetMaxMana()));
+	}
+	
+	if (Data.EvaluatedData.Attribute == GetMaxManaAttribute())
+	{
+		SetMaxMana(FMath::Clamp(GetCurrentMana(), DefaultMaxMana, GetMaxMana()));
+	}
 }

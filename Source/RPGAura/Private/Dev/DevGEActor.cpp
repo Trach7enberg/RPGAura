@@ -52,6 +52,7 @@ void ADevGEActor::ApplyGEToTarget(AActor *Actor, TSubclassOf<UGameplayEffect> Ge
 			ActiveGeMap.Add(ActorAsc, {ActiveGeHandle});
 		}
 	}
+	
 }
 
 void ADevGEActor::OnOverLap(AActor *TargetActor)

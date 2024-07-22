@@ -27,7 +27,7 @@ void UBaseAbilitySystemComponent::OnGEAppliedToSelf(UAbilitySystemComponent *Abi
 	// 获取资产标签的容器
 	GameplayEffectSpec.GetAllAssetTags(AssetTags);
 
-	if (AssetTags.Num())
+	if (AssetTags.Num() > 0)
 	{
 		// 广播资产标签给UI的main控制器
 		OnGetAssetTagsDelegate.Broadcast(AssetTags);
