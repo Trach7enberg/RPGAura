@@ -36,18 +36,9 @@ struct FUIWidgetRow : public FTableRowBase
 
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthChangedSignature, float, NewHealth, bool,
-                                             /* Health增加还是减少,增加则为true */
-                                             BIsIncreased);
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMaxHealthChangedSignature, float, NewMaxHealth,
-                                             bool, /* MaxHealth增加还是减少,增加则为true */ BIsIncreased);
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnManaChangedSignature, float, NewMana, bool, /* Mana增加还是减少,增加则为true */
-                                             BIsIncreased);
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMaxManaChangedSignature, float, NewMaxMana,
-                                             bool, /* MaxMana增加还是减少,增加则为true */ BIsIncreased);
+/// 给属性变化时的委托
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAttributeChangedSignature, float, NewValue,
+                                             bool, /* NewValue增加还是减少,增加则为true */ BIsIncreased);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMessageWidgetRowSignature, const FUIWidgetRow, Row);
 
@@ -62,19 +53,19 @@ class RPGAURA_API UMainWidgetController : public UBaseWidgetController
 public:
 	/// 广播GAS中的生命值变化,bool为true时候表明生命在增加
 	UPROPERTY(BlueprintAssignable, Category="GAS | Attributes")
-	FOnHealthChangedSignature OnHealthChangedSignature;
+	FOnAttributeChangedSignature OnHealthChangedSignature;
 
 	/// 广播GAS中的最大生命值变化,bool为true时候表明最大生命在增加
 	UPROPERTY(BlueprintAssignable, Category="GAS | Attributes")
-	FOnMaxHealthChangedSignature OnMaxHealthChangedSignature;
+	FOnAttributeChangedSignature OnMaxHealthChangedSignature;
 
 	/// 广播GAS中的魔力值变化,bool为true时候表明魔力值在增加
 	UPROPERTY(BlueprintAssignable, Category="GAS | Attributes")
-	FOnManaChangedSignature OnManaChangedSignature;
+	FOnAttributeChangedSignature OnManaChangedSignature;
 
 	/// 广播GAS中的最大魔力值变化,bool为true时候表明最大魔力值在增加
 	UPROPERTY(BlueprintAssignable, Category="GAS | Attributes")
-	FOnMaxManaChangedSignature OnMaxManaChangedSignature;
+	FOnAttributeChangedSignature OnMaxManaChangedSignature;
 
 	/// 广播 数据表中的表行,表行的类型为FUIWidgetRow
 	UPROPERTY(BlueprintAssignable, Category="GAS | Messages")
@@ -95,23 +86,20 @@ protected:
 	/// @param AssetTags 
 	void OnGetAssetTags(const FGameplayTagContainer &AssetTags);
 
+	void HealthChanged(const FOnAttributeChangeData &Data) const;
+	void MaxHealthChanged(const FOnAttributeChangeData &Data) const;
+	void ManaChanged(const FOnAttributeChangeData &Data) const;
+	void MaxManaChanged(const FOnAttributeChangeData &Data) const;
+
 	/// 通过标签获得数据表中的表行
 	/// @tparam T 数据表的类型
 	/// @param DataTable 要查询的数据表
 	/// @param Tag 标签
 	/// @return T类型的数据表 
 	template <typename T>
-	T *GetDataTableRowByTag(UDataTable *DataTable, const FGameplayTag &Tag)
+	static T *GetDataTableRowByTag(UDataTable *DataTable, const FGameplayTag &Tag)
 	{
 		return DataTable->FindRow<T>(Tag.GetTagName(), TEXT(""));
 	}
 
-private:
-	void HealthChanged(const FOnAttributeChangeData &Data) const;
-
-	void MaxHealthChanged(const FOnAttributeChangeData &Data) const;
-
-	void ManaChanged(const FOnAttributeChangeData &Data) const;
-
-	void MaxManaChanged(const FOnAttributeChangeData &Data) const;
 };

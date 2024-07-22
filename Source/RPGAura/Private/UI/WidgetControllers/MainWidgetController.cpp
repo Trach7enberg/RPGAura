@@ -72,34 +72,29 @@ void UMainWidgetController::BindCallBack()
 		                            this, &UMainWidgetController::MaxManaChanged);
 
 
-	// 绑定委托
+	// 绑定委托 ,采用lambda
 	MyAsc->OnGetAssetTagsDelegate.AddUObject(this, &UMainWidgetController::OnGetAssetTags);
+
+
 }
 
 void UMainWidgetController::OnGetAssetTags(const FGameplayTagContainer &AssetTags)
 {
 	for (auto AssetTag : AssetTags)
 	{
-		
+
 		const auto MessageTag = FGameplayTag::RequestGameplayTag(FName("Message"));
 
 		// 如果当前获得的资产Tag不是Message开头的标签的话就跳过
-		if (!AssetTag.MatchesTag(MessageTag))
+		if (AssetTag.MatchesTag(MessageTag))
 		{
-			continue;
+			const auto Row = GetDataTableRowByTag<FUIWidgetRow>(MessageWidgetDataTable, AssetTag);
+			if (Row)
+			{
+				// 广播当前数据表中的表行
+				OnMessageWidgetRow.Broadcast(*Row);
+			}
 		}
-
-		const auto Row = GetDataTableRowByTag<FUIWidgetRow>(MessageWidgetDataTable, AssetTag);
-
-
-		if (!Row)
-		{
-			continue;
-		}
-
-		// 广播当前数据表中的表行
-		OnMessageWidgetRow.Broadcast(*Row);
-
 	}
 
 }
