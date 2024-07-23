@@ -41,6 +41,27 @@ void UBaseAttributeSet::OnRep_MaxMana(const FGameplayAttributeData &OldMaxMana) 
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, MaxMana, OldMaxMana);
 }
 
+void UBaseAttributeSet::OnRep_Strength(const FGameplayAttributeData &OldValue) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, Strength, OldValue);
+}
+
+void UBaseAttributeSet::OnRep_Intelligence(const FGameplayAttributeData &OldValue) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, Intelligence, OldValue);
+}
+
+void UBaseAttributeSet::OnRep_Resilience(const FGameplayAttributeData &OldValue) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, Resilience, OldValue);
+}
+
+void UBaseAttributeSet::OnRep_Vigor(const FGameplayAttributeData &OldValue) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, Vigor, OldValue);
+}
+
+
 void UBaseAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -52,20 +73,23 @@ void UBaseAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &Ou
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, MaxHealth, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, CurrentMana, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, MaxMana, COND_None, REPNOTIFY_Always);
+
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, Strength, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, Resilience, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, Intelligence, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, Vigor, COND_None, REPNOTIFY_Always);
 }
 
 void UBaseAttributeSet::PreAttributeChange(const FGameplayAttribute &Attribute, float &NewValue)
 {
 	Super::PreAttributeChange(Attribute, NewValue);
-	
-
 }
 
 void UBaseAttributeSet::PreAttributeBaseChange(const FGameplayAttribute &Attribute, float &NewValue) const
 {
 	Super::PreAttributeBaseChange(Attribute, NewValue);
 
-	
+
 	if (Attribute == GetCurrentHealthAttribute())
 	{
 		const auto temp = NewValue;
@@ -79,7 +103,7 @@ void UBaseAttributeSet::PreAttributeBaseChange(const FGameplayAttribute &Attribu
 	{
 		const auto temp = NewValue;
 		NewValue = FMath::Clamp(NewValue, 0.f, GetMaxMana());
-	
+
 		// UE_LOG(UBaseAttributeSetLog, Error, TEXT("Old:%.1f , Current :%.1f"), temp, GetCurrentMana());
 	}
 	else if (Attribute == GetMaxHealthAttribute())
@@ -91,6 +115,7 @@ void UBaseAttributeSet::PreAttributeBaseChange(const FGameplayAttribute &Attribu
 		NewValue = FMath::Clamp(NewValue, DefaultMaxMana, NewValue);
 	}
 }
+
 
 void UBaseAttributeSet::InitCurrentGeProp(const FGameplayEffectModCallbackData &Data, FEffectProp &EffectProp)
 {

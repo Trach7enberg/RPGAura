@@ -66,28 +66,80 @@ public:
 	/// @param OutLifetimeProps 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
 
-	// CurrentHealth属性
-	UPROPERTY(ReplicatedUsing = OnRep_CurrentHealth, BlueprintReadOnly, Category = "Hp")
+	/**
+	 *  Primary 属性
+	 */
+
+	UPROPERTY(ReplicatedUsing = OnRep_Strength, BlueprintReadOnly, Category = "Primary Attribute")
+	FGameplayAttributeData Strength;
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Strength);
+
+	UPROPERTY(ReplicatedUsing = OnRep_Intelligence, BlueprintReadOnly, Category = "Primary Attribute")
+	FGameplayAttributeData Intelligence;
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Intelligence);
+
+	UPROPERTY(ReplicatedUsing = OnRep_Resilience, BlueprintReadOnly, Category = "Primary Attribute")
+	FGameplayAttributeData Resilience;
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Resilience);
+
+	UPROPERTY(ReplicatedUsing = OnRep_Vigor, BlueprintReadOnly, Category = "Primary Attribute")
+	FGameplayAttributeData Vigor;
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, Vigor);
+
+	/**
+	 *  Primary 属性
+	 */
+
+	/**
+	 *  Vital 属性
+	 */
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentHealth, BlueprintReadOnly, Category = "Vital Attribute")
 	FGameplayAttributeData CurrentHealth;
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, CurrentHealth);
 
 
-	UPROPERTY(ReplicatedUsing = OnRep_MaxHealth, BlueprintReadOnly, Category = "Hp")
+	UPROPERTY(ReplicatedUsing = OnRep_MaxHealth, BlueprintReadOnly, Category = "Vital Attribute")
 	FGameplayAttributeData MaxHealth;
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxHealth);
 
-	UPROPERTY(ReplicatedUsing = OnRep_CurrentMana, BlueprintReadOnly, Category = "Mp")
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentMana, BlueprintReadOnly, Category = "Vital Attribute")
 	FGameplayAttributeData CurrentMana;
 
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, CurrentMana);
 
-	UPROPERTY(ReplicatedUsing = OnRep_MaxMana, BlueprintReadOnly, Category = "Mp")
+	UPROPERTY(ReplicatedUsing = OnRep_MaxMana, BlueprintReadOnly, Category = "Vital Attribute")
 	FGameplayAttributeData MaxMana;
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxMana);
+	/**
+	 *  Vital 属性
+	 */
 
-	/// CurrentHealth变量复制到客户端的时候,就会调用该函数
-	/// 该函数可以接受1个参数,但是必须也是FGameplayAttributeData类型的
-	/// 当有一个参数时,它将是旧值作为参数
+
+	/**
+	 *  Primary OnRep
+	 */
+	UFUNCTION()
+	void OnRep_Strength(const FGameplayAttributeData &OldValue) const;
+
+	UFUNCTION()
+	void OnRep_Intelligence(const FGameplayAttributeData &OldValue) const;
+
+	UFUNCTION()
+	void OnRep_Resilience(const FGameplayAttributeData &OldValue) const;
+
+	UFUNCTION()
+	void OnRep_Vigor(const FGameplayAttributeData &OldValue) const;
+
+	/**
+	 *  Primary OnRep
+	 */
+
+	/**
+	 *  Vital OnRep
+	 *  CurrentHealth变量复制到客户端的时候,就会调用该函数
+	 *  该函数可以接受1个参数,但是必须也是FGameplayAttributeData类型的
+	 *  当有一个参数时,它将是旧值作为参数
+	 */
 	UFUNCTION()
 	void OnRep_CurrentHealth(const FGameplayAttributeData &OldHealth) const;
 
@@ -100,6 +152,9 @@ public:
 	UFUNCTION()
 	void OnRep_MaxMana(const FGameplayAttributeData &OldMaxMana) const;
 
+	/**
+	 *  Vital OnRep
+	 */
 
 	/// 初始化FEffectProp
 	void InitCurrentGeProp(const FGameplayEffectModCallbackData &Data, FEffectProp &EffectProp);
