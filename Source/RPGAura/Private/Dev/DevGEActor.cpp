@@ -36,7 +36,8 @@ void ADevGEActor::ApplyGEToTarget(AActor *Actor, TSubclassOf<UGameplayEffect> Ge
 
 	// 从ASC 创建的上下文包装变量 获取 GE Spec handle
 	const FGameplayEffectSpecHandle GeSpec = ActorAsc->MakeOutgoingSpec(GeClass, ActorLevel, EffectContextHandle);
-
+	
+	
 	const FActiveGameplayEffectHandle ActiveGeHandle = ActorAsc->ApplyGameplayEffectSpecToSelf(*GeSpec.Data.Get());
 
 	const auto BIsActive = GeSpec.Data.Get()->Def.Get()->DurationPolicy == EGameplayEffectDurationType::Infinite;

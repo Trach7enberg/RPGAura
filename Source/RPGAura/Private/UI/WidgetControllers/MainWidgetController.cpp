@@ -72,9 +72,9 @@ void UMainWidgetController::BindCallBack()
 		                            this, &UMainWidgetController::MaxManaChanged);
 
 
-	// 绑定委托 ,采用lambda
+	// 绑定委托
 	MyAsc->OnGetAssetTagsDelegate.AddUObject(this, &UMainWidgetController::OnGetAssetTags);
-
+	
 
 }
 

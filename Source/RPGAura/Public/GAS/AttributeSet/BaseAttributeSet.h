@@ -105,7 +105,7 @@ public:
 	void InitCurrentGeProp(const FGameplayEffectModCallbackData &Data, FEffectProp &EffectProp);
 
 	virtual void PreAttributeChange(const FGameplayAttribute &Attribute, float &NewValue) override;
-
+	virtual void PreAttributeBaseChange(const FGameplayAttribute &Attribute, float &NewValue) const override;
 	/// 这个函数在游戏效果改变一个属性之后被执行
 	/// @param Data 
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData &Data) override;
