@@ -3,10 +3,13 @@
 
 #include "Characters/CharacterBase.h"
 
+#include "AbilitySystemComponent.h"
+#include "GameplayEffect.h"
 #include "Components/WeaponLogicBaseComponent.h"
 #include "Interfaces/HighLightInterface.h"
 
-// Sets default values
+DEFINE_LOG_CATEGORY_STATIC(ACharacterBaseLog,All,All);
+
 ACharacterBase::ACharacterBase()
 {
 	PrimaryActorTick.bCanEverTick = false;
@@ -19,6 +22,19 @@ ACharacterBase::ACharacterBase()
 
 
 void ACharacterBase::BeginPlay() { Super::BeginPlay(); }
+
+void ACharacterBase::InitPrimaryAttributes() const
+{
+	if (!GetAbilitySystemComponent() || !DefaultPrimaryAttributesGameplayEffect)
+	{
+		UE_LOG(ACharacterBaseLog, Error, TEXT("无法初始化主要属性，因为没有能力组件或者相应的GE为nullptr!"));
+		return;
+	}
+
+	const auto GEContext = GetAbilitySystemComponent()->MakeEffectContext();
+	const auto GESpec = GetAbilitySystemComponent()->MakeOutgoingSpec(DefaultPrimaryAttributesGameplayEffect, 1, GEContext);
+	GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*GESpec.Data.Get(), GetAbilitySystemComponent());
+}
 
 bool ACharacterBase::CanHighLight()
 {

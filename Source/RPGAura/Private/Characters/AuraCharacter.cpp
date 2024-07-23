@@ -104,6 +104,7 @@ void AAuraCharacter::PossessedBy(AController *NewController)
 	InitAbilityActorInfo();
 
 	InitHUD();
+	InitPrimaryAttributes();
 
 }
 
@@ -112,8 +113,7 @@ void AAuraCharacter::OnRep_PlayerState()
 	Super::OnRep_PlayerState();
 	// 为客户端初始化能力角色信息
 	InitAbilityActorInfo();
-
 	InitHUD();
-
-
+	InitPrimaryAttributes();
 }
+

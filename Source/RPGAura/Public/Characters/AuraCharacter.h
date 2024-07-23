@@ -6,6 +6,7 @@
 #include "Characters/CharacterBase.h"
 #include "AuraCharacter.generated.h"
 
+class UGameplayEffect;
 class USpringArmComponent;
 class UCameraComponent;
 /**
@@ -30,6 +31,7 @@ public:
 
 	/// 初始化HUD的主要widget
 	void InitHUD() const;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -39,8 +41,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Camera")
 	USpringArmComponent *SpringArmComponent;
+
 	
+
 	/// 初始化当前ACS的能力组件、属性集和ACS的AbilityActorInfo
 	virtual void InitAbilityActorInfo() override;
+
+	
 
 };

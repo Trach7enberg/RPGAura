@@ -13,21 +13,26 @@ class UAbilitySystemComponent;
  *  基本玩家类
  */
 UCLASS()
-class RPGAURA_API ABasePlayerState : public APlayerState ,public IAbilitySystemInterface
+class RPGAURA_API ABasePlayerState : public APlayerState, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
+
 public:
 	ABasePlayerState();
 
 	virtual UAbilitySystemComponent *GetAbilitySystemComponent() const override;
 
 	// ~ IAbilitySystemInterface Begin
-	virtual UAttributeSet *GetAttributeSet() const { return AttributeSet; }
+	virtual UAttributeSet *GetAttributeSet() const
+	{
+		return AttributeSet;
+	}
+
 	// ~ IAbilitySystemInterface End
-	
+
 protected:
 	/// GAS的能力组件
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AbilitySystem")
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 
 	/// GAS的属性集
