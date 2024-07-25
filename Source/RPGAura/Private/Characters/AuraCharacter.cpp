@@ -119,7 +119,7 @@ void AAuraCharacter::PossessedBy(AController *NewController)
 
 	InitAttributes(DefaultPrimaryAttributesGameplayEffect);
 	InitAttributes(DefaultSecondaryPrimaryAttributesGameplayEffect);
-
+	InitAttributes(DefaultVitalAttributesGameplayEffect);
 }
 
 void AAuraCharacter::OnRep_PlayerState()
@@ -131,4 +131,5 @@ void AAuraCharacter::OnRep_PlayerState()
 
 	InitAttributes(DefaultPrimaryAttributesGameplayEffect);
 	InitAttributes(DefaultSecondaryPrimaryAttributesGameplayEffect);
+	InitAttributes(DefaultVitalAttributesGameplayEffect);
 }

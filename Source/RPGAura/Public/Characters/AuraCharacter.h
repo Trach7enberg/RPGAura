@@ -47,6 +47,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Camera")
 	USpringArmComponent *SpringArmComponent;
 
+	// 用于初始化角色重要(Vital)属性的GE类,在SecondPrimary属性初始化后执行
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="GAS | Attributes")
+	TSubclassOf<UGameplayEffect> DefaultVitalAttributesGameplayEffect = nullptr;
 	
 
 	/// 初始化当前ACS的能力组件、属性集和ACS的AbilityActorInfo
