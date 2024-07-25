@@ -64,7 +64,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="GAS | Attributes")
 	TSubclassOf<UGameplayEffect> DefaultPrimaryAttributesGameplayEffect = nullptr;
 
-	// 用于初始化角色次要属性的GE类,在主属性初始化后执行
+	// 用于初始化角色次要属性的GE类,在主属性初始化后执行,该GE为infinite
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="GAS | Attributes")
 	TSubclassOf<UGameplayEffect> DefaultSecondaryPrimaryAttributesGameplayEffect = nullptr;
 

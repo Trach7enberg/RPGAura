@@ -12,9 +12,6 @@ DEFINE_LOG_CATEGORY_STATIC(UBaseAttributeSetLog, All, All);
 
 UBaseAttributeSet::UBaseAttributeSet()
 {
-	InitCurrentHealth(DefaultCurrentHealth);
-	InitCurrentMana(DefaultCurrentMana / 2.f);
-
 
 }
 

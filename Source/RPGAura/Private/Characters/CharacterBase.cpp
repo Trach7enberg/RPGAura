@@ -39,7 +39,8 @@ void ACharacterBase::InitAttributes(const TSubclassOf<UGameplayEffect> Attribute
 		return;
 	}
 
-	const auto GEContext = GetAbilitySystemComponent()->MakeEffectContext();
+	auto GEContext = GetAbilitySystemComponent()->MakeEffectContext();
+	GEContext.AddSourceObject(this);
 	const auto GESpec = GetAbilitySystemComponent()->MakeOutgoingSpec(AttributesGameplayEffect, Level, GEContext);
 	GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*GESpec.Data.Get(), GetAbilitySystemComponent());
 }

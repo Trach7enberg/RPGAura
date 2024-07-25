@@ -211,8 +211,6 @@ public:
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData &Data) override;
 
 private:
-	float DefaultCurrentMana = 50.f;
-	float DefaultCurrentHealth = 50.f;
 	/// 用于存前某个GE影响当前角色属性集的相关上下文数据
 	FEffectProp EffectProperties{};
 };
