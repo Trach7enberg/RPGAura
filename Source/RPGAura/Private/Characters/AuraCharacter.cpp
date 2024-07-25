@@ -97,6 +97,18 @@ void AAuraCharacter::InitHUD() const
 	Hud->InitHudMainWidget();
 }
 
+int32 AAuraCharacter::GetCharacterLevel()
+{
+	const auto MyPlayerState = GetPlayerState<ABasePlayerState>();
+	if (!MyPlayerState)
+	{
+		UE_LOG(AAuraCharacterLog, Error, TEXT("%s:PlayerState Cant be null"), *GetName());
+		return 0;
+	}
+
+	return MyPlayerState->GetPlayerLevel();
+}
+
 void AAuraCharacter::PossessedBy(AController *NewController)
 {
 	Super::PossessedBy(NewController);
@@ -104,7 +116,9 @@ void AAuraCharacter::PossessedBy(AController *NewController)
 	InitAbilityActorInfo();
 
 	InitHUD();
-	InitPrimaryAttributes();
+
+	InitAttributes(DefaultPrimaryAttributesGameplayEffect);
+	InitAttributes(DefaultSecondaryPrimaryAttributesGameplayEffect);
 
 }
 
@@ -114,6 +128,7 @@ void AAuraCharacter::OnRep_PlayerState()
 	// 为客户端初始化能力角色信息
 	InitAbilityActorInfo();
 	InitHUD();
-	InitPrimaryAttributes();
-}
 
+	InitAttributes(DefaultPrimaryAttributesGameplayEffect);
+	InitAttributes(DefaultSecondaryPrimaryAttributesGameplayEffect);
+}

@@ -8,7 +8,7 @@
 #include "Components/WeaponLogicBaseComponent.h"
 #include "Interfaces/HighLightInterface.h"
 
-DEFINE_LOG_CATEGORY_STATIC(ACharacterBaseLog,All,All);
+DEFINE_LOG_CATEGORY_STATIC(ACharacterBaseLog, All, All);
 
 ACharacterBase::ACharacterBase()
 {
@@ -17,24 +17,33 @@ ACharacterBase::ACharacterBase()
 	WeaponLogicBaseComponent = CreateDefaultSubobject<UWeaponLogicBaseComponent>("WeaponLogicComponent");
 
 
-	if (GetMesh()) { GetMesh()->SetRelativeRotation(FRotator(0, -90, 0)); }
+	if (GetMesh())
+	{
+		GetMesh()->SetRelativeRotation(FRotator(0, -90, 0));
+	}
 }
 
 
-void ACharacterBase::BeginPlay() { Super::BeginPlay(); }
-
-void ACharacterBase::InitPrimaryAttributes() const
+void ACharacterBase::BeginPlay()
 {
-	if (!GetAbilitySystemComponent() || !DefaultPrimaryAttributesGameplayEffect)
+	Super::BeginPlay();
+}
+
+
+void ACharacterBase::InitAttributes(const TSubclassOf<UGameplayEffect> AttributesGameplayEffect,
+                                    const float Level) const
+{
+	if (!GetAbilitySystemComponent() || !AttributesGameplayEffect)
 	{
-		UE_LOG(ACharacterBaseLog, Error, TEXT("无法初始化主要属性，因为没有能力组件或者相应的GE为nullptr!"));
+		UE_LOG(ACharacterBaseLog, Error, TEXT("无法初始化属性，因为没有能力组件或者相应的GE为nullptr!"));
 		return;
 	}
 
 	const auto GEContext = GetAbilitySystemComponent()->MakeEffectContext();
-	const auto GESpec = GetAbilitySystemComponent()->MakeOutgoingSpec(DefaultPrimaryAttributesGameplayEffect, 1, GEContext);
+	const auto GESpec = GetAbilitySystemComponent()->MakeOutgoingSpec(AttributesGameplayEffect, Level, GEContext);
 	GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*GESpec.Data.Get(), GetAbilitySystemComponent());
 }
+
 
 bool ACharacterBase::CanHighLight()
 {
@@ -49,14 +58,23 @@ void ACharacterBase::InitAbilityActorInfo()
 
 void ACharacterBase::HighLight()
 {
-	if (!CanHighLight()) { return; }
+	if (!CanHighLight())
+	{
+		return;
+	}
 	Cast<IHighLightInterface>(this)->HighLightActor();
 }
 
 void ACharacterBase::UnHighLight()
 {
-	if (!CanHighLight()) { return; }
+	if (!CanHighLight())
+	{
+		return;
+	}
 	Cast<IHighLightInterface>(this)->UnHighLightActor();
 }
 
-UAbilitySystemComponent *ACharacterBase::GetAbilitySystemComponent() const { return AbilitySystemComponent; }
+UAbilitySystemComponent *ACharacterBase::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}

@@ -8,6 +8,7 @@
 #include "CoreMinimal.h"
 #include "AbilitySystemInterface.h"
 #include "GameFramework/Character.h"
+#include "Interfaces/CombatInterface.h"
 #include "CharacterBase.generated.h"
 
 class UGameplayEffect;
@@ -17,7 +18,7 @@ class UWeaponLogicBaseComponent;
 
 
 UCLASS(Abstract)
-class RPGAURA_API ACharacterBase : public ACharacter, public IAbilitySystemInterface
+class RPGAURA_API ACharacterBase : public ACharacter, public IAbilitySystemInterface, public ICombatInterface
 {
 	GENERATED_BODY()
 
@@ -32,10 +33,18 @@ public:
 
 	virtual UAbilitySystemComponent *GetAbilitySystemComponent() const override;
 
+	// ~ IAbilitySystemInterface
 	virtual UAttributeSet *GetAttributeSet() const
 	{
 		return AttributeSet;
 	}
+
+	// ~ ICombatInterface
+	virtual int32 GetCharacterLevel() override
+	{
+		return 0;
+	};
+	// ~ ICombatInterface
 
 protected:
 	virtual void BeginPlay() override;
@@ -51,11 +60,18 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UAttributeSet> AttributeSet;
 
+	// 用于初始化角色主要属性的GE类
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="GAS | Attributes")
 	TSubclassOf<UGameplayEffect> DefaultPrimaryAttributesGameplayEffect = nullptr;
 
-	/// 接受一个GE用来初始化角色身上的主要属性
-	void InitPrimaryAttributes() const;
+	// 用于初始化角色次要属性的GE类,在主属性初始化后执行
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="GAS | Attributes")
+	TSubclassOf<UGameplayEffect> DefaultSecondaryPrimaryAttributesGameplayEffect = nullptr;
+
+	/// 接受一个GE用来初始化角色身上的属性,次要属性必须得在主要属性初始化之后
+	/// @param AttributesGameplayEffect GE类
+	/// @param Level 应用GE的等级
+	virtual void InitAttributes(TSubclassOf<UGameplayEffect> AttributesGameplayEffect, float Level = 1.f) const;
 
 	/// 当前角色能否被高亮
 	/// @return 能高亮则返回true

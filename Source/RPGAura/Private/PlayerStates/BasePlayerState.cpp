@@ -5,6 +5,7 @@
 
 #include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
 #include "GAS/AttributeSet/BaseAttributeSet.h"
+#include "Net/UnrealNetwork.h"
 
 ABasePlayerState::ABasePlayerState()
 {
@@ -20,3 +21,13 @@ ABasePlayerState::ABasePlayerState()
 }
 
 UAbilitySystemComponent *ABasePlayerState::GetAbilitySystemComponent() const { return AbilitySystemComponent; }
+
+void ABasePlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ABasePlayerState, PlayerLevel);
+}
+
+void ABasePlayerState::OnRep_PlayerLevel(int32 OldValue)
+{
+}

@@ -52,7 +52,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Dev GE")
 	float ActorLevel = 1.f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Dev GE")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Dev GE")
 	TSubclassOf<UGameplayEffect> CurrentGameplayEffectClass = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Dev GE")

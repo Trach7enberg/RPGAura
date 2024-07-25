@@ -13,8 +13,6 @@ DEFINE_LOG_CATEGORY_STATIC(UBaseAttributeSetLog, All, All);
 UBaseAttributeSet::UBaseAttributeSet()
 {
 	InitCurrentHealth(DefaultCurrentHealth);
-	InitMaxHealth(DefaultMaxHealth);
-	InitMaxMana(DefaultMaxMana);
 	InitCurrentMana(DefaultCurrentMana / 2.f);
 
 
@@ -61,6 +59,46 @@ void UBaseAttributeSet::OnRep_Vigor(const FGameplayAttributeData &OldValue) cons
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, Vigor, OldValue);
 }
 
+void UBaseAttributeSet::OnRep_Armor(const FGameplayAttributeData &OldValue) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, Armor, OldValue);
+}
+
+void UBaseAttributeSet::OnRep_ArmorPenetration(const FGameplayAttributeData &OldValue) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, ArmorPenetration, OldValue);
+}
+
+void UBaseAttributeSet::OnRep_BlockChance(const FGameplayAttributeData &OldValue) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, BlockChance, OldValue);
+}
+
+void UBaseAttributeSet::OnRep_CriticalHitChance(const FGameplayAttributeData &OldValue) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, CriticalHitChance, OldValue);
+}
+
+void UBaseAttributeSet::OnRep_CriticalHitResistance(const FGameplayAttributeData &OldValue) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, CriticalHitResistance, OldValue);
+}
+
+void UBaseAttributeSet::OnRep_CriticalHitDamage(const FGameplayAttributeData &OldValue) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, CriticalHitDamage, OldValue);
+}
+
+void UBaseAttributeSet::OnRep_HealthRegeneration(const FGameplayAttributeData &OldValue) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, HealthRegeneration, OldValue);
+}
+
+void UBaseAttributeSet::OnRep_ManaRegeneration(const FGameplayAttributeData &OldValue) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, ManaRegeneration, OldValue);
+}
+
 
 void UBaseAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
 {
@@ -70,14 +108,27 @@ void UBaseAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &Ou
 	// 复制条件 COND_None ,也就是没有条件的复制
 	// REPNOTIFY_Always 意味着如果在服务器上设置了值,就复制给客户端,那个值将被更新和设置,这里的值就是我们的CurrentHealth
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, CurrentHealth, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, MaxHealth, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, CurrentMana, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, MaxMana, COND_None, REPNOTIFY_Always);
+	
+	
 
+	// 主要属性
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, Strength, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, Resilience, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, Intelligence, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, Vigor, COND_None, REPNOTIFY_Always);
+
+	// 次要属性
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, Armor, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, ArmorPenetration, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, BlockChance, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, CriticalHitChance, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, CriticalHitDamage, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, CriticalHitResistance, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, HealthRegeneration, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, ManaRegeneration, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, MaxHealth, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, MaxMana, COND_None, REPNOTIFY_Always);
 }
 
 void UBaseAttributeSet::PreAttributeChange(const FGameplayAttribute &Attribute, float &NewValue)
@@ -106,14 +157,14 @@ void UBaseAttributeSet::PreAttributeBaseChange(const FGameplayAttribute &Attribu
 
 		// UE_LOG(UBaseAttributeSetLog, Error, TEXT("Old:%.1f , Current :%.1f"), temp, GetCurrentMana());
 	}
-	else if (Attribute == GetMaxHealthAttribute())
-	{
-		NewValue = FMath::Clamp(NewValue, DefaultMaxHealth, NewValue);
-	}
-	else if (Attribute == GetMaxManaAttribute())
-	{
-		NewValue = FMath::Clamp(NewValue, DefaultMaxMana, NewValue);
-	}
+	// else if (Attribute == GetMaxHealthAttribute())
+	// {
+	// 	NewValue = FMath::Clamp(NewValue, DefaultMaxHealth, NewValue);
+	// }
+	// else if (Attribute == GetMaxManaAttribute())
+	// {
+	// 	NewValue = FMath::Clamp(NewValue, DefaultMaxMana, NewValue);
+	// }
 }
 
 

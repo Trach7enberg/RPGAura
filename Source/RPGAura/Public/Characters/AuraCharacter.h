@@ -9,6 +9,7 @@
 class UGameplayEffect;
 class USpringArmComponent;
 class UCameraComponent;
+
 /**
  * Aura人物类
  */
@@ -31,6 +32,10 @@ public:
 
 	/// 初始化HUD的主要widget
 	void InitHUD() const;
+
+	// ~ ICombatInterface
+	virtual int32 GetCharacterLevel() override;
+	// ~ ICombatInterface
 
 protected:
 	virtual void BeginPlay() override;
