@@ -3,55 +3,17 @@
 
 #include "UI/HUD/BaseHUD.h"
 
-#include "PlayerStates/BasePlayerState.h"
+#include "FunctionLibrary/WidgetControllerBpFuncLib.h"
 #include "UI/Widgets/BaseUserWidget.h"
 #include "UI/WidgetControllers/MainWidgetController.h"
 
 DEFINE_LOG_CATEGORY_STATIC(ABaseHUDLog, All, All);
 
-void ABaseHUD::BeginPlay() { Super::BeginPlay(); }
-
-void ABaseHUD::CreateWidgetControllerParams(FWidgetControllerParams &Params) const
+void ABaseHUD::BeginPlay()
 {
-	if (!GetOwningPlayerController()) { return; }
-
-	const auto MyPlayerState = GetOwningPlayerController()->GetPlayerState<ABasePlayerState>();
-	if (!MyPlayerState) { return; }
-
-	if (!MyPlayerState->GetAbilitySystemComponent() || !MyPlayerState->GetAttributeSet()) { return; }
-
-	Params = {GetOwningPlayerController(), MyPlayerState,
-	          MyPlayerState->GetAbilitySystemComponent(),
-	          MyPlayerState->GetAttributeSet()};
-
+	Super::BeginPlay();
 }
 
-UMainWidgetController *ABaseHUD::CreateMainWidgetController()
-{
-
-	if (!MainWidgetControllerClass) { return nullptr; }
-
-	auto MWidgetController = Cast<UMainWidgetController>(CurrentMainWidget->GetWidgetController());
-	if (!MWidgetController)
-	{
-		auto Params = FWidgetControllerParams();
-		CreateWidgetControllerParams(Params);
-
-
-		MWidgetController = NewObject<UMainWidgetController>(this, MainWidgetControllerClass);
-		MWidgetController->SetWidgetControllerParams(Params);
-		if (!MWidgetController->IsWidgetControllerParamsValid())
-		{
-			UE_LOG(ABaseHUDLog, Error, TEXT("WidgetControllerParams 不能为 null"));
-		}
-		MWidgetController->BindCallBack();
-
-		if (!MWidgetController) { UE_LOG(ABaseHUDLog, Error, TEXT("MainWidgetController 不能为 null")); }
-	}
-
-
-	return MWidgetController;
-}
 
 UMainWidgetController *ABaseHUD::GetMainWidgetController() const
 {
@@ -59,7 +21,7 @@ UMainWidgetController *ABaseHUD::GetMainWidgetController() const
 	const auto Result = Cast<UMainWidgetController>(CurrentMainWidget->GetWidgetController());
 	if (!Result)
 	{
-		UE_LOG(ABaseHUDLog, Error, TEXT("创建 MainWidgetController 失败!"));
+		UE_LOG(ABaseHUDLog, Error, TEXT("获取 MainWidgetController 失败!"));
 		return nullptr;
 	}
 
@@ -68,19 +30,36 @@ UMainWidgetController *ABaseHUD::GetMainWidgetController() const
 
 void ABaseHUD::InitHudMainWidget()
 {
-	if (!GetOwningPlayerController() || !MainWidgetClass) { return; }
+	if (!GetOwningPlayerController() || !MainWidgetClass)
+	{
+		return;
+	}
 
-	if (CurrentMainWidget) { return; }
+	if (CurrentMainWidget)
+	{
+		return;
+	}
 
 	CurrentMainWidget = Cast<UBaseUserWidget>(CreateWidget<UUserWidget>(GetOwningPlayerController(), MainWidgetClass));
-	if (!CurrentMainWidget) { return; }
+	if (!CurrentMainWidget)
+	{
+		return;
+	}
 
-	CurrentMainWidget->SetWidgetController(CreateMainWidgetController());
+	// 给当前主Widget设置控制器
+	CurrentMainWidget->SetWidgetController(
+		UWidgetControllerBpFuncLib::CreateWidgetController(MainWidgetControllerClass, GetOwningPlayerController()));
 
-	if (!CurrentMainWidget->GetWidgetController()) { return; }
+	if (!CurrentMainWidget->GetWidgetController())
+	{
+		UE_LOG(ABaseHUDLog, Error, TEXT("创建 MainWidgetController 失败!"));
+		return;
+	}
 
 
 	CurrentMainWidget->GetWidgetController()->BroadcastInitialValues();
+
+	// TODO 把蓝图中设置的属性菜单换到这里统一创建属性菜单,并且设置属性菜单的控制器、BroadcastInitialValues();
 
 	CurrentMainWidget->AddToViewport();
 }
