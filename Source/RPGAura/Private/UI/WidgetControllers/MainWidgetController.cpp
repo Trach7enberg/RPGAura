@@ -83,6 +83,7 @@ void UMainWidgetController::OnGetAssetTags(const FGameplayTagContainer &AssetTag
 	for (auto AssetTag : AssetTags)
 	{
 
+		
 		const auto MessageTag = FGameplayTag::RequestGameplayTag(FName("Message"));
 
 		// 如果当前获得的资产Tag不是Message开头的标签的话就跳过
