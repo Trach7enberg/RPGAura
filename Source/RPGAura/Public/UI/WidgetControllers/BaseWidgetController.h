@@ -3,45 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CoreTypes/RPGAuraCoreTypes.h"
 #include "BaseWidgetController.generated.h"
 
 
 class UAttributeSet;
 class UAbilitySystemComponent;
 
-/**
- *  Widget控制器需要的基本参数的结构体
- */
-USTRUCT(BlueprintType)
-struct FWidgetControllerParams
-{
-	GENERATED_BODY()
-
-	FWidgetControllerParams()
-	{
-	}
-
-	FWidgetControllerParams(APlayerController *Pc,
-	                        APlayerState *Ps,
-	                        UAbilitySystemComponent *Asc,
-	                        UAttributeSet *As) :
-		CurrentPlayerController(Pc), CurrentPlayerState(Ps),
-		CurrentAbilitySystemComponent(Asc), CurrentAttributeSet(As)
-	{
-	}
-
-	UPROPERTY(BlueprintReadOnly, Category="WidgetController")
-	TObjectPtr<APlayerController> CurrentPlayerController = nullptr;
-
-	UPROPERTY(BlueprintReadOnly, Category="WidgetController")
-	TObjectPtr<APlayerState> CurrentPlayerState = nullptr;
-
-	UPROPERTY(BlueprintReadOnly, Category="WidgetController")
-	TObjectPtr<UAbilitySystemComponent> CurrentAbilitySystemComponent = nullptr;
-
-	UPROPERTY(BlueprintReadOnly, Category="WidgetController")
-	TObjectPtr<UAttributeSet> CurrentAttributeSet = nullptr;
-};
 
 /**
  *  基础UI控制器,用来获得数据以传递给显示的UI
@@ -72,7 +40,8 @@ public:
 	/// @return 有效则为true
 	bool IsWidgetControllerParamsValid() const;
 
-	/// 绑定一系列的回调函数
+	/// 绑定一系列的回调函数,用于当前控制器的Owner的GAS中的属性值更改时绑定的回调函数
+	/// 一般在创建控制器(UWidgetControllerBpFuncLib::CreateWidgetController)中自动调用
 	virtual void BindCallBack();
 
 private:
