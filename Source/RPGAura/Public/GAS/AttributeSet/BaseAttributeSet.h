@@ -62,6 +62,7 @@ class RPGAURA_API UBaseAttributeSet : public UAttributeSet
 public:
 	UBaseAttributeSet();
 
+
 	/// 设置 当前类 中的属性在网络中如何进行复制
 	/// @param OutLifetimeProps 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
@@ -134,7 +135,6 @@ public:
 
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentMana, BlueprintReadOnly, Category = "Vital Attribute")
 	FGameplayAttributeData CurrentMana;
-
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, CurrentMana);
 	// Vital 属性
 
@@ -184,7 +184,7 @@ public:
 	UFUNCTION()
 	void OnRep_MaxMana(const FGameplayAttributeData &OldMaxMana) const;
 	// Second Primary OnRep
-	
+
 	/**
 	 *  Vital OnRep
 	 *  CurrentHealth变量复制到客户端的时候,就会调用该函数
@@ -209,6 +209,7 @@ public:
 	/// 这个函数在游戏效果改变一个属性之后被执行
 	/// @param Data 
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData &Data) override;
+
 
 private:
 	/// 用于存前某个GE影响当前角色属性集的相关上下文数据
