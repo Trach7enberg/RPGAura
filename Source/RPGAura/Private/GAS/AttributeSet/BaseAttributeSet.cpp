@@ -12,7 +12,7 @@ DEFINE_LOG_CATEGORY_STATIC(UBaseAttributeSetLog, All, All);
 
 UBaseAttributeSet::UBaseAttributeSet()
 {
-
+	
 }
 
 void UBaseAttributeSet::OnRep_CurrentHealth(const FGameplayAttributeData &OldHealth) const
