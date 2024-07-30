@@ -115,11 +115,12 @@ void AAuraCharacter::PossessedBy(AController *NewController)
 	// 为服务器初始化能力角色信息
 	InitAbilityActorInfo();
 
-	InitHUD();
+	
 
 	InitAttributes(DefaultPrimaryAttributesGameplayEffect);
 	InitAttributes(DefaultSecondaryPrimaryAttributesGameplayEffect);
 	InitAttributes(DefaultVitalAttributesGameplayEffect);
+	InitHUD();
 }
 
 void AAuraCharacter::OnRep_PlayerState()
@@ -127,9 +128,9 @@ void AAuraCharacter::OnRep_PlayerState()
 	Super::OnRep_PlayerState();
 	// 为客户端初始化能力角色信息
 	InitAbilityActorInfo();
-	InitHUD();
 
 	InitAttributes(DefaultPrimaryAttributesGameplayEffect);
 	InitAttributes(DefaultSecondaryPrimaryAttributesGameplayEffect);
 	InitAttributes(DefaultVitalAttributesGameplayEffect);
+	InitHUD();
 }
