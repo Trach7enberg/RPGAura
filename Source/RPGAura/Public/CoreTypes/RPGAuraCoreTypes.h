@@ -110,3 +110,5 @@ enum class EGameplayTagType:uint8
 	PrimaryGameplayTags UMETA(DisplayName = "主要标签(Primary)"),
 	SecondaryGameplayTags UMETA(DisplayName = "次要标签(Secondary)")
 };
+
+/// --- BaseA

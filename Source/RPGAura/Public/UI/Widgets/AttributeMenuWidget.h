@@ -20,7 +20,7 @@ public:
     /// 初始化垂直框区域,注意需要在控制器设置之后运行
     UFUNCTION(BlueprintCallable)
     void InitVerticalArea();
-
+    
     /// 根据BaseUserWidget有的GT查找当前AttriMenu的Widget
     /// 每一个显示属性的Widget都不重复,因此找到的Widget是唯一的,不会有多个
     /// @param GameplayTagType 标签类型(重要、主要、次要)
@@ -64,6 +64,8 @@ protected:
     /// 保存属性面板中所有通过CreateVerticalAreaWidgets函数创建的widget指针(该数组包括Vital、Primary、Secondary等widget数组所拥有的内容)
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="AttriMenu|VerticalAreaElement")
     TArray<UBaseUserWidget*> AllAttriAreaWidgetArray{};
+    
+    virtual void NativeConstruct() override;
 
 private:
     UPROPERTY()

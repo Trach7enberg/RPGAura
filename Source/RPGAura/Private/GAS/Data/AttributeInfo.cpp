@@ -7,8 +7,7 @@
 
 DEFINE_LOG_CATEGORY_STATIC(UAttributeInfoLog, All, All);
 
-FRPGAuraAttributeInfo *UAttributeInfo::GetAttributeInfoByTag(const FGameplayTag &AttributeTag,
-                                                             const bool BLogNotFound)
+FRPGAuraAttributeInfo *UAttributeInfo::FindAttributeInfoByTag(const FGameplayTag &AttributeTag)
 {
 
 	for (auto &AttributeInfo : RPGAuraAttributeInfos)
@@ -20,20 +19,17 @@ FRPGAuraAttributeInfo *UAttributeInfo::GetAttributeInfoByTag(const FGameplayTag 
 		}
 	}
 
-	if (BLogNotFound)
-	{
-		UE_LOG(UAttributeInfoLog, Warning, TEXT("找不到 [%s] 对应的属性信息"), *AttributeTag.ToString());
-	}
+    UE_LOG(UAttributeInfoLog, Warning, TEXT("找不到 [%s] 对应的属性信息"), *AttributeTag.ToString());
 	return nullptr;
 }
 
-FRPGAuraAttributeInfo *UAttributeInfo::GetAttributeInfoByAttributeName(const FString &AttributeName, bool BLogNotFound)
+FRPGAuraAttributeInfo *UAttributeInfo::FindAttributeInfoByAttributeName(const FString &AttributeName)
 {
-	const auto Tag = FRPGAuraGameplayTags::GetGameplayTagByAttributeName(AttributeName);
+	const auto Tag = FRPGAuraGameplayTags::FindGameplayTagByAttributeName(AttributeName);
 	if (!Tag)
 	{
 		UE_LOG(UAttributeInfoLog, Warning, TEXT("找不到对应属性的GT"));
 		return nullptr;
 	}
-	return GetAttributeInfoByTag(*Tag);
+	return FindAttributeInfoByTag(*Tag);
 }

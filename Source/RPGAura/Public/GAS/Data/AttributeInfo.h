@@ -20,15 +20,13 @@ class RPGAURA_API UAttributeInfo : public UDataAsset
 public:
 	/// 通过GT返回对应的属性信息
 	/// @param AttributeTag 属性标签
-	/// @param BLogNotFound 没找到时是否打印日志
 	/// @return 属性信息结构体,没找到则为nullptr
-	FRPGAuraAttributeInfo* GetAttributeInfoByTag(const FGameplayTag &AttributeTag, bool BLogNotFound = true) ;
+	FRPGAuraAttributeInfo* FindAttributeInfoByTag(const FGameplayTag &AttributeTag) ;
 
 	/// 通过属性集的相应属性名字返回对应的属性信息
 	/// @param AttributeName 属性名字
-	/// @param BLogNotFound 没找到时是否打印日志
 	/// @return 属性信息结构体,没找到则为nullptr
-	FRPGAuraAttributeInfo* GetAttributeInfoByAttributeName(const FString &AttributeName, bool BLogNotFound = true) ;
+	FRPGAuraAttributeInfo* FindAttributeInfoByAttributeName(const FString &AttributeName) ;
 	
 	
 	

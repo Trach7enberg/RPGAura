@@ -7,7 +7,8 @@
 #include "BaseAbilitySystemComponent.generated.h"
 
 // 在GAS当中GE应用到玩家身上,并且获取资产标签时的委托
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnGetAssetTagsDelegate,const FGameplayTagContainer& /* AssetTags */);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnGetAssetTagsDelegate, const FGameplayTagContainer& /* AssetTags */);
+
 
 /**
  * ASC
@@ -15,22 +16,25 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnGetAssetTagsDelegate,const FGameplayTagCo
 UCLASS()
 class RPGAURA_API UBaseAbilitySystemComponent : public UAbilitySystemComponent
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	virtual void BeginPlay() override;
+    UBaseAbilitySystemComponent();
 
-	/// 初始化ASC中的一些设置、比如绑定回调函数
-	virtual void InitSetting();
+    virtual void BeginPlay() override;
 
-	FOnGetAssetTagsDelegate OnGetAssetTagsDelegate;
+    /// 初始化ASC中的一些设置、比如绑定回调函数
+    virtual void InitSetting();
+
+    FOnGetAssetTagsDelegate OnGetAssetTagsDelegate;
+
 
 protected:
-	/// 当前ACS被应用任意的GE到自己身上时触发的回调函数
-	/// @param AbilitySystemComponent 
-	/// @param GameplayEffectSpec 
-	/// @param ActiveEffectHandle 
-	void OnGEAppliedToSelf(UAbilitySystemComponent *AbilitySystemComponent,
-	                       const FGameplayEffectSpec &GameplayEffectSpec,
-	                       FActiveGameplayEffectHandle ActiveEffectHandle);
+    /// 当前ACS被应用任意的GE到自己身上时触发的回调函数
+    /// @param AbilitySystemComponent 
+    /// @param GameplayEffectSpec 
+    /// @param ActiveEffectHandle 
+    void OnGEAppliedToSelf(UAbilitySystemComponent* AbilitySystemComponent,
+                           const FGameplayEffectSpec& GameplayEffectSpec,
+                           FActiveGameplayEffectHandle ActiveEffectHandle);
 };

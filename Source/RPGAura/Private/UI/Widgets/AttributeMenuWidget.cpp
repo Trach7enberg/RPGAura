@@ -18,13 +18,6 @@ void UAttributeMenuWidget::InitVerticalArea()
         return;
     }
 
-    const auto CurrentAttributeMenuWidgetController = Cast<UAttributeMenuWidgetController>(GetWidgetController());
-    if (!CurrentAttributeMenuWidgetController || !CurrentAttributeMenuWidgetController->IsWidgetControllerParamsValid())
-    {
-        UE_LOG(UAttributeMenuWidgetLog, Error, TEXT("需要先设置widget控制器和widget控制器参数!"))
-        return;
-    }
-
     CurrentAttributePointArea->ClearChildren();
 
     // 创建可加属性点数区域
@@ -33,16 +26,16 @@ void UAttributeMenuWidget::InitVerticalArea()
 
     // 创建主要属性widget
     CreateVerticalAreaWidgets(FRPGAuraGameplayTags::
-                           GetGameplayTagsByType(EGameplayTagType::PrimaryGameplayTags),
-                           EGameplayTagType::PrimaryGameplayTags,
-                           VerticalBox_PrimaryAttriArea);
+                              GetGameplayTagsByType(EGameplayTagType::PrimaryGameplayTags),
+                              EGameplayTagType::PrimaryGameplayTags,
+                              VerticalBox_PrimaryAttriArea);
 
     // 创建次要属性widget
     VerticalBox_SecondaryAttriArea->ClearChildren();
     CreateVerticalAreaWidgets(FRPGAuraGameplayTags::
-                           GetGameplayTagsByType(EGameplayTagType::SecondaryGameplayTags),
-                           EGameplayTagType::SecondaryGameplayTags,
-                           VerticalBox_SecondaryAttriArea);
+                              GetGameplayTagsByType(EGameplayTagType::SecondaryGameplayTags),
+                              EGameplayTagType::SecondaryGameplayTags,
+                              VerticalBox_SecondaryAttriArea);
 }
 
 UBaseUserWidget* UAttributeMenuWidget::GetWidgetByGameplayTag(const EGameplayTagType GameplayTagType,
@@ -68,6 +61,20 @@ UBaseUserWidget* UAttributeMenuWidget::GetWidgetByGameplayTag(const EGameplayTag
     return Result;
 }
 
+void UAttributeMenuWidget::NativeConstruct()
+{
+    Super::NativeConstruct();
+    InitVerticalArea();
+    if (!GetWidgetController())
+    {
+        UE_LOG(UAttributeMenuWidgetLog, Error, TEXT("广播初始值失败!"))
+       return;
+    }
+    GetWidgetController()->BroadcastInitialValues();
+}
+
+
+
 UBaseUserWidget* UAttributeMenuWidget::FindWidgetByTagFromArray(const TArray<UBaseUserWidget*>& Array,
                                                                 const FGameplayTag& Tag)
 {
@@ -82,12 +89,12 @@ UBaseUserWidget* UAttributeMenuWidget::FindWidgetByTagFromArray(const TArray<UBa
 }
 
 void UAttributeMenuWidget::CreateVerticalAreaWidgets(const TArray<FGameplayTag*>* Array,
-                                                  const EGameplayTagType GameplayTagType,
-                                                  UVerticalBox* VerticalArea)
+                                                     const EGameplayTagType GameplayTagType,
+                                                     UVerticalBox* VerticalArea)
 {
     if (!Array || !VerticalArea)
     {
-        UE_LOG(UAttributeMenuWidgetLog, Error, TEXT("标签数组和垂直区域内容不能为空!"))
+        UE_LOG(UAttributeMenuWidgetLog, Error, TEXT("标签数组和垂直区域内容不能为空!"));
         return;
     }
     VerticalArea->ClearChildren();

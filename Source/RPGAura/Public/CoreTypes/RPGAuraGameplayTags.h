@@ -44,32 +44,45 @@ struct FRPGAuraGameplayTags
     }
 
     /// 获取所有GameplayTag
-    /// @param Array 存储数据的数组
-    static void GetAllGameplayTags(TArray<FGameplayTag*>& Array);
+    static const TArray<FGameplayTag*>& GetGameplayTagsArray();
 
     /// 根据属性集属性的名字和标签的类型(全部、重要、主要、次要)获取GameplayTag
     /// @param AttributeName 属性名字
     /// @param TagType 标签类型
     /// @return GameplayTag 
-    static FGameplayTag* GetGameplayTagByAttributeName(const FString& AttributeName,
-                                                       EGameplayTagType TagType =
-                                                           EGameplayTagType::AllGameplayTags);
+    static FGameplayTag* FindGameplayTagByAttributeName(const FString& AttributeName,
+                                                        EGameplayTagType TagType);
 
 
     /// 根据游戏标签的类型(全部、重要、主要、次要)返回对应的标签数组
     /// @param TagType 游戏标签的类型(Vital、Primary、Secondary、还是所有标签)
     /// @return 游戏标签数组的指针
-    static TArray<FGameplayTag*>* GetGameplayTagsByType(EGameplayTagType TagType);
+    static const TArray<FGameplayTag*>* GetGameplayTagsByType(const EGameplayTagType TagType);
 
-private:
-    /// 存储所有游戏标签的静态类的实例
-    static FRPGAuraGameplayTags GameplayTags;
+    /// 从存储所有游戏标签的Map中根据属性名字获取对应的游戏标签
+    /// @param AttributeName 属性名字
+    /// @return 游戏标签
+    static FGameplayTag* FindGameplayTagByAttributeName(const FString& AttributeName);
+
+    /// 获取所有游戏标签的Map
+    /// @return 存储所有游戏标签的Map
+    FORCEINLINE static const TMap<FString, FGameplayTag*>& GetGameplayTagsMap()
+    {
+        return GameplayTagsMap;
+    }
 
     static TArray<FGameplayTag*> VitalGameplayTagsArray;
     static TArray<FGameplayTag*> PrimaryGameplayTagsArray;
     static TArray<FGameplayTag*> SecondaryGameplayTagsArray;
     static TArray<FGameplayTag*> AllGameplayTagsArray;
 
-    static FGameplayTag* GetGameplayTagByAttributeName(const FString& AttributeName,
-                                                       const TArray<FGameplayTag*>& Array);
+private:
+    /// 存储所有游戏标签的静态类的实例
+    static FRPGAuraGameplayTags GameplayTags;
+
+
+    static TMap<FString, FGameplayTag*> GameplayTagsMap;
+
+    static FGameplayTag* FindGameplayTagByAttributeName(const FString& AttributeName,
+                                                        const TArray<FGameplayTag*>& Array);
 };

@@ -4,6 +4,7 @@
 #include "UI/HUD/BaseHUD.h"
 
 #include "FunctionLibrary/WidgetControllerBpFuncLib.h"
+#include "UI/WidgetControllers/AttributeMenuWidgetController.h"
 #include "UI/Widgets/BaseUserWidget.h"
 #include "UI/WidgetControllers/MainWidgetController.h"
 
@@ -11,55 +12,55 @@ DEFINE_LOG_CATEGORY_STATIC(ABaseHUDLog, All, All);
 
 void ABaseHUD::BeginPlay()
 {
-	Super::BeginPlay();
+    Super::BeginPlay();
 }
 
 
-UMainWidgetController *ABaseHUD::GetMainWidgetController() const
+UMainWidgetController* ABaseHUD::GetMainWidgetController() const
 {
+    return CurrentMainWidgetController;
+}
 
-	const auto Result = Cast<UMainWidgetController>(CurrentMainWidget->GetWidgetController());
-	if (!Result)
-	{
-		UE_LOG(ABaseHUDLog, Error, TEXT("获取 MainWidgetController 失败!"));
-		return nullptr;
-	}
-
-	return Result;
+UAttributeMenuWidgetController* ABaseHUD::GetAttributeMenuWidgetController() const
+{
+    return CurrentAttributeMenuWidgetController;
 }
 
 void ABaseHUD::InitHudMainWidget()
 {
-	if (!GetOwningPlayerController() || !MainWidgetClass)
-	{
-		return;
-	}
+    if (!GetOwningPlayerController() || !MainWidgetClass)
+    {
+        return;
+    }
 
-	if (CurrentMainWidget)
-	{
-		return;
-	}
+    if (CurrentMainWidget)
+    {
+        return;
+    }
 
-	CurrentMainWidget = Cast<UBaseUserWidget>(CreateWidget<UUserWidget>(GetOwningPlayerController(), MainWidgetClass));
-	if (!CurrentMainWidget)
-	{
-		return;
-	}
+    CurrentMainWidget = Cast<UBaseUserWidget>(CreateWidget<UUserWidget>(GetOwningPlayerController(), MainWidgetClass));
+    if (!CurrentMainWidget)
+    {
+        return;
+    }
 
-	// 给当前主Widget设置控制器
-	CurrentMainWidget->SetWidgetController(
-		UWidgetControllerBpFuncLib::CreateWidgetController(MainWidgetControllerClass, GetOwningPlayerController()));
+    CurrentMainWidgetController =
+        Cast<UMainWidgetController>(UWidgetControllerBpFuncLib::CreateWidgetController(MainWidgetControllerClass, GetOwningPlayerController()));
+    CurrentAttributeMenuWidgetController =
+        Cast<UAttributeMenuWidgetController>(UWidgetControllerBpFuncLib::CreateWidgetController(AttributeMenuWidgetControllerClass, GetOwningPlayerController()));
 
-	if (!CurrentMainWidget->GetWidgetController())
-	{
-		UE_LOG(ABaseHUDLog, Error, TEXT("创建 MainWidgetController 失败!"));
-		return;
-	}
+    // 给当前主Widget设置控制器
+    CurrentMainWidget->SetWidgetController(GetMainWidgetController());
 
+    if (!CurrentMainWidget->GetWidgetController())
+    {
+        UE_LOG(ABaseHUDLog, Error, TEXT("创建 MainWidgetController 失败!"));
+        return;
+    }
 
-	CurrentMainWidget->GetWidgetController()->BroadcastInitialValues();
+    CurrentMainWidget->GetWidgetController()->BroadcastInitialValues();
 
-	// TODO 把蓝图中设置的属性菜单换到这里统一创建属性菜单,并且设置属性菜单的控制器、BroadcastInitialValues();
+    // TODO 把蓝图中设置的属性菜单换到这里统一创建属性菜单,并且设置属性菜单的控制器、BroadcastInitialValues();
 
-	CurrentMainWidget->AddToViewport();
+    CurrentMainWidget->AddToViewport();
 }
