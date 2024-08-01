@@ -28,7 +28,7 @@ public:
 
     FOnGetAssetTagsDelegate OnGetAssetTagsDelegate;
 
-
+    void AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>> & StartUpAbilities);
 protected:
     /// 当前ACS被应用任意的GE到自己身上时触发的回调函数
     /// @param AbilitySystemComponent 

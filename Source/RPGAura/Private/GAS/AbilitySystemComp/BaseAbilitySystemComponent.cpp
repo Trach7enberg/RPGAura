@@ -18,7 +18,15 @@ void UBaseAbilitySystemComponent::BeginPlay()
 void UBaseAbilitySystemComponent::InitSetting()
 {
     OnGameplayEffectAppliedDelegateToSelf.AddUObject(this, &UBaseAbilitySystemComponent::OnGEAppliedToSelf);
-    
+}
+
+void UBaseAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& StartUpAbilities)
+{
+    for (const auto AbilityClass : StartUpAbilities)
+    {
+        FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass);
+        GiveAbilityAndActivateOnce(AbilitySpec);
+    }
 }
 
 void UBaseAbilitySystemComponent::OnGEAppliedToSelf(UAbilitySystemComponent* AbilitySystemComponent,
