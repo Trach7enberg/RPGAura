@@ -25,7 +25,7 @@ FRPGAuraAttributeInfo *UAttributeInfo::FindAttributeInfoByTag(const FGameplayTag
 
 FRPGAuraAttributeInfo *UAttributeInfo::FindAttributeInfoByAttributeName(const FString &AttributeName)
 {
-	const auto Tag = FRPGAuraGameplayTags::FindGameplayTagByAttributeName(AttributeName);
+	const auto Tag = FRPGAuraGameplayTags::FindGameplayTagByName(AttributeName);
 	if (!Tag)
 	{
 		UE_LOG(UAttributeInfoLog, Warning, TEXT("找不到对应属性的GT"));
