@@ -61,7 +61,7 @@ void AAuraCharacter::InitAbilityActorInfo()
     const auto MyPlayerState = GetPlayerState<ABasePlayerState>();
     if (!MyPlayerState)
     {
-        UE_LOG(AAuraCharacterLog, Error, TEXT("%s:MyPlayerState Cant be null"), *GetName());
+        UE_LOG(AAuraCharacterLog, Error, TEXT("%s:MyPlayerState 不能为null"), *GetName());
         return;
     }
 
