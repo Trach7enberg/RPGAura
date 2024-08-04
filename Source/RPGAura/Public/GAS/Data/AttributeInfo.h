@@ -21,12 +21,9 @@ public:
 	/// 通过GT返回对应的属性信息
 	/// @param AttributeTag 属性标签
 	/// @return 属性信息结构体,没找到则为nullptr
-	FRPGAuraAttributeInfo* FindAttributeInfoByTag(const FGameplayTag &AttributeTag) ;
+	FRPGAuraAttributeInfo FindAttributeInfoByTag(const FGameplayTag &AttributeTag) ;
 
-	/// 通过属性集的相应属性名字返回对应的属性信息
-	/// @param AttributeName 属性名字
-	/// @return 属性信息结构体,没找到则为nullptr
-	FRPGAuraAttributeInfo* FindAttributeInfoByAttributeName(const FString &AttributeName) ;
+	
 	
 	
 	
