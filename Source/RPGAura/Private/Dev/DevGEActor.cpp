@@ -18,7 +18,7 @@ void ADevGEActor::BeginPlay()
 	Super::BeginPlay();
 }
 
-void ADevGEActor::ApplyGEToTarget(AActor *Actor, TSubclassOf<UGameplayEffect> GeClass)
+void ADevGEActor::ClientApplyGEToTarget(AActor *Actor, TSubclassOf<UGameplayEffect> GeClass)
 {
 	UAbilitySystemComponent *ActorAsc = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor);
 	if (!ActorAsc || !GeClass)
@@ -60,7 +60,7 @@ void ADevGEActor::OnOverLap(AActor *TargetActor)
 {
 	if (CurrentApplicationPolicy == EGeApplicationPolicy::ApplyOnOverlap)
 	{
-		ApplyGEToTarget(TargetActor, CurrentGameplayEffectClass);
+		ClientApplyGEToTarget(TargetActor, CurrentGameplayEffectClass);
 	}
 }
 
@@ -68,7 +68,7 @@ void ADevGEActor::EndOverLap(AActor *TargetActor, bool DestroyActor)
 {
 	if (CurrentApplicationPolicy == EGeApplicationPolicy::ApplyOnEndOverlap)
 	{
-		ApplyGEToTarget(TargetActor, CurrentGameplayEffectClass);
+		ClientApplyGEToTarget(TargetActor, CurrentGameplayEffectClass);
 	}
 
 	if (InfinityRemovalPolicy == EGeRemovalPolicy::RemoveOnEndOverlap)
