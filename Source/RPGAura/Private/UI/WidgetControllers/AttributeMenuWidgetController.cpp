@@ -38,14 +38,14 @@ void UAttributeMenuWidgetController::BroadcastInitialValues()
     }
 
     // UE_LOG(UAttributeMenuWidgetControllerLog, Error, TEXT("ALL:%d"), FRPGAuraGameplayTags::GetGameplayTagsMap().Num());
-    UE_LOG(UAttributeMenuWidgetControllerLog, Error, TEXT("ALL:%d"), MyAs->TagToAttributeMap.Num());
+    // UE_LOG(UAttributeMenuWidgetControllerLog, Error, TEXT("ALL:%d"), MyAs->TagToAttributeMap.Num());
 
     // 遍历属性集的主要和次要属性,广播属性信息
     // DoFirstBroadcast(MyAs, FRPGAuraGameplayTags::PrimaryGameplayTagsArray);
     // DoFirstBroadcast(MyAs, FRPGAuraGameplayTags::SecondaryGameplayTagsArray);
     for (const auto& Pair : MyAs->TagToAttributeMap)
     {
-        BroadcastAttributeInfoStruct(MyAs, Pair);
+        BroadcastAttributeInfoStruct(MyAs, Pair.Key, Pair.Value());
     }
 }
 
@@ -65,67 +65,31 @@ void UAttributeMenuWidgetController::BindCallBack()
 
     for (const auto& Pair : MyAs->TagToAttributeMap)
     {
-        HandleAnyAttributeChange(MyAs, Pair);
+        HandleAnyAttributeChange(MyAs, Pair.Key, Pair.Value());
     }
 }
 
-void UAttributeMenuWidgetController::DoFirstBroadcast(const UBaseAttributeSet* MyAs, const TArray<FGameplayTag*>& TagArray) const
-{
-    for (const auto Tag : TagArray)
-    {
-        const auto AttributePtr = MyAs->TagToAttributeMap.Find(*Tag);
-        if (!AttributePtr)
-        {
-            UE_LOG(UAttributeMenuWidgetControllerLog, Warning, TEXT("找不到GT:[%s]对应的属性"), *Tag->GetTagName().ToString());
-            continue;
-        }
 
-        const auto AttributeInfoStruct = AttributeInfo->FindAttributeInfoByTag(*Tag);
-        if (!AttributeInfoStruct)
-        {
-            UE_LOG(UAttributeMenuWidgetControllerLog, Warning, TEXT("找不到GT:[%s]对应的属性信息结构体"), *Tag->GetTagName().ToString());
-            return;
-        }
-
-        AttributeInfoStruct->AttributeValue = (*AttributePtr)().GetNumericValue(MyAs);
-        OnAttributeChanged.Broadcast(*AttributeInfoStruct);
-    }
-}
-
-void UAttributeMenuWidgetController::HandleAnyAttributeChange(const FOnAttributeChangeData& Data) const
-{
-    const auto AttributeInfoStruct = AttributeInfo->FindAttributeInfoByAttributeName(
-        Data.Attribute.GetName());
-
-    if (!AttributeInfoStruct)
-    {
-        UE_LOG(UAttributeMenuWidgetControllerLog, Warning, TEXT("映射属性信息结构无效!"));
-        return;
-    }
-
-    AttributeInfoStruct->AttributeValue = Data.NewValue;
-    OnAttributeChanged.Broadcast(*AttributeInfoStruct);
-}
-
-void UAttributeMenuWidgetController::HandleAnyAttributeChange(const UBaseAttributeSet* MyAs, const TTuple<FGameplayTag, FGameplayAttribute(*)()>& Pair) const
+void UAttributeMenuWidgetController::HandleAnyAttributeChange(const UBaseAttributeSet* MyAs, const FGameplayTag& GameplayTag, const FGameplayAttribute& Attribute) const
 {
     GetWidgetControllerParams().CurrentAbilitySystemComponent->
-                                GetGameplayAttributeValueChangeDelegate(Pair.Value())
-                                .AddLambda([this,Pair,MyAs](const FOnAttributeChangeData& Data)
+                                GetGameplayAttributeValueChangeDelegate(Attribute)
+                                .AddLambda([this,MyAs, GameplayTag, Attribute](const FOnAttributeChangeData& Data)
                                 {
-                                    BroadcastAttributeInfoStruct(MyAs, Pair);
+                                    BroadcastAttributeInfoStruct(MyAs, GameplayTag, Attribute);
                                 });
 }
 
-void UAttributeMenuWidgetController::BroadcastAttributeInfoStruct(const UBaseAttributeSet* MyAs, const TTuple<FGameplayTag, FGameplayAttribute(*)()>& Pair) const
+
+void UAttributeMenuWidgetController::BroadcastAttributeInfoStruct(const UBaseAttributeSet* MyAs, const FGameplayTag& GameplayTag, const FGameplayAttribute& Attribute) const
 {
-    const auto AttributeInfoStruct = AttributeInfo->FindAttributeInfoByTag(Pair.Key);
-    if (!AttributeInfoStruct)
+    auto AttributeInfoStruct = AttributeInfo->FindAttributeInfoByTag(GameplayTag);
+    if (!AttributeInfoStruct.AttributeTag.IsValid())
     {
-        UE_LOG(UAttributeMenuWidgetControllerLog, Warning, TEXT("找不到GT:[%s]对应的属性信息结构体"), *Pair.Key.ToString());
+        UE_LOG(UAttributeMenuWidgetControllerLog, Warning, TEXT("找不到GT:[%s]对应的属性信息结构体"), *GameplayTag.ToString());
         return;
     }
-
-    AttributeInfoStruct->AttributeValue = Pair.Value().GetNumericValue(MyAs);
-    OnAttributeChanged.Broadcast(*AttributeInfoStruct);
+    
+    AttributeInfoStruct.AttributeValue = Attribute.GetNumericValue(MyAs);
+    OnAttributeChanged.Broadcast(AttributeInfoStruct);
 }
