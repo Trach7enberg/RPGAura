@@ -18,7 +18,7 @@ void UBaseAbilitySystemComponent::BeginPlay()
 
 void UBaseAbilitySystemComponent::InitSetting()
 {
-    OnGameplayEffectAppliedDelegateToSelf.AddUObject(this, &UBaseAbilitySystemComponent::OnGEAppliedToSelf);
+    OnGameplayEffectAppliedDelegateToSelf.AddUObject(this, &UBaseAbilitySystemComponent::ClientOnGEAppliedToSelf);
 }
 
 void UBaseAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& StartUpAbilities)
@@ -112,7 +112,7 @@ void UBaseAbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& In
     }
 }
 
-void UBaseAbilitySystemComponent::OnGEAppliedToSelf(UAbilitySystemComponent* AbilitySystemComponent,
+void UBaseAbilitySystemComponent::ClientOnGEAppliedToSelf_Implementation(UAbilitySystemComponent* AbilitySystemComponent,
                                                     const FGameplayEffectSpec& GameplayEffectSpec,
                                                     FActiveGameplayEffectHandle ActiveEffectHandle)
 {
