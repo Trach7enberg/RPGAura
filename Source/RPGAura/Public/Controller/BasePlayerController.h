@@ -24,10 +24,12 @@ class RPGAURA_API ABasePlayerController : public APlayerController
 
 public:
     ABasePlayerController();
+    virtual void PlayerTick(float DeltaTime) override;
 
 protected:
     virtual void BeginPlay() override;
     virtual void SetupInputComponent() override;
+    virtual void OnPossess(APawn* aPawn) override;
 
 private:
     // 当前鼠标击中的Actor
@@ -67,7 +69,7 @@ private:
     float ShortPressThreshold;
 
     // 是否自动行走
-    bool BIsAutoRunning;
+    bool BIsAutoWalking;
 
     // 鼠标是否在瞄准目标
     bool BIsTargeting;
@@ -80,4 +82,6 @@ private:
     void AbilityInputTagPressed(FGameplayTag InputTag);
     void AbilityInputTagReleased(FGameplayTag InputTag);
     void AbilityInputTagHeld(FGameplayTag InputTag);
+
+    void AutoWalking();
 };
