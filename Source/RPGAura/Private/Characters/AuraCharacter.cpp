@@ -8,6 +8,7 @@
 #include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "PlayerStates/BasePlayerState.h"
 #include "UI/HUD/BaseHUD.h"
 
@@ -71,19 +72,44 @@ void AAuraCharacter::InitAbilityActorInfo()
     const auto MyAsc = Cast<UBaseAbilitySystemComponent>(AbilitySystemComponent);
     if (!MyAsc)
     {
-        UE_LOG(AAuraCharacterLog, Error, TEXT("MyAsc Cant be null"));
+        UE_LOG(AAuraCharacterLog, Error, TEXT("MyAsc 不能为null"));
         return;
     }
     MyAsc->InitAbilityActorInfo(MyPlayerState, this);
     MyAsc->InitSetting();
 }
 
+FString AAuraCharacter::GetNetModeStr() const
+{
+    FString NetMode = "";
+
+    switch (GetNetMode())
+    {
+        case ENetMode::NM_Client:
+            NetMode = "Client";
+            break;
+        case ENetMode::NM_Standalone:
+            NetMode = "Standalone";
+            break;
+        case ENetMode::NM_DedicatedServer:
+            NetMode = "DedicatedServer";
+            break;
+        case ENetMode::NM_ListenServer:
+            NetMode = "ListenServer";
+            break;
+        default: ;
+    }
+    return NetMode;
+}
+
 void AAuraCharacter::InitHUD() const
 {
     const auto Pc = Cast<APlayerController>(GetController());
+    
     if (!Pc)
     {
-        UE_LOG(AAuraCharacterLog, Error, TEXT("控制器无效!"));
+        
+        UE_LOG(AAuraCharacterLog, Error, TEXT("[模式:%s]:[%s]的控制器无效! (IsLocalPalyerController?:%s)"), *GetNetModeStr(), *GetName(), IsLocallyControlled() ? TEXT("是") : TEXT("否"));
         return;
     }
     const auto Hud = Cast<ABaseHUD>(Pc->GetHUD());
@@ -111,14 +137,13 @@ void AAuraCharacter::PossessedBy(AController* NewController)
     Super::PossessedBy(NewController);
     // 为服务器初始化能力角色信息
     InitAbilityActorInfo();
-
     InitAttributes(DefaultPrimaryAttributesGameplayEffect);
     InitAttributes(DefaultSecondaryPrimaryAttributesGameplayEffect);
     InitAttributes(DefaultVitalAttributesGameplayEffect);
-    
-    AddCharacterAbilities();
-    
+
     InitHUD();
+
+    AddCharacterAbilities();
 }
 
 void AAuraCharacter::OnRep_PlayerState()
@@ -126,9 +151,9 @@ void AAuraCharacter::OnRep_PlayerState()
     Super::OnRep_PlayerState();
     // 为客户端初始化能力角色信息
     InitAbilityActorInfo();
-
     InitAttributes(DefaultPrimaryAttributesGameplayEffect);
     InitAttributes(DefaultSecondaryPrimaryAttributesGameplayEffect);
     InitAttributes(DefaultVitalAttributesGameplayEffect);
+
     InitHUD();
 }
