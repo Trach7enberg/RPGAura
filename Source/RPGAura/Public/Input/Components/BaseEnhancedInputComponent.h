@@ -7,7 +7,7 @@
 #include "Input/DataAssets/RPGAuraInputConfig.h"
 #include "BaseEnhancedInputComponent.generated.h"
 
-DEFINE_LOG_CATEGORY_STATIC(UBaseEnhancedInputComponentLog,All,All);
+DEFINE_LOG_CATEGORY_STATIC(UBaseEnhancedInputComponentLog, All, All);
 
 /**
  * 本项目的基础增强输入组件
@@ -18,7 +18,7 @@ class RPGAURA_API UBaseEnhancedInputComponent : public UEnhancedInputComponent
     GENERATED_BODY()
 
 public:
-    /// 将输入绑定到GAS
+    /// 根据InputAction映射到GameplayTag的数据资产,将输入绑定到GAS的能力中
     /// @tparam UserClass 用户类,即绑定函数的类
     /// @tparam PressedFuncType 按下按键时的回调函数(Started) 
     /// @tparam ReleasedFuncType 释放按键时的回调函数(Completed)

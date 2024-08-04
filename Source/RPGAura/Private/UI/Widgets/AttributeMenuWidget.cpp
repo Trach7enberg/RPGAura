@@ -64,13 +64,13 @@ UBaseUserWidget* UAttributeMenuWidget::GetWidgetByGameplayTag(const EGameplayTag
 void UAttributeMenuWidget::NativeConstruct()
 {
     Super::NativeConstruct();
-    InitVerticalArea();
-    if (!GetWidgetController())
-    {
-        UE_LOG(UAttributeMenuWidgetLog, Error, TEXT("广播初始值失败!"))
-       return;
-    }
-    GetWidgetController()->BroadcastInitialValues();
+    // InitVerticalArea();
+    // if (!GetWidgetController())
+    // {
+    //     UE_LOG(UAttributeMenuWidgetLog, Error, TEXT("广播初始值失败!"))
+    //    return;
+    // }
+    // GetWidgetController()->BroadcastInitialValues();
 }
 
 
