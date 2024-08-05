@@ -63,8 +63,8 @@ UBaseWidgetController* UWidgetControllerBpFuncLib::CreateWidgetController(
     {
         UE_LOG(UWidgetControllerBpFuncLibLog, Error, TEXT("WidgetControllerParams 不能为 null"));
     }
-    // 给这个控制器的拥有者绑定当属性值更改时候的回调函数
-    WidgetController->BindCallBack();
+    // // 给这个控制器的拥有者绑定当属性值更改时候的回调函数
+    // WidgetController->BindCallBack();
 
     if (!WidgetController)
     {
