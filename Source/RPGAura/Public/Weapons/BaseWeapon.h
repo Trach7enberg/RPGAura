@@ -22,6 +22,11 @@ public:
 	virtual void HighLight();
 	virtual void UnHighLight();
 
+    /// 根据名字获取武器的插槽位置
+    /// @param SocketName 
+    /// @return 插槽位置
+    FVector GetWeaponSocketLocByName(const FName& SocketName)const ;
+
 protected:
 	virtual void BeginPlay() override;
 
