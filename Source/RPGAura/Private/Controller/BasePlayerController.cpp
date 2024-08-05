@@ -84,7 +84,12 @@ void ABasePlayerController::SetupInputComponent()
         return;
     }
     Input->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ABasePlayerController::Move);
-    Input->BindAbilityActions(InputConfig, this, &ABasePlayerController::AbilityInputTagPressed, &ABasePlayerController::AbilityInputTagReleased, &ABasePlayerController::AbilityInputTagHeld);
+    Input->BindAbilityActions(
+        InputConfig,
+        this,
+        &ABasePlayerController::AbilityInputTagPressed,
+        &ABasePlayerController::AbilityInputTagReleased,
+        &ABasePlayerController::AbilityInputTagHeld);
 }
 
 void ABasePlayerController::OnPossess(APawn* aPawn)
@@ -123,6 +128,7 @@ void ABasePlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
     {
         return;
     }
+    
 
     const auto GameplayEnum = FRPGAuraGameplayTags::FindEnumByTag(InputTag);
     if (!GameplayEnum)
