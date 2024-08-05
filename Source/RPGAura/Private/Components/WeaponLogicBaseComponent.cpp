@@ -9,45 +9,68 @@
 
 DEFINE_LOG_CATEGORY_STATIC(MyWeaponLogicBaseComponentLog, All, All);
 
-UWeaponLogicBaseComponent::UWeaponLogicBaseComponent() { PrimaryComponentTick.bCanEverTick = false; }
+UWeaponLogicBaseComponent::UWeaponLogicBaseComponent()
+{
+    PrimaryComponentTick.bCanEverTick = false;
+}
+
+
+void UWeaponLogicBaseComponent::BeginPlay()
+{
+    Super::BeginPlay();
+
+    if (!GetOwner() || !WeaponBp)
+    {
+        UE_LOG(MyWeaponLogicBaseComponentLog, Error, TEXT("Owner Error"));
+        return;
+    }
+
+    AttachWeaponToSocket(Cast<ACharacterBase>(GetOwner()), WeaponAttachSocketName);
+}
 
 void UWeaponLogicBaseComponent::HighLight() const
 {
-	if (!CurrentWeapon) { return; }
-	CurrentWeapon->HighLight();
+    if (!CurrentWeapon)
+    {
+        return;
+    }
+    CurrentWeapon->HighLight();
 }
 
 void UWeaponLogicBaseComponent::UnHighLight() const
 {
-	if (!CurrentWeapon) { return; }
-	CurrentWeapon->UnHighLight();
+    if (!CurrentWeapon)
+    {
+        return;
+    }
+    CurrentWeapon->UnHighLight();
 }
 
-void UWeaponLogicBaseComponent::BeginPlay()
+FVector UWeaponLogicBaseComponent::GetWeaponSocketLocByName(const FName& SocketName) const
 {
-	Super::BeginPlay();
-
-	if (!GetOwner() || !WeaponBp)
-	{
-		UE_LOG(MyWeaponLogicBaseComponentLog, Error, TEXT("Owner Error"));
-		return;
-	}
-
-	AttachWeaponToSocket(Cast<ACharacterBase>(GetOwner()), WeaponAttachSocketName);
+    if (!CurrentWeapon)
+    {
+        return FVector::Zero();
+    }
+    return CurrentWeapon->GetWeaponSocketLocByName(SocketName);
 }
 
-void UWeaponLogicBaseComponent::AttachWeaponToSocket(ACharacterBase *Character, FName &SocketName)
+void UWeaponLogicBaseComponent::AttachWeaponToSocket(ACharacterBase* Character, FName& SocketName)
 {
-	const auto Mesh = Character->GetMesh();
-	if (!Character || !Mesh) { return; }
+    const auto Mesh = Character->GetMesh();
+    if (!Character || !Mesh)
+    {
+        return;
+    }
 
-	CurrentWeapon = Cast<ABaseWeapon>(GetWorld()->SpawnActor(WeaponBp));
+    CurrentWeapon = Cast<ABaseWeapon>(GetWorld()->SpawnActor(WeaponBp));
 
-	if (CurrentWeapon)
-	{
-		CurrentWeapon->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetIncludingScale,
-		                                 WeaponAttachSocketName);
-		CurrentWeapon->SetOwner(Character);
-		CurrentWeapon->SetWeaponMeshCollision(false);
-	}
+    if (CurrentWeapon)
+    {
+        CurrentWeapon->AttachToComponent(Mesh,
+                                         FAttachmentTransformRules::SnapToTargetIncludingScale,
+                                         WeaponAttachSocketName);
+        CurrentWeapon->SetOwner(Character);
+        CurrentWeapon->SetWeaponMeshCollision(false);
+    }
 }
