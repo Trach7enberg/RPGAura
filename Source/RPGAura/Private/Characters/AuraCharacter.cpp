@@ -77,29 +77,10 @@ void AAuraCharacter::InitAbilityActorInfo()
     }
     MyAsc->InitAbilityActorInfo(MyPlayerState, this);
     MyAsc->InitSetting();
-}
 
-FString AAuraCharacter::GetNetModeStr() const
-{
-    FString NetMode = "";
-
-    switch (GetNetMode())
-    {
-        case ENetMode::NM_Client:
-            NetMode = "Client";
-            break;
-        case ENetMode::NM_Standalone:
-            NetMode = "Standalone";
-            break;
-        case ENetMode::NM_DedicatedServer:
-            NetMode = "DedicatedServer";
-            break;
-        case ENetMode::NM_ListenServer:
-            NetMode = "ListenServer";
-            break;
-        default: ;
-    }
-    return NetMode;
+    InitAttributes(DefaultPrimaryAttributesGameplayEffect);
+    InitAttributes(DefaultSecondaryPrimaryAttributesGameplayEffect);
+    InitAttributes(DefaultVitalAttributesGameplayEffect);
 }
 
 void AAuraCharacter::InitHUD() const
@@ -137,9 +118,7 @@ void AAuraCharacter::PossessedBy(AController* NewController)
     Super::PossessedBy(NewController);
     // 为服务器初始化能力角色信息
     InitAbilityActorInfo();
-    InitAttributes(DefaultPrimaryAttributesGameplayEffect);
-    InitAttributes(DefaultSecondaryPrimaryAttributesGameplayEffect);
-    InitAttributes(DefaultVitalAttributesGameplayEffect);
+    
 
     InitHUD();
 
@@ -151,9 +130,29 @@ void AAuraCharacter::OnRep_PlayerState()
     Super::OnRep_PlayerState();
     // 为客户端初始化能力角色信息
     InitAbilityActorInfo();
-    InitAttributes(DefaultPrimaryAttributesGameplayEffect);
-    InitAttributes(DefaultSecondaryPrimaryAttributesGameplayEffect);
-    InitAttributes(DefaultVitalAttributesGameplayEffect);
 
     InitHUD();
+}
+
+FString AAuraCharacter::GetNetModeStr() const
+{
+    FString NetMode = "";
+
+    switch (GetNetMode())
+    {
+        case ENetMode::NM_Client:
+            NetMode = "Client";
+        break;
+        case ENetMode::NM_Standalone:
+            NetMode = "Standalone";
+        break;
+        case ENetMode::NM_DedicatedServer:
+            NetMode = "DedicatedServer";
+        break;
+        case ENetMode::NM_ListenServer:
+            NetMode = "ListenServer";
+        break;
+        default: ;
+    }
+    return NetMode;
 }
