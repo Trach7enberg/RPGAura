@@ -6,6 +6,7 @@
 #include "GameFramework/HUD.h"
 #include "BaseHUD.generated.h"
 
+class UAttributeInfo;
 class UAttributeMenuWidgetController;
 class UBaseWidgetController;
 class UMainWidgetController;
@@ -47,6 +48,9 @@ protected:
     /// 用于生成属性菜单widget控制器的Class
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="WidgetClass")
     TSubclassOf<UAttributeMenuWidgetController> AttributeMenuWidgetControllerClass;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="DataAsset")
+    TObjectPtr<UAttributeInfo> AttributeInfoClass;
 
 private:
     /// 当前主Widget的引用
