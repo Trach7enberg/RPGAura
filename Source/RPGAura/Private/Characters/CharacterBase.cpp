@@ -24,9 +24,15 @@ ACharacterBase::ACharacterBase()
 }
 
 
+FVector ACharacterBase::GetCombatSocketLocation()
+{
+    return WeaponLogicBaseComponent->GetWeaponSocketLocByName(WeaponLogicBaseComponent->GetWeaponTipSocketName());
+}
+
 void ACharacterBase::BeginPlay()
 {
     Super::BeginPlay();
+    check(WeaponLogicBaseComponent);
 }
 
 

@@ -45,6 +45,7 @@ public:
     {
         return 0;
     };
+    virtual FVector GetCombatSocketLocation() override;
     // ~ ICombatInterface
 
 protected:
