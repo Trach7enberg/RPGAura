@@ -11,11 +11,7 @@ public class RPGAura : ModuleRules
 		PublicDependencyModuleNames.AddRange(new string[]
 		{
 			"Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "GameplayAbilities", "GameplayTags",
-			"GameplayTasks",
-		});
-
-		PrivateDependencyModuleNames.AddRange(new string[]
-		{
+			"GameplayTasks","NavigationSystem","Niagara"
 		});
 
 		PublicIncludePaths.AddRange(new string[] { });
