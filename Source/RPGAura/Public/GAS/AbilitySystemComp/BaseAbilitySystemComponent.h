@@ -33,8 +33,16 @@ public:
     /// @param StartUpAbilities 能力列表
     void AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& StartUpAbilities);
 
+    /// 处理InputAction按下时的能力触发问题
+    /// @param InputTag 输入的游戏标签
     void AbilityInputTagPressed(const FGameplayTag& InputTag);
+
+    /// 处理InputAction持续按下时的能力触发问题
+    /// @param InputTag 输入的游戏标签
     void AbilityInputTagHeld(const FGameplayTag& InputTag);
+
+    /// 处理InputAction按键释放时的能力问题
+    /// @param InputTag 输入的游戏标签
     void AbilityInputTagReleased(const FGameplayTag& InputTag);
 
 protected:

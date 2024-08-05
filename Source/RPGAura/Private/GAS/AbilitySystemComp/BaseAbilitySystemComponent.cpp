@@ -55,11 +55,11 @@ void UBaseAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& Inp
         // 如果能力的动态标签包含InputTag,那么就可以被激活
         if (AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag))
         {
-            // 通知能力系统,输入已经按下,该函数内部会调用虚函数InputPressed,如果你想干别的事情,可以在虚函数InputPressed中实现
+            // 通知能力系统,输入已经按下,该函数内部会调用虚函数InputPressed,如果你想在这里干别的事情,可以通过覆写虚函数InputPressed实现
             AbilitySpecInputPressed(AbilitySpec);
             if (!AbilitySpec.IsActive())
             {
-                // 尝试激活能力,因为有时候能力可能有一些tag,不允许被激活
+                // 尝试激活能力而不是直接调用激活能力函数,是因为有时候能力可能有一些tag,不允许被激活
                 TryActivateAbility(AbilitySpec.Handle);
             }
         }
@@ -105,7 +105,7 @@ void UBaseAbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& In
         {
             if (AbilitySpec.IsActive())
             {
-                // 通知能力系统,输入已经释放
+                // 通知能力系统,输入已经释放 , 并没有终止能力!
                 AbilitySpecInputReleased(AbilitySpec);
             }
         }
