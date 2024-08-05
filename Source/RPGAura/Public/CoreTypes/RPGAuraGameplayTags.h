@@ -37,7 +37,11 @@ enum class EGameplayTagNum : uint8
 
     MaxHealth,
     MaxMana,
+
+    Event_Montage_FireBolt,
 };
+
+
 
 /**
  * 包含当前项目GameplayTags的结构体
@@ -76,6 +80,7 @@ struct FRPGAuraGameplayTags
     FGameplayTag InputTag_3;
     FGameplayTag InputTag_4;
 
+    FGameplayTag Event_Montage_FireBolt;
     // 标签的真实名字
     FString CurrentHealth = "Attributes.Vital.CurrentHealth";
     FString CurrentMana = "Attributes.Vital.CurrentMana";
@@ -126,7 +131,6 @@ struct FRPGAuraGameplayTags
     /// @return 游戏标签数组的指针
     static const TArray<FGameplayTag*>* GetGameplayTagsByType(const EGameplayTagType TagType);
 
-    
 
     /// 获取所有游戏标签的Map
     /// @return 存储所有游戏标签的Map
@@ -139,8 +143,8 @@ struct FRPGAuraGameplayTags
     /// @param Name 属性名字
     /// @return 游戏标签
     static FGameplayTag* FindGameplayTagByName(const FString& Name);
-    
-    static  EGameplayTagNum* FindEnumByTag(const FGameplayTag& GameplayTag);
+
+    static EGameplayTagNum* FindEnumByTag(const FGameplayTag& GameplayTag);
 
     static TArray<FGameplayTag*> VitalGameplayTagsArray;
     static TArray<FGameplayTag*> PrimaryGameplayTagsArray;

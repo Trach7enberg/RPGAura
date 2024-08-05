@@ -66,6 +66,10 @@ void FRPGAuraGameplayTags::InitGameplayTags()
             GameplayTags.InputTag_3 = UGameplayTagsManager::Get().AddNativeGameplayTag("InputTag.3", FString("主键盘3"));
             GameplayTags.InputTag_4 = UGameplayTagsManager::Get().AddNativeGameplayTag("InputTag.4", FString("主键盘4"));
         }
+
+        {
+            GameplayTags.Event_Montage_FireBolt = UGameplayTagsManager::Get().AddNativeGameplayTag("Event.Montage.FireBolt", FString("识别GameplayEvent的标签,用于当播放火箭蒙太奇触发某个通知时发送gameplay事件"));
+        }
     }
 
     // 添加到Vital数组
@@ -152,6 +156,8 @@ void FRPGAuraGameplayTags::InitGameplayTags()
         GameplayTags.GameplayTagsMap.Add("2", &GameplayTags.InputTag_2);
         GameplayTags.GameplayTagsMap.Add("3", &GameplayTags.InputTag_3);
         GameplayTags.GameplayTagsMap.Add("4", &GameplayTags.InputTag_4);
+
+        GameplayTags.GameplayTagsMap.Add("EventMontage", &GameplayTags.Event_Montage_FireBolt);
     }
 
     // 标签到枚举的映射
@@ -181,6 +187,9 @@ void FRPGAuraGameplayTags::InitGameplayTags()
         GameplayTags.TagToNumMap.Add(GameplayTags.InputTag_2, EGameplayTagNum::Input2);
         GameplayTags.TagToNumMap.Add(GameplayTags.InputTag_3, EGameplayTagNum::Input3);
         GameplayTags.TagToNumMap.Add(GameplayTags.InputTag_4, EGameplayTagNum::Input4);
+
+        
+        GameplayTags.TagToNumMap.Add(GameplayTags.Event_Montage_FireBolt, EGameplayTagNum::Event_Montage_FireBolt);
     }
 }
 
