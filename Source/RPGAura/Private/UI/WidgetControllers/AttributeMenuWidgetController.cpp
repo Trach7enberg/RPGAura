@@ -11,6 +11,10 @@
 DEFINE_LOG_CATEGORY_STATIC(UAttributeMenuWidgetControllerLog, All, All);
 
 
+UAttributeMenuWidgetController::UAttributeMenuWidgetController()
+{
+}
+
 void UAttributeMenuWidgetController::BroadcastInitialValues()
 {
     if (!AttributeInfo)
@@ -70,7 +74,7 @@ void UAttributeMenuWidgetController::BindCallBack()
 }
 
 
-void UAttributeMenuWidgetController::HandleAnyAttributeChange(const UBaseAttributeSet* MyAs, const FGameplayTag& GameplayTag, const FGameplayAttribute& Attribute) const
+void UAttributeMenuWidgetController::HandleAnyAttributeChange(const UBaseAttributeSet* MyAs, const FGameplayTag& GameplayTag, const FGameplayAttribute& Attribute)
 {
     GetWidgetControllerParams().CurrentAbilitySystemComponent->
                                 GetGameplayAttributeValueChangeDelegate(Attribute)
@@ -81,15 +85,18 @@ void UAttributeMenuWidgetController::HandleAnyAttributeChange(const UBaseAttribu
 }
 
 
-void UAttributeMenuWidgetController::BroadcastAttributeInfoStruct(const UBaseAttributeSet* MyAs, const FGameplayTag& GameplayTag, const FGameplayAttribute& Attribute) const
+void UAttributeMenuWidgetController::BroadcastAttributeInfoStruct(const UBaseAttributeSet* MyAs, const FGameplayTag& GameplayTag, const FGameplayAttribute& Attribute)
 {
+
     auto AttributeInfoStruct = AttributeInfo->FindAttributeInfoByTag(GameplayTag);
+    // FRPGAuraAttributeInfo{};
+
     if (!AttributeInfoStruct.AttributeTag.IsValid())
     {
         UE_LOG(UAttributeMenuWidgetControllerLog, Warning, TEXT("找不到GT:[%s]对应的属性信息结构体"), *GameplayTag.ToString());
         return;
     }
-    
+
     AttributeInfoStruct.AttributeValue = Attribute.GetNumericValue(MyAs);
     OnAttributeChanged.Broadcast(AttributeInfoStruct);
 }
