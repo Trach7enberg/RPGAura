@@ -6,7 +6,7 @@
 #include "Abilities/Tasks/AbilityTask.h"
 #include "TargetDataUnderCursor.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMouseTargetDataSignatue, const FVector&, Data);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMouseTargetDataSignature, const FGameplayAbilityTargetDataHandle&, Data);
 
 /**
  * 这个能力任务将负责获取与光标下的击中结果相关的数据
@@ -20,7 +20,8 @@ public:
 
     // 输出引脚
     UPROPERTY(BlueprintAssignable)
-    FMouseTargetDataSignatue OnGetTargetDataUnderCursor;
+    FMouseTargetDataSignature OnGetTargetDataUnderCursor;
+
     
     /// 获取鼠标击中的HitResult
     /// 该函数实际上只是一个工厂,创建这个任务的实例并返回,因此使用宏参数BlueprintInternalUseOnly = "TRUE"
@@ -35,4 +36,13 @@ public:
 
 protected:
     virtual void Activate() override;
+
+    /// 发送FHitResult类型的数据给服务器
+    void SendTargetDataToServer();
+
+    /// 当复制的数据被接收时，这个函数将在服务器上被调用
+    /// @param DataHandle 包装有复制数据的一个Handle
+    /// @param ActivationTag 传过来的游戏标签
+    UFUNCTION()
+    void OnTargetDataReplicatedCallBack(const FGameplayAbilityTargetDataHandle& DataHandle,FGameplayTag ActivationTag);
 };
