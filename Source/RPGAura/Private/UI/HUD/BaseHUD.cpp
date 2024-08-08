@@ -52,6 +52,7 @@ void ABaseHUD::InitHudMainWidget()
         Cast<UAttributeMenuWidgetController>(UWidgetControllerBpFuncLib::CreateWidgetController(AttributeMenuWidgetControllerClass, GetOwningPlayerController()));
     
     CurrentAttributeMenuWidgetController->BindCallBack();
+    
 
     // 给当前主Widget设置控制器
     CurrentMainWidget->SetWidgetController(GetMainWidgetController());

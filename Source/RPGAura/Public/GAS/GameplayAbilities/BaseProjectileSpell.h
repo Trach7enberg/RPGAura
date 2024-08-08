@@ -13,17 +13,19 @@ class ABaseProjectile;
 UCLASS()
 class RPGAURA_API UBaseProjectileSpell : public UBaseGameplayAbility
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 public:
-    /// 生成投射物
-    UFUNCTION(BlueprintCallable, Category="Spawn")
-    void SpawnProjectile() const;
+	/// 生成投射物
+	UFUNCTION(BlueprintCallable, Category="Spawn")
+	void SpawnProjectile(const FHitResult HitResult) const;
 
 protected:
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Class")
-    TSubclassOf<ABaseProjectile> ProjectileClass;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Class")
+	TSubclassOf<ABaseProjectile> ProjectileClass;
 
 
-    virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
+	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+	                             const FGameplayAbilityActivationInfo ActivationInfo,
+	                             const FGameplayEventData* TriggerEventData) override;
 };

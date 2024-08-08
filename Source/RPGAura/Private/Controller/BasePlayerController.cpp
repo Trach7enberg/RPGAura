@@ -151,6 +151,7 @@ void ABasePlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
                 {
                     BIsAutoWalking = false;
                     BIsTargeting = true;
+                    
                     GetAbilitySystemComponent()->AbilityInputTagPressed(InputTag);
                 }
                 else
@@ -293,7 +294,7 @@ void ABasePlayerController::AutoWalking()
     {
         // 从样条曲线中寻找离Pawn最近的点
         const auto Loc = SplineComponent->FindLocationClosestToWorldLocation(GetPawn()->GetActorLocation(), ESplineCoordinateSpace::World);
-        GEngine->AddOnScreenDebugMessage(1, 0.5f, FColor::Red, *Loc.ToString());
+        // GEngine->AddOnScreenDebugMessage(1, 0.5f, FColor::Red, *Loc.ToString());
         // 从样条曲线中寻找离Loc最近的方向
         const auto Dir = SplineComponent->FindDirectionClosestToWorldLocation(Loc, ESplineCoordinateSpace::World);
         GetPawn()->AddMovementInput(Dir);

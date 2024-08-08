@@ -101,7 +101,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMessageWidgetRowSignature, const 
 
 /// ---UAttributeMenuWidgetController类使用
 /// 用于广播GAS属性变化的结构体,更新属性菜单的属性值显示 (包括vital、primary、secondary属性)
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributeChangedSignature, const FRPGAuraAttributeInfo, Info);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributeChangedSignature, const FRPGAuraAttributeInfo&, Info);
 
 
 /// ---FRPGAuraGameplayTags结构类使用

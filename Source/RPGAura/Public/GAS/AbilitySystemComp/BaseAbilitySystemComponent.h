@@ -50,7 +50,6 @@ protected:
     /// @param AbilitySystemComponent 
     /// @param GameplayEffectSpec 
     /// @param ActiveEffectHandle 
-
     UFUNCTION(Client, Reliable)
     void ClientOnGEAppliedToSelf(UAbilitySystemComponent* AbilitySystemComponent,
                                  const FGameplayEffectSpec& GameplayEffectSpec,
