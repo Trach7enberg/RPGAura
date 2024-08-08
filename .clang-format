@@ -1,4 +1,3 @@
----
 # 语言: None, Cpp, Java, JavaScript, ObjC, Proto, TableGen, TextProto
 Language: Cpp
 BasedOnStyle:  LLVM
@@ -73,13 +72,13 @@ AllowShortEnumsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: Empty
 
 # 允许短的if语句保持在同一行
-AllowShortIfStatementsOnASingleLine: Never
+AllowShortIfStatementsOnASingleLine: true
 
 # 允许短的匿名函数lamda表达式放在同一行
 AllowShortLambdasOnASingleLine: Empty
 
 # 允许短的循环while保持在同一行
-AllowShortLoopsOnASingleLine: false
+AllowShortLoopsOnASingleLine: true
 
 # 总是在返回类型后换行
 AlwaysBreakAfterReturnType: None
