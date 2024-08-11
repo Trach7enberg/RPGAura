@@ -53,7 +53,6 @@ void UTargetDataUnderCursor::SendTargetDataToServer()
 	Pc->GetHitResultUnderCursor(ECC_Visibility, false, HitResult);
 
 	// 创建一个要发送给服务器FHitResult数据的结构体
-	// 注意,如果开始游戏报错显示什么ScriptStructCache的话你需要在未使用targetData这个结构体之前用UAbilitySystemGlobals::Get().InitGlobalData()这个函数初始化一下
 	const auto HitData = new FGameplayAbilityTargetData_SingleTargetHit();
 	HitData->HitResult = HitResult;
 
@@ -71,7 +70,7 @@ void UTargetDataUnderCursor::SendTargetDataToServer()
 	// 在某些情况下，如果任务不需要广播事件,可判断 false 来减少不必要的性能开销
 	if (ShouldBroadcastAbilityTaskDelegates())
 	{
-		// 将委托的参数改为DataHandle类
+		// 将委托的参数改为FGameplayAbilityTargetDataHandle类
 		// 发送FHitResult的Handle到客户端,这样我们除了可以拿到HitResult之外,还可以获得其它有用的信息
 		OnGetTargetDataUnderCursor.Broadcast(DataHandle);
 	}
