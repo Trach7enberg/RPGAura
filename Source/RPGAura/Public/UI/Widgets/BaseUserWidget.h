@@ -17,24 +17,20 @@ class RPGAURA_API UBaseUserWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	FGameplayTag GetCurrentGameplayTag() const
-	{
-		return CurrentGameplayTag;
-	}
+	FGameplayTag GetCurrentGameplayTag() const { return CurrentGameplayTag; }
 
-	void SetCurrentGameplayTag(const FGameplayTag &NewGameplayTag)
-	{
-		this->CurrentGameplayTag = NewGameplayTag;
-	}
+	void SetCurrentGameplayTag(const FGameplayTag& NewGameplayTag) { this->CurrentGameplayTag = NewGameplayTag; }
 
 	UFUNCTION(BlueprintCallable, Category="WidgetController")
-	UBaseWidgetController *GetWidgetController() const
-	{
-		return WidgetController;
-	}
+	UObject* GetWidgetController() const { return WidgetController; }
+
+
+	template <typename T>
+	UFUNCTION(BlueprintCallable, Category="WidgetController")
+	T* GetWidgetController() const { return Cast<T>(WidgetController); }
 
 	UFUNCTION(BlueprintCallable, Category="WidgetController")
-	void SetWidgetController(UBaseWidgetController *NewWidgetController);
+	void SetWidgetController(UObject* NewWidgetController);
 
 protected:
 	virtual void NativeOnInitialized() override;
@@ -47,5 +43,6 @@ protected:
 	FGameplayTag CurrentGameplayTag;
 
 private:
-	TObjectPtr<UBaseWidgetController> WidgetController;
+	UPROPERTY()
+	TObjectPtr<UObject> WidgetController;
 };

@@ -9,7 +9,7 @@ DEFINE_LOG_CATEGORY_STATIC(UBaseUserWidgetLog, All, All);
 
 void UBaseUserWidget::NativeOnInitialized() { Super::NativeOnInitialized(); }
 
-void UBaseUserWidget::SetWidgetController(UBaseWidgetController *NewWidgetController)
+void UBaseUserWidget::SetWidgetController(UObject *NewWidgetController)
 {
 	
 	WidgetController = NewWidgetController;
