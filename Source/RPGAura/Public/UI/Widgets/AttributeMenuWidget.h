@@ -6,6 +6,7 @@
 #include "UI/Widgets/BaseUserWidget.h"
 #include "AttributeMenuWidget.generated.h"
 
+class UAttributeMenuWidgetController;
 enum class EGameplayTagType : uint8;
 class UVerticalBox;
 /**
@@ -17,7 +18,7 @@ class RPGAURA_API UAttributeMenuWidget : public UBaseUserWidget
     GENERATED_BODY()
 
 public:
-    /// 初始化垂直框区域,注意需要在控制器设置之后运行
+    /// 初始化垂直框区域,注意需要先设置了widget控制器之后再运行!!!
     UFUNCTION(BlueprintCallable)
     void InitVerticalArea();
     
@@ -30,6 +31,8 @@ public:
     UBaseUserWidget* GetWidgetByGameplayTag(EGameplayTagType GameplayTagType, FGameplayTag Tag);
 
 protected:
+    virtual void NativeOnInitialized() override;
+    
     /// 可加属性点数区域,该区域只有一行内容
     UPROPERTY(meta=(BindWidget))
     UVerticalBox* CurrentAttributePointArea;
@@ -65,6 +68,9 @@ protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="AttriMenu|VerticalAreaElement")
     TArray<UBaseUserWidget*> AllAttriAreaWidgetArray{};
     
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="WidgetClass")
+    TSubclassOf<UAttributeMenuWidgetController> AttributeMenuWidgetControllerClass;
+
     virtual void NativeConstruct() override;
 
 private:
@@ -78,10 +84,10 @@ private:
     UBaseUserWidget* FindWidgetByTagFromArray(const TArray<UBaseUserWidget*>& Array, const FGameplayTag& Tag);
 
     /// 创建属性面板的垂直区域里的widget
-    /// @param Array 标签数组指针
+    /// @param TagContainer 标签容器
     /// @param GameplayTagType 标签类型
     /// @param VerticalArea 垂直区域
-    void CreateVerticalAreaWidgets(const TArray<FGameplayTag*>* Array,
+    void CreateVerticalAreaWidgets(const FGameplayTagContainer& TagContainer,
                                    const EGameplayTagType GameplayTagType,
                                    UVerticalBox* VerticalArea);
 };
