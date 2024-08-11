@@ -5,9 +5,11 @@
 
 #include "Components/CapsuleComponent.h"
 #include "Components/WeaponLogicBaseComponent.h"
+#include "Components/WidgetComponent.h"
 #include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
 #include "GAS/AttributeSet/BaseAttributeSet.h"
 #include "RPGAura/RPGAura.h"
+#include "UI/Widgets/BaseUserWidget.h"
 
 DEFINE_LOG_CATEGORY_STATIC(AEnemyCharacterLog, All, All);
 
@@ -21,6 +23,9 @@ AEnemyCharacter::AEnemyCharacter()
 
 	AttributeSet = CreateDefaultSubobject<UBaseAttributeSet>("AttributeSet");
 	// AutoPossessAI = EAutoPossessAI::Disabled;
+
+	EnemyHealthBar = CreateDefaultSubobject<UWidgetComponent>("EnemyHealthBar");
+	EnemyHealthBar->SetupAttachment(RootComponent);
 }
 
 
@@ -37,6 +42,33 @@ void AEnemyCharacter::BeginPlay()
 	OnBeginCursorOver.AddDynamic(this, &AEnemyCharacter::OnMouseOver);
 	OnEndCursorOver.AddDynamic(this, &AEnemyCharacter::EndMouseOver);
 
+	const auto MyWidget = Cast<UBaseUserWidget>(EnemyHealthBar->GetUserWidgetObject());
+	if (!MyWidget) { UE_LOG(AEnemyCharacterLog, Error, TEXT("设置血条widg的控制器失败")); }
+
+	// 设置敌人血条的小部件控制器为当前角色 TODO 应该为敌人血条widget单独创建一个控制器类
+	MyWidget->SetWidgetController(this);
+
+	if (!AttributeSet) { return; }
+	const auto MyAs = Cast<UBaseAttributeSet>(AttributeSet);
+
+	if (!MyAs) { return; }
+
+	GetAbilitySystemComponent()->GetGameplayAttributeValueChangeDelegate(MyAs->GetCurrentHealthAttribute()).
+	                             AddLambda(
+		                             [this](const FOnAttributeChangeData& Data)
+		                             {
+			                             OnCurrentHealthAttributeChanged.Broadcast(
+				                             Data.NewValue, Data.NewValue > Data.OldValue);
+		                             });
+	GetAbilitySystemComponent()->GetGameplayAttributeValueChangeDelegate(MyAs->GetMaxHealthAttribute()).
+	                             AddLambda(
+		                             [this](const FOnAttributeChangeData& Data)
+		                             {
+			                             OnCurrentHealthAttributeChanged.Broadcast(
+				                             Data.NewValue, Data.NewValue > Data.OldValue);
+		                             });
+
+	BroadCastHealthBarInit();
 }
 
 void AEnemyCharacter::InitAbilityActorInfo()
@@ -45,19 +77,17 @@ void AEnemyCharacter::InitAbilityActorInfo()
 	const auto MyAsc = Cast<UBaseAbilitySystemComponent>(AbilitySystemComponent);
 	if (!MyAsc)
 	{
-		UE_LOG(AEnemyCharacterLog, Error, TEXT("MyAsc Cant be null"));
+		UE_LOG(AEnemyCharacterLog, Error, TEXT("MyAsc 不能为 null"));
 		return;
 	}
 	MyAsc->InitSetting();
+	InitAllAttributes();
 }
 
 
 void AEnemyCharacter::HighLightActor()
 {
-	if (!GetMesh() || !WeaponLogicBaseComponent)
-	{
-		return;
-	}
+	if (!GetMesh() || !WeaponLogicBaseComponent) { return; }
 	GetMesh()->SetRenderCustomDepth(true);
 	GetMesh()->SetCustomDepthStencilValue(CUSTOM_DEPTH_RED);
 	WeaponLogicBaseComponent->HighLight();
@@ -65,24 +95,26 @@ void AEnemyCharacter::HighLightActor()
 
 void AEnemyCharacter::UnHighLightActor()
 {
-	if (!GetMesh() || !WeaponLogicBaseComponent)
-	{
-		return;
-	}
+	if (!GetMesh() || !WeaponLogicBaseComponent) { return; }
 	GetMesh()->SetRenderCustomDepth(false);
 	GetMesh()->SetCustomDepthStencilValue(0);
 	WeaponLogicBaseComponent->UnHighLight();
 }
 
-void AEnemyCharacter::OnMouseOver(AActor *TouchedActor)
-{
-	Super::HighLight();
-	UE_LOG(AEnemyCharacterLog, Warning, TEXT("%s,HightLight"), *TouchedActor->GetName());
+void AEnemyCharacter::OnMouseOver(AActor* TouchedActor) { Super::HighLight(); }
 
-}
+void AEnemyCharacter::EndMouseOver(AActor* TouchedActor) { Super::UnHighLight(); }
 
-void AEnemyCharacter::EndMouseOver(AActor *TouchedActor)
+void AEnemyCharacter::BroadCastHealthBarInit() const
 {
-	Super::UnHighLight();
-	UE_LOG(AEnemyCharacterLog, Warning, TEXT("%s,UnHightLight"), *TouchedActor->GetName());
+	if (!AttributeSet)
+	{
+		UE_LOG(AEnemyCharacterLog, Error, TEXT("AttributeSet 不能为 null"));
+		return;
+	}
+	const auto MyAs = Cast<UBaseAttributeSet>(AttributeSet);
+	OnCurrentHealthAttributeChanged.Broadcast(
+		MyAs->GetCurrentHealth(), false);
+	OnMaxHealthAttributeChanged.Broadcast(
+		MyAs->GetMaxHealth(), false);
 }
