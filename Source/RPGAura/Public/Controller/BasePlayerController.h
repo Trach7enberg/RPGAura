@@ -20,68 +20,78 @@ class UInputMappingContext;
 UCLASS()
 class RPGAURA_API ABasePlayerController : public APlayerController
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 public:
-    ABasePlayerController();
-    virtual void PlayerTick(float DeltaTime) override;
+	ABasePlayerController();
+	virtual void PlayerTick(float DeltaTime) override;
 
 protected:
-    virtual void BeginPlay() override;
-    virtual void SetupInputComponent() override;
-    virtual void OnPossess(APawn* aPawn) override;
+	virtual void BeginPlay() override;
+	virtual void SetupInputComponent() override;
+	virtual void OnPossess(APawn* aPawn) override;
 
 private:
-    // 当前鼠标击中的Actor
-    UPROPERTY()
-    TObjectPtr<AActor> CurrentActor;
+	// 当前鼠标击中的Actor
+	UPROPERTY()
+	TObjectPtr<AActor> CurrentActor;
 
-    // 鼠标击中Actor时的HitResult
-    UPROPERTY()
-    FHitResult CurseHitResult;
-    /// 输入上下文
-    UPROPERTY(EditAnywhere, Category="Input")
-    TObjectPtr<UInputMappingContext> InputContext;
+	// 鼠标击中Actor时的HitResult
+	UPROPERTY()
+	FHitResult CurseHitResult;
+	/// 输入上下文
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputMappingContext> InputContext;
 
-    //IA_Move
-    UPROPERTY(EditAnywhere, Category="Input")
-    TObjectPtr<UInputAction> MoveAction;
+	//IA_Move
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> MoveAction;
 
-    void Move(const FInputActionValue& InputActionValue);
+	//IA_Shift
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> ShiftAction;
 
-    UPROPERTY(EditDefaultsOnly, Category="Input")
-    TObjectPtr<URPGAuraInputConfig> InputConfig;
+	void Move(const FInputActionValue& InputActionValue);
 
-    UPROPERTY()
-    TObjectPtr<UBaseAbilitySystemComponent> AbilitySystemComponent;
+	UPROPERTY(EditDefaultsOnly, Category="Input")
+	TObjectPtr<URPGAuraInputConfig> InputConfig;
 
-    // 样条线组件,用于平滑路径
-    UPROPERTY()
-    TObjectPtr<USplineComponent> SplineComponent;
+	UPROPERTY()
+	TObjectPtr<UBaseAbilitySystemComponent> AbilitySystemComponent;
 
-    // 存储目标点
-    FVector CachedDestination;
+	// 样条线组件,用于平滑路径
+	UPROPERTY()
+	TObjectPtr<USplineComponent> SplineComponent;
 
-    // 人物跟随鼠标的时间
-    float FollowCursorTime;
+	// 存储目标点
+	FVector CachedDestination;
 
-    // 短按阈值,超过这个值就是短按,不是点击,以秒为单位 TODO 应该在增强输入IA或者映射里设置触发器
-    float ShortPressThreshold;
+	// 人物跟随鼠标的时间
+	float FollowCursorTime;
 
-    // 是否自动行走
-    bool BIsAutoWalking;
+	// 短按阈值,超过这个值就是短按,不是点击,以秒为单位 TODO 应该在增强输入IA或者映射里设置触发器
+	float ShortPressThreshold;
 
-    // 鼠标是否在瞄准目标
-    bool BIsTargeting;
+	// 是否自动行走
+	bool BIsAutoWalking;
 
-    // 距离目标多近就停下来
-    UPROPERTY(EditDefaultsOnly, Category="Move")
-    float StopDistance;
+	// 鼠标是否在瞄准目标
+	bool BIsTargeting;
 
-    UBaseAbilitySystemComponent* GetAbilitySystemComponent();
-    void AbilityInputTagPressed(FGameplayTag InputTag);
-    void AbilityInputTagReleased(FGameplayTag InputTag);
-    void AbilityInputTagHeld(FGameplayTag InputTag);
+	// 距离目标多近就停下来
+	UPROPERTY(EditDefaultsOnly, Category="Move")
+	float StopDistance;
 
-    void AutoWalking();
+	// 是否按下Shift键
+	bool BIsShiftDown;
+	
+	UBaseAbilitySystemComponent* GetAbilitySystemComponent();
+	void AbilityInputTagPressed(FGameplayTag InputTag);
+	void AbilityInputTagReleased(FGameplayTag InputTag);
+	void AbilityInputTagHeld(FGameplayTag InputTag);
+
+	void AutoWalking();
+
+	void ShiftPressed();
+	void ShiftReleased();
 };
