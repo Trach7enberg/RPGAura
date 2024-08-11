@@ -21,9 +21,13 @@ public:
 	void SpawnProjectile(const FHitResult HitResult) const;
 
 protected:
+	// 飞弹实体类
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Class")
 	TSubclassOf<ABaseProjectile> ProjectileClass;
 
+	// GE实体类
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="GameplayEffect")
+	TSubclassOf<UGameplayEffect> DamageEffectClass;
 
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	                             const FGameplayAbilityActivationInfo ActivationInfo,

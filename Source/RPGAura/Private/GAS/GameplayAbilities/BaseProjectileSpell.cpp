@@ -3,6 +3,7 @@
 
 #include "GAS/GameplayAbilities/BaseProjectileSpell.h"
 
+#include "AbilitySystemComponent.h"
 #include "GAS/AbilityTasks/TargetDataUnderCursor.h"
 #include "Interfaces/CombatInterface.h"
 #include "Weapons/Projectiles/BaseProjectile.h"
@@ -19,7 +20,7 @@ void UBaseProjectileSpell::SpawnProjectile(const FHitResult HitResult) const
 		UE_LOG(UBaseProjectileSpellLog, Error, TEXT("Projectile Class不能为nullptr!"));
 		return;
 	}
-	if (!GetOwningActorFromActorInfo() || !GetAvatarActorFromActorInfo())
+	if (!GetOwningActorFromActorInfo() || !GetAvatarActorFromActorInfo() || !GetAbilitySystemComponentFromActorInfo())
 	{
 		UE_LOG(UBaseProjectileSpellLog, Error, TEXT("Actor信息获取失败!"));
 		return;
@@ -36,10 +37,15 @@ void UBaseProjectileSpell::SpawnProjectile(const FHitResult HitResult) const
 		return;
 	}
 
-	// TODO 设置飞弹的Rotation
 	FTransform Transform;
 	Transform.SetLocation(CombatInter->GetCombatSocketLocation());
-	Transform.SetRotation((HitResult.ImpactPoint - CombatInter->GetCombatSocketLocation()).Rotation().Quaternion());
+
+	FRotator Rotation = (HitResult.ImpactPoint - CombatInter->GetCombatSocketLocation()).Rotation();
+
+	// 飞弹的倾斜度是与地面平行
+	Rotation.Pitch = 0.f;
+	Transform.SetRotation(Rotation.Quaternion());
+
 
 	const auto Projectile = GetWorld()->SpawnActorDeferred<ABaseProjectile>(
 		ProjectileClass,
@@ -48,12 +54,22 @@ void UBaseProjectileSpell::SpawnProjectile(const FHitResult HitResult) const
 		Instigate,
 		ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
 
-	// TODO 给飞弹一个GameplayEffectSpec , 可以让它在overlap的时候应用
 
 	if (GetCurrentActorInfo()->PlayerController.Get())
 	{
 		GetCurrentActorInfo()->PlayerController.Get()->SetControlRotation(Transform.Rotator());
 	}
+
+	// 创建GE
+	if (DamageEffectClass)
+	{
+		auto EffectContext = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
+		EffectContext.AddSourceObject(GetAvatarActorFromActorInfo());
+		
+		Projectile->DamageEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(
+			DamageEffectClass, GetAbilityLevel(), EffectContext);
+	}
+
 	Projectile->FinishSpawning(Transform);
 }
 
