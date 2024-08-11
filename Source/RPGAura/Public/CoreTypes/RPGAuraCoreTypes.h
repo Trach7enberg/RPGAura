@@ -15,28 +15,28 @@ class UAbilitySystemComponent;
 USTRUCT(BlueprintType)
 struct FWidgetControllerParams
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
-    FWidgetControllerParams() {}
+	FWidgetControllerParams() {}
 
-    FWidgetControllerParams(APlayerController* Pc,
-                            APlayerState* Ps,
-                            UAbilitySystemComponent* Asc,
-                            UAttributeSet* As) :
-        CurrentPlayerController(Pc), CurrentPlayerState(Ps),
-        CurrentAbilitySystemComponent(Asc), CurrentAttributeSet(As) {}
+	FWidgetControllerParams(APlayerController* Pc,
+	                        APlayerState* Ps,
+	                        UAbilitySystemComponent* Asc,
+	                        UAttributeSet* As) :
+		CurrentPlayerController(Pc), CurrentPlayerState(Ps),
+		CurrentAbilitySystemComponent(Asc), CurrentAttributeSet(As) {}
 
-    UPROPERTY(BlueprintReadOnly, Category="WidgetController")
-    TObjectPtr<APlayerController> CurrentPlayerController = nullptr;
+	UPROPERTY(BlueprintReadOnly, Category="WidgetController")
+	TObjectPtr<APlayerController> CurrentPlayerController = nullptr;
 
-    UPROPERTY(BlueprintReadOnly, Category="WidgetController")
-    TObjectPtr<APlayerState> CurrentPlayerState = nullptr;
+	UPROPERTY(BlueprintReadOnly, Category="WidgetController")
+	TObjectPtr<APlayerState> CurrentPlayerState = nullptr;
 
-    UPROPERTY(BlueprintReadOnly, Category="WidgetController")
-    TObjectPtr<UAbilitySystemComponent> CurrentAbilitySystemComponent = nullptr;
+	UPROPERTY(BlueprintReadOnly, Category="WidgetController")
+	TObjectPtr<UAbilitySystemComponent> CurrentAbilitySystemComponent = nullptr;
 
-    UPROPERTY(BlueprintReadOnly, Category="WidgetController")
-    TObjectPtr<UAttributeSet> CurrentAttributeSet = nullptr;
+	UPROPERTY(BlueprintReadOnly, Category="WidgetController")
+	TObjectPtr<UAttributeSet> CurrentAttributeSet = nullptr;
 };
 
 /// ---BaseWidgetController类 使用
@@ -46,19 +46,19 @@ struct FWidgetControllerParams
 USTRUCT(BlueprintType)
 struct FRPGAuraAttributeInfo
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-    FGameplayTag AttributeTag = FGameplayTag();
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FGameplayTag AttributeTag = FGameplayTag();
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-    FText AttributeName = FText();
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FText AttributeName = FText();
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-    FText AttributeDescription = FText();
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FText AttributeDescription = FText();
 
-    UPROPERTY(BlueprintReadOnly)
-    float AttributeValue = 0.f;
+	UPROPERTY(BlueprintReadOnly)
+	float AttributeValue = 0.f;
 };
 
 /// ---UAttributeInfo类使用
@@ -68,31 +68,31 @@ struct FRPGAuraAttributeInfo
 USTRUCT(BlueprintType)
 struct FUIWidgetRow : public FTableRowBase
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
-    // 要显示的标签
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-    FGameplayTag Tag = FGameplayTag();
+	// 要显示的标签
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	FGameplayTag Tag = FGameplayTag();
 
-    // 要显示的消息
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-    FText Message = FText();
+	// 要显示的消息
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	FText Message = FText();
 
-    // 要显示的UI
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-    TSubclassOf<UBaseUserWidget> MessageWidget;
+	// 要显示的UI
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TSubclassOf<UBaseUserWidget> MessageWidget;
 
-    // 要显示的图片
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-    UTexture2D* Image = nullptr;
+	// 要显示的图片
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UTexture2D* Image = nullptr;
 };
 
-/// 给生命值、魔力值属性变化时的委托
+/// 给生命值、魔力值属性变化时的委托,BIsIncreased 增加还是减少,增加则为true
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnVitalAttributeChangedSignature,
                                              float,
                                              NewValue,
                                              bool,
-                                             /* NewValue增加还是减少,增加则为true */
+                                             /* BIsIncreased增加还是减少,增加则为true */
                                              BIsIncreased);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMessageWidgetRowSignature, const FUIWidgetRow, Row);
@@ -108,10 +108,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributeChangedSignature, const 
 UENUM(BlueprintType)
 enum class EGameplayTagType:uint8
 {
-    AllGameplayTags UMETA(DisplayName = "全部标签(All)"),
-    VitalGameplayTags UMETA(DisplayName = "重要标签(Vital)"),
-    PrimaryGameplayTags UMETA(DisplayName = "主要标签(Primary)"),
-    SecondaryGameplayTags UMETA(DisplayName = "次要标签(Secondary)")
+	AllGameplayTags UMETA(DisplayName = "全部标签(All)"),
+	VitalGameplayTags UMETA(DisplayName = "重要标签(Vital)"),
+	PrimaryGameplayTags UMETA(DisplayName = "主要标签(Primary)"),
+	SecondaryGameplayTags UMETA(DisplayName = "次要标签(Secondary)")
 };
 
 /// --- BaseA
