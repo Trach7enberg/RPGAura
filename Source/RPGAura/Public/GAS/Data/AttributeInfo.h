@@ -27,5 +27,5 @@ public:
 
 	/// 在蓝图中填充的数据数组,游戏标签到属性的映射
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TArray<FRPGAuraAttributeInfo> RPGAuraAttributeInfos{};
+	TArray<FRPGAuraAttributeInfo> RPGAuraAttributeInfos;
 };

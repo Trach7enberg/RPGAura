@@ -8,10 +8,10 @@ DEFINE_LOG_CATEGORY_STATIC(UAttributeInfoLog, All, All);
 
 UAttributeInfo::UAttributeInfo()
 {
-    for (const auto GameplayTag : FRPGAuraGameplayTags::GetGameplayTagsArray())
+    for (const auto& GameplayTag : FRPGAuraGameplayTags::GameplayTagsContainer)
     {
         FRPGAuraAttributeInfo Tmp;
-        Tmp.AttributeTag = *GameplayTag;
+        Tmp.AttributeTag = GameplayTag;
         RPGAuraAttributeInfos.Add(Tmp);
     }
 }
