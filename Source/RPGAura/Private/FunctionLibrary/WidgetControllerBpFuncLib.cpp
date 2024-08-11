@@ -10,98 +10,92 @@
 
 DEFINE_LOG_CATEGORY_STATIC(UWidgetControllerBpFuncLibLog, All, All);
 
-void UWidgetControllerBpFuncLib::CreateWidgetControllerParams(AController* OwnerController, FWidgetControllerParams& Params)
+void UWidgetControllerBpFuncLib::CreateWidgetControllerParams(AController* OwnerController,
+                                                              FWidgetControllerParams& Params)
 {
-    if (!OwnerController)
-    {
-        UE_LOG(UWidgetControllerBpFuncLibLog, Error, TEXT("当前Owner为空"));
-        return;
-    }
+	if (!OwnerController)
+	{
+		UE_LOG(UWidgetControllerBpFuncLibLog, Error, TEXT("当前Owner为空"));
+		return;
+	}
 
-    const auto CurrentPlayerController = Cast<APlayerController>(OwnerController);
+	const auto CurrentPlayerController = Cast<APlayerController>(OwnerController);
 
-    if (!CurrentPlayerController)
-    {
-        UE_LOG(UWidgetControllerBpFuncLibLog, Error, TEXT("当前Owner不是玩家控制器!"));
-        return;
-    }
+	if (!CurrentPlayerController)
+	{
+		UE_LOG(UWidgetControllerBpFuncLibLog, Error, TEXT("当前Owner不是玩家控制器!"));
+		return;
+	}
 
-    const auto MyPlayerState = CurrentPlayerController->GetPlayerState<ABasePlayerState>();
-    if (!MyPlayerState)
-    {
-        return;
-    }
+	const auto MyPlayerState = CurrentPlayerController->GetPlayerState<ABasePlayerState>();
+	if (!MyPlayerState) { return; }
 
-    if (!MyPlayerState->GetAbilitySystemComponent() || !MyPlayerState->GetAttributeSet())
-    {
-        return;
-    }
+	if (!MyPlayerState->GetAbilitySystemComponent() || !MyPlayerState->GetAttributeSet()) { return; }
 
-    Params = { CurrentPlayerController, MyPlayerState,
-               MyPlayerState->GetAbilitySystemComponent(),
-               MyPlayerState->GetAttributeSet() };
+	Params = {
+		CurrentPlayerController, MyPlayerState,
+		MyPlayerState->GetAbilitySystemComponent(),
+		MyPlayerState->GetAttributeSet()
+	};
 }
 
 
 UBaseWidgetController* UWidgetControllerBpFuncLib::CreateWidgetController(
-    const TSubclassOf<UBaseWidgetController> WidgetControllerClass,
-    AController* OwnerController)
+	const TSubclassOf<UBaseWidgetController> WidgetControllerClass,
+	AController* OwnerController)
 {
-    if (!WidgetControllerClass)
-    {
-        return nullptr;
-    }
+	if (!WidgetControllerClass) { return nullptr; }
 
-    UBaseWidgetController* WidgetController = nullptr;
+	UBaseWidgetController* WidgetController = nullptr;
 
-    auto Params = FWidgetControllerParams();
-    UWidgetControllerBpFuncLib::CreateWidgetControllerParams(OwnerController, Params);
+	auto Params = FWidgetControllerParams();
+	UWidgetControllerBpFuncLib::CreateWidgetControllerParams(OwnerController, Params);
 
-    WidgetController = NewObject<UBaseWidgetController>(OwnerController, WidgetControllerClass);
-    WidgetController->SetWidgetControllerParams(Params);
-    if (!WidgetController->IsWidgetControllerParamsValid())
-    {
-        UE_LOG(UWidgetControllerBpFuncLibLog, Error, TEXT("WidgetControllerParams 不能为 null"));
-    }
-    // // 给这个控制器的拥有者绑定当属性值更改时候的回调函数
-    // WidgetController->BindCallBack();
+	WidgetController = NewObject<UBaseWidgetController>(OwnerController, WidgetControllerClass);
+	WidgetController->SetWidgetControllerParams(Params);
+	if (!WidgetController->IsWidgetControllerParamsValid())
+	{
+		UE_LOG(UWidgetControllerBpFuncLibLog, Error, TEXT("WidgetControllerParams 不能为 null"));
+	}
+	// // 给这个控制器的拥有者绑定当属性值更改时候的回调函数
+	// WidgetController->BindCallBack();
 
-    if (!WidgetController)
-    {
-        UE_LOG(UWidgetControllerBpFuncLibLog, Error, TEXT("[%s]类型的WidgetController 创建失败"), *WidgetControllerClass->GetName());
-    }
+	if (!WidgetController)
+	{
+		UE_LOG(UWidgetControllerBpFuncLibLog, Error, TEXT("[%s]类型的WidgetController 创建失败"),
+		       *WidgetControllerClass->GetName());
+	}
 
-    return WidgetController;
+	return WidgetController;
 }
 
 UMainWidgetController* UWidgetControllerBpFuncLib::GetMainWidgetController(const APlayerController* PlayerController)
 {
-    if (!PlayerController)
-    {
-        return nullptr;
-    }
-    const auto Hud = Cast<ABaseHUD>(PlayerController->GetHUD());
+	if (!PlayerController) { return nullptr; }
+	const auto Hud = Cast<ABaseHUD>(PlayerController->GetHUD());
 
-    if (!Hud)
-    {
-        return nullptr;
-    }
+	if (!Hud) { return nullptr; }
 
-    return Hud->GetMainWidgetController();
+	return Hud->GetMainWidgetController();
 }
 
-UAttributeMenuWidgetController* UWidgetControllerBpFuncLib::GetAttributeMenuWidgetController(const APlayerController* PlayerController)
+void UWidgetControllerBpFuncLib::SetHudAttributeMenuWidgetController(const APlayerController* PlayerController,
+                                                                     UAttributeMenuWidgetController*
+                                                                     AttributeMenuWidgetController)
 {
-    if (!PlayerController)
-    {
-        return nullptr;
-    }
-    const auto Hud = Cast<ABaseHUD>(PlayerController->GetHUD());
+	if (!PlayerController) { return; }
+	const auto Hud = Cast<ABaseHUD>(PlayerController->GetHUD());
+	if (!Hud) { return; }
+	Hud->SetAttributeMenuWidgetController(AttributeMenuWidgetController);
+}
 
-    if (!Hud)
-    {
-        return nullptr;
-    }
+UAttributeMenuWidgetController* UWidgetControllerBpFuncLib::GetAttributeMenuWidgetController(
+	const APlayerController* PlayerController)
+{
+	if (!PlayerController) { return nullptr; }
+	const auto Hud = Cast<ABaseHUD>(PlayerController->GetHUD());
 
-    return Hud->GetAttributeMenuWidgetController();
+	if (!Hud) { return nullptr; }
+
+	return Hud->GetAttributeMenuWidgetController();
 }
