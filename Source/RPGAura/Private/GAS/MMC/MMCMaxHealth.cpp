@@ -6,6 +6,8 @@
 #include "GAS/AttributeSet/BaseAttributeSet.h"
 #include "Interfaces/CombatInterface.h"
 
+DEFINE_LOG_CATEGORY_STATIC(UMMCMaxHealthLog,All,All);
+
 UMMCMaxHealth::UMMCMaxHealth()
 {
 	// 设置要捕获的属性,从属性集(AttributeSet)的静态方法中获得
@@ -44,6 +46,7 @@ float UMMCMaxHealth::CalculateBaseMagnitude_Implementation(const FGameplayEffect
 	const auto TargetActorCombatInterface = Cast<ICombatInterface>(Spec.GetContext().GetSourceObject());
 	if (!TargetActorCombatInterface)
 	{
+		UE_LOG(UMMCMaxHealthLog,Warning,TEXT("获取ICombatInterface接口失败!!"));
 		return 0;
 	}
 

@@ -6,6 +6,7 @@
 #include "GAS/AttributeSet/BaseAttributeSet.h"
 #include "Interfaces/CombatInterface.h"
 
+DEFINE_LOG_CATEGORY_STATIC(UMMCMaxManaLog,All,All);
 UMMCMaxMana::UMMCMaxMana()
 {
 	CaptureAttributeDef.AttributeToCapture = UBaseAttributeSet::GetIntelligenceAttribute();
@@ -39,6 +40,7 @@ float UMMCMaxMana::CalculateBaseMagnitude_Implementation(const FGameplayEffectSp
 	const auto TargetActorCombatInterface = Cast<ICombatInterface>(Spec.GetContext().GetSourceObject());
 	if (!TargetActorCombatInterface)
 	{
+		UE_LOG(UMMCMaxManaLog,Warning,TEXT("获取ICombatInterface接口失败!!"));
 		return 0;
 	}
 
