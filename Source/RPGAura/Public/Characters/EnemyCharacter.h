@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Characters/CharacterBase.h"
-#include "CoreTypes/RPGAuraCoreTypes.h"
 #include "Interfaces/HighLightInterface.h"
 #include "EnemyCharacter.generated.h"
 
@@ -39,16 +38,17 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnVitalAttributeChangedSignature OnMaxHealthAttributeChanged;
 
+	/// 仅广播血条值一次,用于初始化血条
 	UFUNCTION(BlueprintCallable, Category = "Widget")
 	void BroadCastHealthBarInit() const;
 
 protected:
 	virtual void BeginPlay() override;
 	virtual void InitAbilityActorInfo() override;
-
+	
 
 	/// 敌人的等级
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "EnemyLevel")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character Class Defaluts")
 	int32 EnemyLevel = 1;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widget")

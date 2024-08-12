@@ -80,9 +80,12 @@ void AEnemyCharacter::InitAbilityActorInfo()
 		UE_LOG(AEnemyCharacterLog, Error, TEXT("MyAsc 不能为 null"));
 		return;
 	}
+
 	MyAsc->InitSetting();
 	InitAllAttributes();
 }
+
+
 
 
 void AEnemyCharacter::HighLightActor()
