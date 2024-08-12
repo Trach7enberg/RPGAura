@@ -8,6 +8,8 @@
 #include "Components/WeaponLogicBaseComponent.h"
 #include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
 #include "Interfaces/HighLightInterface.h"
+#include "SubSystems/RPGAuraGameInstanceSubsystem.h"
+#include "Subsystems/SubsystemBlueprintLibrary.h"
 
 DEFINE_LOG_CATEGORY_STATIC(ACharacterBaseLog, All, All);
 
@@ -59,11 +61,20 @@ void ACharacterBase::InitAttributes(const TSubclassOf<UGameplayEffect> Attribute
 	GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*GESpec.Data.Get(), GetAbilitySystemComponent());
 }
 
-void ACharacterBase::InitAllAttributes() const
+void ACharacterBase::InitAllAttributes(bool BIsPlayer) 
 {
-	InitAttributes(DefaultPrimaryAttributesGameplayEffect);
-	InitAttributes(DefaultSecondaryPrimaryAttributesGameplayEffect);
-	InitAttributes(DefaultVitalAttributesGameplayEffect);
+	if (!GetAbilitySystemComponent())
+	{
+		UE_LOG(ACharacterBaseLog, Error, TEXT("能力系统为nullptr!"));
+		return;
+	}
+	auto GiSubSystem = Cast<URPGAuraGameInstanceSubsystem>(
+		USubsystemBlueprintLibrary::GetGameInstanceSubsystem(this, URPGAuraGameInstanceSubsystem::StaticClass()));
+	if (!GiSubSystem)
+	{
+		UE_LOG(ACharacterBaseLog, Error, TEXT("获取GameInstance子系统失败!"));
+	}
+	GiSubSystem->InitializeDefaultAttributes(GetAbilitySystemComponent(), CharacterClass, GetCharacterLevel(), BIsPlayer);
 }
 
 

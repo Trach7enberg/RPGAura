@@ -7,9 +7,11 @@
  */
 #include "CoreMinimal.h"
 #include "AbilitySystemInterface.h"
+#include "CoreTypes/RPGAuraCoreTypes.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/CombatInterface.h"
 #include "CharacterBase.generated.h"
+
 
 class UGameplayAbility;
 class UGameplayEffect;
@@ -47,6 +49,10 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	// 当前角色的职业类别
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Character Class Defaluts")
+	ECharacterClass CharacterClass;
+
 	UPROPERTY(EditDefaultsOnly, Category="Weapon")
 	TObjectPtr<UWeaponLogicBaseComponent> WeaponLogicBaseComponent;
 
@@ -58,17 +64,6 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UAttributeSet> AttributeSet;
 
-	// 用于初始化角色主要属性的GE类
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="GAS | Attributes")
-	TSubclassOf<UGameplayEffect> DefaultPrimaryAttributesGameplayEffect = nullptr;
-
-	// 用于初始化角色次要属性的GE类,在主属性初始化后执行,该GE为infinite
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="GAS | Attributes")
-	TSubclassOf<UGameplayEffect> DefaultSecondaryPrimaryAttributesGameplayEffect = nullptr;
-
-	// 用于初始化角色重要(Vital)属性的GE类,在SecondPrimary属性初始化后执行
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="GAS | Attributes")
-	TSubclassOf<UGameplayEffect> DefaultVitalAttributesGameplayEffect = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="GAS | Abilities")
 	TArray<TSubclassOf<UGameplayAbility>> StartUpAbilities;
@@ -81,8 +76,9 @@ protected:
 	/// @param Level 应用GE的等级
 	virtual void InitAttributes(TSubclassOf<UGameplayEffect> AttributesGameplayEffect, float Level = 1.f) const;
 
-	/// 初始化角色身上的所有属性
-	void InitAllAttributes() const;
+	/// 初始化角色身上的所有属性(职业对应的默认主要属性以及次要、vital属性),NPC和玩家的次要属性有所区分,不是同一种
+	/// @param BIsPlayer 是否是玩家
+	virtual void InitAllAttributes(bool BIsPlayer = false);
 
 	/// 当前角色能否被高亮
 	/// @return 能高亮则返回true

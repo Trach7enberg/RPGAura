@@ -6,6 +6,7 @@
 #include "GameplayTagContainer.h"
 #include "RPGAuraCoreTypes.generated.h"
 
+class UGameplayEffect;
 class UBaseUserWidget;
 class UAttributeSet;
 class UAbilitySystemComponent;
@@ -114,4 +115,27 @@ enum class EGameplayTagType:uint8
 	SecondaryGameplayTags UMETA(DisplayName = "次要标签(Secondary)")
 };
 
-/// --- BaseA
+/// ---UCharacterClassInfo 数据资产使用
+/// 角色职业枚举类
+UENUM(BlueprintType)
+enum class ECharacterClass :uint8
+{
+	// 法术师
+	Elementalist ,
+
+	// 战士
+	Warrior,
+
+	//游侠
+	Ranger,
+};
+
+/// 每个角色职业的默认属性数据
+USTRUCT(BlueprintType)
+struct FCharacterClassDefaultInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite , Category = "DefaultAttributes")
+	TSubclassOf<UGameplayEffect> PrimaryAttributes;
+};

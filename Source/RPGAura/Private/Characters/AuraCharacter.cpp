@@ -45,6 +45,9 @@ AAuraCharacter::AAuraCharacter()
 	bUseControllerRotationYaw = false;
 
 	if (GetMesh()) { GetMesh()->SetRelativeLocation(FVector(0, 0, -85)); }
+
+	// Aura角色职业默认为法师
+	CharacterClass = ECharacterClass::Elementalist;
 }
 
 void AAuraCharacter::BeginPlay() { Super::BeginPlay(); }
@@ -72,8 +75,9 @@ void AAuraCharacter::InitAbilityActorInfo()
 	MyAsc->InitAbilityActorInfo(MyPlayerState, this);
 	MyAsc->InitSetting();
 
-	InitAllAttributes();
+	InitAllAttributes(true);
 }
+
 
 void AAuraCharacter::InitHUD() const
 {
@@ -131,5 +135,5 @@ FString AAuraCharacter::GetNetModeStr() const
 	FString NetMode = "Client";
 
 	if (HasAuthority()) { NetMode = "Server"; }
-	return NetMode ;
+	return NetMode;
 }

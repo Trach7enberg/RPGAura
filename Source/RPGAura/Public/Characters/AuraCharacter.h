@@ -36,7 +36,7 @@ public:
 
 	// ~ ICombatInterface
 	virtual int32 GetCharacterLevel() override;
-	
+
 	virtual void UpdateCharacterFacingTarget(const FVector& TargetLoc) override;
 	// ~ ICombatInterface
 
@@ -57,11 +57,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Animation")
 	FName WarpTargetName = "FacingTarget";
 
-	
-
 
 	/// 初始化当前ACS的能力组件、属性集和ACS的AbilityActorInfo
 	virtual void InitAbilityActorInfo() override;
+
 
 private :
 	FString GetNetModeStr() const;
