@@ -78,12 +78,12 @@ void UAttributeMenuWidget::NativeOnInitialized()
 		if (const auto Wc = GetWidgetController<UBaseWidgetController>())
 		{
 			Wc->BindCallBack();
-			UE_LOG(UAttributeMenuWidgetLog, Error, TEXT("(1)设置属性菜单控制器"))
+			// UE_LOG(UAttributeMenuWidgetLog, Error, TEXT("(1)设置属性菜单控制器"))
 		}
 	}
 	
 	InitVerticalArea();
-	UE_LOG(UAttributeMenuWidgetLog, Error, TEXT("(2)初始化属性菜单的Vertical区域"))
+	// UE_LOG(UAttributeMenuWidgetLog, Error, TEXT("(2)初始化属性菜单的Vertical区域"))
 	
 }
 
@@ -95,7 +95,7 @@ void UAttributeMenuWidget::NativeConstruct()
 	if(const auto Wc = GetWidgetController<UBaseWidgetController>())
 	{
 		Wc->BroadcastInitialValues();
-		UE_LOG(UAttributeMenuWidgetLog, Error, TEXT("(3)初始广播属性菜单控制器的委托一次"))
+		// UE_LOG(UAttributeMenuWidgetLog, Error, TEXT("(3)初始广播属性菜单控制器的委托一次"))
 	}
 	
 }
