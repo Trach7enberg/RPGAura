@@ -101,7 +101,7 @@ void ABasePlayerController::SetupInputComponent()
 void ABasePlayerController::OnPossess(APawn* aPawn)
 {
 	Super::OnPossess(aPawn);
-	UE_LOG(ABasePlayerControllerLog, Warning, TEXT("控制器: [%s] , 以控制 : [%s] 角色"),*GetName(),*aPawn->GetName());
+	// UE_LOG(ABasePlayerControllerLog, Warning, TEXT("控制器: [%s] , 以控制 : [%s] 角色"),*GetName(),*aPawn->GetName());
 }
 
 void ABasePlayerController::Move(const FInputActionValue& InputActionValue)
