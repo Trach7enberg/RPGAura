@@ -7,12 +7,15 @@
 #include "GameplayEffectExtension.h"
 #include "CoreTypes/RPGAuraGameplayTags.h"
 #include "GameFramework/Character.h"
+#include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
 #include "Net/UnrealNetwork.h"
 
 DEFINE_LOG_CATEGORY_STATIC(UBaseAttributeSetLog, All, All);
 
 UBaseAttributeSet::UBaseAttributeSet()
 {
+	CurrentMyAbilitySystemComponent = nullptr;
+
 	const auto GameplayTags = FRPGAuraGameplayTags::Get();
 	// FAttributeSignature Signature;
 	// Signature.BindStatic(GetStrengthAttribute);
@@ -183,7 +186,7 @@ void UBaseAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribu
 	// {
 	// 	NewValue = FMath::Clamp(NewValue, DefaultMaxMana, NewValue);
 	// }
-	
+
 	// UE_LOG(UBaseAttributeSetLog, Error, TEXT("[%s,%s]:%.1f"),
 	//        (GetOwningActor())?*GetOwningActor()->GetName():*FString(""),
 	//        *Attribute.GetName(), NewValue);
@@ -223,4 +226,40 @@ void UBaseAttributeSet::InitCurrentGeProp(const FGameplayEffectModCallbackData& 
 void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
 	Super::PostGameplayEffectExecute(Data);
+	if (!GetMyCurrentAbilitySystem())
+	{
+		UE_LOG(UBaseAttributeSetLog, Error, TEXT("能力系统组件 为空!"));
+		return;
+	}
+	// 检查是否等于 InComingDamage 元属性
+	if (Data.EvaluatedData.Attribute == GetInComingDamageAttribute() && GetInComingDamage() != 0)
+	{
+		const auto TempValue = GetInComingDamage();
+		SetInComingDamage(0);
+
+
+		const auto TempHealth = GetCurrentHealth() - TempValue;
+
+		SetCurrentHealth(FMath::Clamp(TempHealth, 0.f, GetMaxHealth()));
+
+		// 是否是致命伤
+		bool BIsFatal = TempHealth <= 0.f;
+
+		// 给击中的敌人 激活含有标签HitReact的能力
+		if (!BIsFatal)
+		{
+			GetMyCurrentAbilitySystem()->TryActivateAbilityByTag(FRPGAuraGameplayTags::Get().Effects_HitReact);
+		}
+	} 
+}
+
+UBaseAbilitySystemComponent* UBaseAttributeSet::GetMyCurrentAbilitySystem()
+{
+	if (!CurrentMyAbilitySystemComponent)
+	{
+		// 存储我们自己的ASC组件 方便后面使用
+		CurrentMyAbilitySystemComponent = Cast<UBaseAbilitySystemComponent>(
+			GetOwningAbilitySystemComponent());
+	}
+	return CurrentMyAbilitySystemComponent;
 }
