@@ -64,4 +64,6 @@ protected:
 
 private :
 	FString GetNetModeStr() const;
+	
+	virtual void OnGrantedTag_HitReact(const FGameplayTag Tag, int32 NewTagCount) override;
 };

@@ -74,8 +74,11 @@ void AAuraCharacter::InitAbilityActorInfo()
 	}
 	MyAsc->InitAbilityActorInfo(MyPlayerState, this);
 	MyAsc->InitSetting();
-
 	InitAllAttributes(true);
+	
+	RegisterGameplayTagEvent();
+
+	AddCharacterAbilities();
 }
 
 
@@ -118,7 +121,7 @@ void AAuraCharacter::PossessedBy(AController* NewController)
 
 	InitHUD();
 
-	AddCharacterAbilities();
+	
 }
 
 void AAuraCharacter::OnRep_PlayerState()
@@ -136,4 +139,9 @@ FString AAuraCharacter::GetNetModeStr() const
 
 	if (HasAuthority()) { NetMode = "Server"; }
 	return NetMode;
+}
+
+void AAuraCharacter::OnGrantedTag_HitReact(const FGameplayTag Tag, int32 NewTagCount)
+{
+	// TODO 待实现 玩家的受击逻辑
 }
