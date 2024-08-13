@@ -53,7 +53,11 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widget")
 	UWidgetComponent *EnemyHealthBar;
+
 	
+
+	
+
 private:
 	// ~ IHighLightInterface Begin
 	UFUNCTION()

@@ -6,6 +6,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/WeaponLogicBaseComponent.h"
 #include "Components/WidgetComponent.h"
+#include "CoreTypes/RPGAuraGameplayTags.h"
 #include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
 #include "GAS/AttributeSet/BaseAttributeSet.h"
 #include "RPGAura/RPGAura.h"
@@ -26,6 +27,9 @@ AEnemyCharacter::AEnemyCharacter()
 
 	EnemyHealthBar = CreateDefaultSubobject<UWidgetComponent>("EnemyHealthBar");
 	EnemyHealthBar->SetupAttachment(RootComponent);
+
+	
+	MaxWalkingSpeed = 250.f;
 }
 
 
@@ -33,6 +37,10 @@ void AEnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	check(AbilitySystemComponent);
+	check(GetCharacterMovement());
+
+	
+
 
 	InitAbilityActorInfo();
 
@@ -53,6 +61,7 @@ void AEnemyCharacter::BeginPlay()
 
 	if (!MyAs) { return; }
 
+	// 绑定属性集生命值属性变化时候的委托
 	GetAbilitySystemComponent()->GetGameplayAttributeValueChangeDelegate(MyAs->GetCurrentHealthAttribute()).
 	                             AddLambda(
 		                             [this](const FOnAttributeChangeData& Data)
@@ -69,6 +78,8 @@ void AEnemyCharacter::BeginPlay()
 		                             });
 
 	BroadCastHealthBarInit();
+
+	
 }
 
 void AEnemyCharacter::InitAbilityActorInfo()
@@ -82,10 +93,12 @@ void AEnemyCharacter::InitAbilityActorInfo()
 	}
 
 	MyAsc->InitSetting();
+	
 	InitAllAttributes();
+	RegisterGameplayTagEvent();
+	
+	AddCharacterAbilities();
 }
-
-
 
 
 void AEnemyCharacter::HighLightActor()
@@ -108,6 +121,7 @@ void AEnemyCharacter::OnMouseOver(AActor* TouchedActor) { Super::HighLight(); }
 
 void AEnemyCharacter::EndMouseOver(AActor* TouchedActor) { Super::UnHighLight(); }
 
+
 void AEnemyCharacter::BroadCastHealthBarInit() const
 {
 	if (!AttributeSet)
@@ -121,3 +135,5 @@ void AEnemyCharacter::BroadCastHealthBarInit() const
 	OnMaxHealthAttributeChanged.Broadcast(
 		MyAs->GetMaxHealth(), false);
 }
+
+
