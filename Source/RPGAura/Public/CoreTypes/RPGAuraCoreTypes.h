@@ -6,6 +6,7 @@
 #include "GameplayTagContainer.h"
 #include "RPGAuraCoreTypes.generated.h"
 
+class UGameplayAbility;
 class UGameplayEffect;
 class UBaseUserWidget;
 class UAttributeSet;
@@ -121,7 +122,7 @@ UENUM(BlueprintType)
 enum class ECharacterClass :uint8
 {
 	// 法术师
-	Elementalist ,
+	Elementalist,
 
 	// 战士
 	Warrior,
@@ -136,6 +137,11 @@ struct FCharacterClassDefaultInfo
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite , Category = "DefaultAttributes")
+	// 角色的主要GE属性
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "DefaultAttributes")
 	TSubclassOf<UGameplayEffect> PrimaryAttributes;
+
+	// 角色的主要初始能力
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "DefaultAbilities")
+	TArray<TSubclassOf<UGameplayAbility>> PrimaryStartUpAbilities;
 };
