@@ -18,4 +18,10 @@ public:
     // 每一个能力都有的初始默认能力标签
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="StartUp")
     FGameplayTag StartUpTag;
+
+protected:
+
+	// 根据CT缩放的伤害值
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Magnitude|Damage")
+	FScalableFloat ScalableDamage;
 };
