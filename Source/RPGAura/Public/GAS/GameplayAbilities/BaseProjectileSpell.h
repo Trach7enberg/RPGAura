@@ -25,8 +25,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Class")
 	TSubclassOf<ABaseProjectile> ProjectileClass;
 
-	// GE实体类
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="GameplayEffect")
+	// 伤害GE实体类
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GameplayEffect")
 	TSubclassOf<UGameplayEffect> DamageEffectClass;
 
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,

@@ -3,7 +3,9 @@
 
 #include "GAS/GameplayAbilities/BaseProjectileSpell.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "CoreTypes/RPGAuraGameplayTags.h"
 #include "GAS/AbilityTasks/TargetDataUnderCursor.h"
 #include "Interfaces/CombatInterface.h"
 #include "Weapons/Projectiles/BaseProjectile.h"
@@ -15,9 +17,9 @@ void UBaseProjectileSpell::SpawnProjectile(const FHitResult HitResult) const
 	// 飞弹能力(投射物)仅在服务器上生成
 	if (!GetAvatarActorFromActorInfo()->HasAuthority()) { return; }
 
-	if (!ProjectileClass)
+	if (!ProjectileClass || !DamageEffectClass)
 	{
-		UE_LOG(UBaseProjectileSpellLog, Error, TEXT("Projectile Class不能为nullptr!"));
+		UE_LOG(UBaseProjectileSpellLog, Error, TEXT("GE Class不能为nullptr!"));
 		return;
 	}
 	if (!GetOwningActorFromActorInfo() || !GetAvatarActorFromActorInfo() || !GetAbilitySystemComponentFromActorInfo())
@@ -60,16 +62,24 @@ void UBaseProjectileSpell::SpawnProjectile(const FHitResult HitResult) const
 		GetCurrentActorInfo()->PlayerController.Get()->SetControlRotation(Transform.Rotator());
 	}
 
-	// 创建GE
-	if (DamageEffectClass)
-	{
-		auto EffectContext = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
-		EffectContext.AddSourceObject(GetAvatarActorFromActorInfo());
-		
-		Projectile->DamageEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(
-			DamageEffectClass, GetAbilityLevel(), EffectContext);
-	}
+	// 创建GE 上下文
+	FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
+	EffectContextHandle.AddSourceObject(GetAvatarActorFromActorInfo());
 
+	// 创建GE
+	auto GameplayEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(
+		DamageEffectClass, GetAbilityLevel(), EffectContextHandle);
+
+	// 分配一个键值对给SetByCaller,键是游戏标签,值是设定的Magnitude,到时候在GE蓝图中选择我们分配的标签,该GE就会应用我们这里设定的Magnitude值
+	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(GameplayEffectSpecHandle,
+	                                                              FRPGAuraGameplayTags::Get().Abilities_Damage_FireBolt,
+	                                                              ScalableDamage.GetValueAtLevel(GetAbilityLevel()));
+
+
+	Projectile->DamageEffectSpecHandle = GameplayEffectSpecHandle;
+
+
+	// 完成飞弹生成
 	Projectile->FinishSpawning(Transform);
 }
 
