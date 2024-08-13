@@ -69,17 +69,15 @@ void ABaseProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, 
 
 	if (HasAuthority())
 	{
-		UAbilitySystemComponent *ActorAsc = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
+		UAbilitySystemComponent* ActorAsc = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
 		// TODO 应用GE
-		if (!DamageEffectSpecHandle.IsValid() || !ActorAsc)
+		if (!DamageEffectSpecHandle.IsValid() || !ActorAsc) { UE_LOG(ABaseProjectileLog, Warning, TEXT("无法应用GE!")); }
+		else
 		{
-			UE_LOG(ABaseProjectileLog, Warning, TEXT("无法应用GE!"));
-		}else{
 			// 应用GE到自身,这里的自身是OtherActor
 			ActorAsc->ApplyGameplayEffectSpecToSelf(*DamageEffectSpecHandle.Data);
 		}
-		 
-		
+
 		Destroy();
 	}
 	else
