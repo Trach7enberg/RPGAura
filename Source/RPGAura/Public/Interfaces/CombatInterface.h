@@ -6,6 +6,7 @@
 #include "UObject/Interface.h"
 #include "CombatInterface.generated.h"
 
+class UAnimMontage;
 /// 和战斗相关的接口
 UINTERFACE(MinimalAPI, meta=(CannotImplementInterfaceInBlueprint))
 class UCombatInterface : public UInterface
@@ -14,7 +15,7 @@ class UCombatInterface : public UInterface
 };
 
 /**
- * 
+ * 战斗接口类
  */
 class RPGAURA_API ICombatInterface
 {
@@ -33,4 +34,9 @@ public:
 	/// @param TargetLoc 目标位置
 	UFUNCTION(BlueprintCallable)
 	virtual void UpdateCharacterFacingTarget(const FVector& TargetLoc) = 0;
+
+	/// 获取受击蒙太奇动画
+	/// @return 受击蒙太奇动画
+	UFUNCTION(BlueprintCallable)
+	virtual UAnimMontage* GetHitReactAnim() =0;
 };
