@@ -6,7 +6,10 @@
 #include "AbilitySystemComponent.h"
 #include "GameplayEffect.h"
 #include "Components/WeaponLogicBaseComponent.h"
+#include "CoreTypes/RPGAuraGameplayTags.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
+#include "GAS/Data/CharacterClassInfo.h"
 #include "Interfaces/HighLightInterface.h"
 #include "SubSystems/RPGAuraGameInstanceSubsystem.h"
 #include "Subsystems/SubsystemBlueprintLibrary.h"
@@ -16,6 +19,9 @@ DEFINE_LOG_CATEGORY_STATIC(ACharacterBaseLog, All, All);
 ACharacterBase::ACharacterBase()
 {
 	PrimaryActorTick.bCanEverTick = false;
+
+	BIsHitReacting = false;
+	MaxWalkingSpeed = 600.f;
 
 	WeaponLogicBaseComponent = CreateDefaultSubobject<UWeaponLogicBaseComponent>("WeaponLogicComponent");
 
@@ -28,22 +34,38 @@ FVector ACharacterBase::GetCombatSocketLocation()
 	return WeaponLogicBaseComponent->GetWeaponSocketLocByName(WeaponLogicBaseComponent->GetWeaponTipSocketName());
 }
 
+UAnimMontage* ACharacterBase::GetHitReactAnim() { return HitReactAnimMontage.Get(); }
+
 void ACharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
 	check(WeaponLogicBaseComponent);
+
+	GetCharacterMovement()->MaxWalkSpeed = MaxWalkingSpeed;
 }
 
 
 void ACharacterBase::AddCharacterAbilities() const
 {
-	if (!HasAuthority()) { return; }
+	const auto GiSubSystem = GetGameInstance()->GetSubsystem<URPGAuraGameInstanceSubsystem>();
+	if (!HasAuthority() || !GiSubSystem) { return; }
 
+	if (!GiSubSystem->CharacterClassInfo)
+	{
+		UE_LOG(ACharacterBaseLog, Error, TEXT("[%s]初始能力对象为空!"), *GetName());
+		return;
+	}
 	if (!GetAbilitySystemComponent()) { return; }
 
 	const auto Asc = Cast<UBaseAbilitySystemComponent>(GetAbilitySystemComponent());
 	if (!Asc) { return; }
-	Asc->AddCharacterAbilities(StartUpAbilities);
+
+	// 赋予角色的通用能力
+	Asc->AddCharacterAbilities(GiSubSystem->CharacterClassInfo->CommonAbilities);
+
+	// 赋予相应角色的初始能力
+	Asc->AddCharacterAbilities(
+		GiSubSystem->CharacterClassInfo->FindClassDefaultInfo(CharacterClass).PrimaryStartUpAbilities);
 }
 
 void ACharacterBase::InitAttributes(const TSubclassOf<UGameplayEffect> AttributesGameplayEffect,
@@ -61,7 +83,7 @@ void ACharacterBase::InitAttributes(const TSubclassOf<UGameplayEffect> Attribute
 	GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*GESpec.Data.Get(), GetAbilitySystemComponent());
 }
 
-void ACharacterBase::InitAllAttributes(bool BIsPlayer) 
+void ACharacterBase::InitAllAttributes(bool BIsPlayer)
 {
 	if (!GetAbilitySystemComponent())
 	{
@@ -70,11 +92,9 @@ void ACharacterBase::InitAllAttributes(bool BIsPlayer)
 	}
 	auto GiSubSystem = Cast<URPGAuraGameInstanceSubsystem>(
 		USubsystemBlueprintLibrary::GetGameInstanceSubsystem(this, URPGAuraGameInstanceSubsystem::StaticClass()));
-	if (!GiSubSystem)
-	{
-		UE_LOG(ACharacterBaseLog, Error, TEXT("获取GameInstance子系统失败!"));
-	}
-	GiSubSystem->InitializeDefaultAttributes(GetAbilitySystemComponent(), CharacterClass, GetCharacterLevel(), BIsPlayer);
+	if (!GiSubSystem) { UE_LOG(ACharacterBaseLog, Error, TEXT("获取GameInstance子系统失败!")); }
+	GiSubSystem->InitializeDefaultAttributes(GetAbilitySystemComponent(), CharacterClass, GetCharacterLevel(),
+	                                         BIsPlayer);
 }
 
 
@@ -86,6 +106,14 @@ bool ACharacterBase::CanHighLight()
 }
 
 void ACharacterBase::InitAbilityActorInfo() {}
+
+void ACharacterBase::RegisterGameplayTagEvent()
+{
+	// 绑定(注册)当ASC被授予Effects_HitReact标签或者(被完全)移除标签时触发的Event
+	// ( EGameplayTagEventType::AnyCountChange 意味着任何改变都会触发,如果有多个相同的标签只移除一个也会被触发)
+	GetAbilitySystemComponent()->RegisterGameplayTagEvent(FRPGAuraGameplayTags::Get().Effects_HitReact).AddUObject(
+		this, &ACharacterBase::OnGrantedTag_HitReact);
+}
 
 void ACharacterBase::HighLight()
 {
@@ -99,4 +127,19 @@ void ACharacterBase::UnHighLight()
 	Cast<IHighLightInterface>(this)->UnHighLightActor();
 }
 
-UAbilitySystemComponent* ACharacterBase::GetAbilitySystemComponent() const { return AbilitySystemComponent; }
+FORCEINLINE UAbilitySystemComponent* ACharacterBase::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}
+
+void ACharacterBase::OnGrantedTag_HitReact(const FGameplayTag Tag, int32 NewTagCount)
+{
+	BIsHitReacting = NewTagCount > 0;
+
+	// 触发回调函数时,NewTagCount不大于0意味着当前标签正在移除,所以继续行走 否则停止走动
+	GetCharacterMovement()->MaxWalkSpeed = BIsHitReacting ? 0.f : MaxWalkingSpeed;
+
+	GEngine->AddOnScreenDebugMessage(1, 2, FColor::Red,
+	                                 FString::Printf(
+		                                 TEXT("TagName: [%s] , NewTagCount: [%d]"), *Tag.ToString(), NewTagCount));
+}

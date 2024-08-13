@@ -44,11 +44,20 @@ public:
 	virtual FVector GetCombatSocketLocation() override;
 
 	virtual void UpdateCharacterFacingTarget(const FVector& TargetLoc) override {};
+	virtual UAnimMontage* GetHitReactAnim() override;
 	// ~ ICombatInterface
 
 protected:
 	virtual void BeginPlay() override;
 
+	/// 当前角色是否在进行被击中逻辑
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Combat")
+	bool BIsHitReacting ;
+
+	/// 当前角色的最大移动速度
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Combat")
+	float MaxWalkingSpeed;
+	
 	// 当前角色的职业类别
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Character Class Defaluts")
 	ECharacterClass CharacterClass;
@@ -64,11 +73,11 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UAttributeSet> AttributeSet;
 
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="GAS | Abilities")
-	TArray<TSubclassOf<UGameplayAbility>> StartUpAbilities;
-
-	/// 给角色授予能力(初始能力)
+	// 角色的受击动画
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GAS | CombatInterface")
+	TObjectPtr<UAnimMontage> HitReactAnimMontage;
+	
+	/// 给角色授予能力
 	void AddCharacterAbilities() const;
 
 	/// 接受一个GE用来初始化角色身上的属性,次要属性必须得在主要属性初始化之后
@@ -84,5 +93,17 @@ protected:
 	/// @return 能高亮则返回true
 	virtual bool CanHighLight();
 
+	/// 初始化能力系统的ActorInfo
 	virtual void InitAbilityActorInfo();
+
+	/// 向能力组件中注册当某个标签被移除或者添加时候的回调,需要在InitAbilityActorInfo之后执行
+	virtual void RegisterGameplayTagEvent();
+
+
+private:
+	/// 当ASC 被授予或者被完全移除HitReact标签时的回调函数
+	/// @param Tag 指定标签被移除或者被添加的标签
+	/// @param NewTagCount 当前标签被移除或者被添加 多个同样的签标的计数时 (可以同时有相同类型的标签)
+	UFUNCTION()
+	virtual void OnGrantedTag_HitReact(const FGameplayTag Tag, int32 NewTagCount);
 };
