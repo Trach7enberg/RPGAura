@@ -29,9 +29,13 @@ public:
     // 应用GE时候 广播资产标签,用于弹出拾取信息
     FOnGetAssetTagsDelegate OnGetAssetTagsDelegate;
 
-    /// 给玩家添加初始能力
-    /// @param StartUpAbilities 能力列表
-    void AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& StartUpAbilities);
+    /// 给玩家添加初始能力,可能有多个
+    /// @param Abilities 能力列表
+    void AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& Abilities);
+
+    /// 给玩家添加一个能力
+    /// @param AbilityClass 能力类
+    void AddCharacterAbility(const TSubclassOf<UGameplayAbility>& AbilityClass);
 
     /// 处理InputAction按下时的能力触发问题
     /// @param InputTag 输入的游戏标签
@@ -45,6 +49,10 @@ public:
     /// @param InputTag 输入的游戏标签
     void AbilityInputTagReleased(const FGameplayTag& InputTag);
 
+    /// 根据游戏标签激活能力
+    /// @param Tag 标签
+    void TryActivateAbilityByTag(const FGameplayTag& Tag);
+    
 protected:
     /// 当前ACS被应用任意的GE到自己身上时触发的回调函数
     /// @param AbilitySystemComponent 
