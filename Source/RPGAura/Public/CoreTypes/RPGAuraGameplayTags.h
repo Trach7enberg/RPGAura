@@ -6,6 +6,7 @@
 #include "GameplayTagContainer.h"
 #include "RPGAuraCoreTypes.h"
 
+/// GAS的属性集里属性、InputAction 对应的游戏标签
 UENUM(BlueprintType)
 enum class EGameplayTagNum : uint8
 {
@@ -39,6 +40,10 @@ enum class EGameplayTagNum : uint8
 	MaxMana,
 
 	Event_Montage_FireBolt,
+
+	Damage,
+
+	Effects_HitReact,
 };
 
 
@@ -80,6 +85,12 @@ struct FRPGAuraGameplayTags
 	FGameplayTag InputTag_4;
 
 	FGameplayTag Event_Montage_FireBolt;
+
+	FGameplayTag Abilities_Damage_FireBolt;
+	
+	FGameplayTag Effects_HitReact;
+
+	
 	// 标签的真实名字
 	FString CurrentHealth = "Attributes.Vital.CurrentHealth";
 	FString CurrentMana = "Attributes.Vital.CurrentMana";

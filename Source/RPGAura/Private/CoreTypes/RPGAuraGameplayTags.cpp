@@ -73,11 +73,18 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 			GameplayTags.Event_Montage_FireBolt = UGameplayTagsManager::Get().AddNativeGameplayTag(
 				"Event.Montage.FireBolt", FString("识别GameplayEvent的标签,用于当播放火箭蒙太奇触发某个通知时发送gameplay事件"));
 		}
+
+		{
+			GameplayTags.Abilities_Damage_FireBolt = UGameplayTagsManager::Get().AddNativeGameplayTag("Abilities.Damage.FireBolt", FString("伤害"));
+		}
+
+		{
+			GameplayTags.Effects_HitReact = UGameplayTagsManager::Get().AddNativeGameplayTag("Effects.HitReact", FString("被击中时给予的标签"));
+		}
 	}
 
 	// 添加到Vital 标签容器
 	{
-		
 		GameplayTags.VitalGameplayTagsContainer.AddTag(GameplayTags.Attribute_Vital_CurrentHealth);
 		GameplayTags.VitalGameplayTagsContainer.AddTag(GameplayTags.Attribute_Vital_CurrentMana);
 	}
@@ -134,6 +141,8 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.InputTag_4);
 
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Event_Montage_FireBolt);
+
+		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Abilities_Damage_FireBolt);
 	}
 
 	// 标签到枚举的映射
@@ -172,10 +181,14 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 
 
 		GameplayTags.TagToNumMap.Add(GameplayTags.Event_Montage_FireBolt, EGameplayTagNum::Event_Montage_FireBolt);
+
+		GameplayTags.TagToNumMap.Add(GameplayTags.Abilities_Damage_FireBolt, EGameplayTagNum::Damage);
+		
+		GameplayTags.TagToNumMap.Add(GameplayTags.Effects_HitReact, EGameplayTagNum::Damage);
 	}
 }
 
-const  FGameplayTagContainer&  FRPGAuraGameplayTags::GetTagsContainerByType(const EGameplayTagType TagType)
+const FGameplayTagContainer& FRPGAuraGameplayTags::GetTagsContainerByType(const EGameplayTagType TagType)
 {
 	switch (TagType)
 	{
