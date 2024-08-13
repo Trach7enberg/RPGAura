@@ -8,6 +8,7 @@
 #include "CharacterClassInfo.generated.h"
 
 
+class UGameplayAbility;
 /**
  *  游戏角色职业信息资产
  */
@@ -33,6 +34,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite,Category="Common Class Defaults")
 	TSubclassOf<UGameplayEffect> VitalAttributes;
 
+	// 角色共同拥有的能力
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Common Class Defaults")
+	TArray<TSubclassOf<UGameplayAbility>> CommonAbilities;
+	
 	/// 根据角色职业枚举查找对应角色的默认职业数据
 	/// @param CharacterClass 角色职业枚举
 	/// @return 角色的默认职业数据结构
