@@ -56,3 +56,15 @@ void ABaseWeapon::SetWeaponPhysics(const bool Enable) const
 		                                ? ECollisionEnabled::Type::PhysicsOnly
 		                                : ECollisionEnabled::Type::NoCollision);
 }
+
+void ABaseWeapon::SetWeaponMaterial(const int I, UMaterialInstance* MaterialInstance) const
+{
+	if(!WeaponMesh){return;}
+	WeaponMesh->SetMaterial(I,MaterialInstance);
+}
+
+void ABaseWeapon::SetCollisionEnabled(const ECollisionEnabled::Type NewType) const
+{
+	if(!WeaponMesh){return;}
+	WeaponMesh->SetCollisionEnabled(NewType);
+}

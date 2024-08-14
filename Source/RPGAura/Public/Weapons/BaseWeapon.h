@@ -30,7 +30,14 @@ public:
 	/// 设置武器的物理(模拟物理、重力、碰撞)
 	/// @param Enable 是否开启物理
 	void SetWeaponPhysics(bool Enable) const;
-	
+
+	// 设置武器的材质效果为溶解
+	void SetWeaponMaterial(int I, UMaterialInstance* MaterialInstance) const;
+
+	/// 设置武器的碰撞类型
+	/// @param NewType 碰撞类型
+	void SetCollisionEnabled(ECollisionEnabled::Type NewType) const;
+
 protected:
 	virtual void BeginPlay() override;
 
