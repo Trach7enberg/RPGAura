@@ -4,8 +4,15 @@
 #include "GAS/GameplayAbilities/BaseHitReactAbility.h"
 
 #include "AbilitySystemComponent.h"
+#include "CoreTypes/RPGAuraGameplayTags.h"
 
 DEFINE_LOG_CATEGORY_STATIC(UBaseHitReactAbilityLog, All, All);
+
+
+UBaseHitReactAbility::UBaseHitReactAbility()
+{
+	
+}
 
 void UBaseHitReactAbility::ApplyHitReact()
 {
@@ -49,9 +56,14 @@ void UBaseHitReactAbility::RemoveHitReact()
 		return;
 	}
 
-	const auto Suc = GetAbilitySystemComponentFromActorInfo()->RemoveActiveGameplayEffect(
+	GetAbilitySystemComponentFromActorInfo()->RemoveActiveGameplayEffect(
 		HitReactActiveGameplayEffectHandle);
-	GEngine->AddOnScreenDebugMessage(1, 2, FColor::Red,
-	                                 FString::Printf(
-		                                 TEXT("移除效果:%d"), Suc));
+	// BP_RemoveGameplayEffectFromOwnerWithHandle()
+}
+
+void UBaseHitReactAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
+	const FGameplayEventData* TriggerEventData)
+{
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 }
