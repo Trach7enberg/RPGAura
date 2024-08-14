@@ -30,4 +30,6 @@ public:
 	/// @param BIsPlayer 是否是玩家
 	UFUNCTION(BlueprintCallable, Category="GAS")
 	void InitializeDefaultAttributes( UAbilitySystemComponent* Asc, ECharacterClass CharacterClass, float Level , bool BIsPlayer = false);
+
+	// TODO 待实现在子系统中创建一个赋予能力的函数
 };
