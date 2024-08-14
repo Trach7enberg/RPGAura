@@ -8,6 +8,7 @@
 #include "CoreTypes/RPGAuraGameplayTags.h"
 #include "GameFramework/Character.h"
 #include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
+#include "Interfaces/CombatInterface.h"
 #include "Net/UnrealNetwork.h"
 
 DEFINE_LOG_CATEGORY_STATIC(UBaseAttributeSetLog, All, All);
@@ -245,12 +246,23 @@ void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 		// 是否是致命伤
 		bool BIsFatal = TempHealth <= 0.f;
 
-		// 给击中的敌人 激活含有标签HitReact的能力
+		// 非致命伤,给击中的敌人 激活含有标签HitReact的能力
 		if (!BIsFatal)
 		{
-			GetMyCurrentAbilitySystem()->TryActivateAbilityByTag(FRPGAuraGameplayTags::Get().Effects_HitReact);
+			// GetMyCurrentAbilitySystem()->TryActivateAbilityByTag(FRPGAuraGameplayTags::Get().Abilities_Effects_HitReact);
+
+			// 使用该函数需要确保能力蓝图类中的AbilityTags容器里有Effects_HitReact标签
+			GetMyCurrentAbilitySystem()->TryActivateAbilitiesByTag(
+				FGameplayTagContainer(FRPGAuraGameplayTags::Get().Abilities_Effects_HitReact));
+		}else
+		{
+			const auto CbInterface = Cast<ICombatInterface>(GetMyCurrentAbilitySystem()->GetAvatarActor());
+			if(CbInterface)
+			{
+				CbInterface->Die();
+			}
 		}
-	} 
+	}
 }
 
 UBaseAbilitySystemComponent* UBaseAttributeSet::GetMyCurrentAbilitySystem()
