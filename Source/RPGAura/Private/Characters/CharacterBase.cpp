@@ -21,11 +21,12 @@ ACharacterBase::ACharacterBase()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	SelfLifeSpan = 5.f;
+	SelfLifeSpan = 1.f;
 	BIsHitReacting = false;
 	MaxWalkingSpeed = 600.f;
 
 	WeaponLogicBaseComponent = CreateDefaultSubobject<UWeaponLogicBaseComponent>("WeaponLogicComponent");
+	DissolveTimelineComponent = CreateDefaultSubobject<UTimelineComponent>("DissolveTimelineComponent");
 
 	if (GetMesh()) { GetMesh()->SetRelativeRotation(FRotator(0, -90, 0)); }
 }
@@ -37,6 +38,8 @@ void ACharacterBase::BeginPlay()
 	check(WeaponLogicBaseComponent);
 
 	GetCharacterMovement()->MaxWalkSpeed = MaxWalkingSpeed;
+
+	InitDissolveTimeLine();
 }
 
 
@@ -131,32 +134,19 @@ void ACharacterBase::UnHighLight()
 	Cast<IHighLightInterface>(this)->UnHighLightActor();
 }
 
+void ACharacterBase::LifeSpanExpired()
+{
+	// 销毁武器,再销毁角色
+	UE_LOG(ACharacterBaseLog, Warning, TEXT("销毁"));
+	WeaponLogicBaseComponent->DestroyComponent(true);
+	Super::LifeSpanExpired();
+}
+
 FORCEINLINE UAbilitySystemComponent* ACharacterBase::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
 }
 
-void ACharacterBase::MulticastHandleDeath_Implementation()
-{
-	WeaponLogicBaseComponent->SetWeaponPhysics(true);
-
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
-	
-	// 启用布娃娃
-	GetMesh()->SetEnableGravity(true);
-	GetMesh()->SetSimulatePhysics(true);
-	GetMesh()->SetCollisionEnabled(ECollisionEnabled::Type::PhysicsOnly);
-	GetMesh()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
-
-	
-}
-
-void ACharacterBase::Die()
-{
-	WeaponLogicBaseComponent->DetachWeapon();
-	MulticastHandleDeath();
-	SetLifeSpan(SelfLifeSpan);
-}
 
 void ACharacterBase::OnGrantedTag_HitReact(const FGameplayTag Tag, int32 NewTagCount)
 {
@@ -168,4 +158,96 @@ void ACharacterBase::OnGrantedTag_HitReact(const FGameplayTag Tag, int32 NewTagC
 	GEngine->AddOnScreenDebugMessage(1, 2, FColor::Red,
 	                                 FString::Printf(
 		                                 TEXT("TagName: [%s] , NewTagCount: [%d]"), *Tag.ToString(), NewTagCount));
+}
+
+void ACharacterBase::InitDissolveTimeLine()
+{
+	if (!DissolveFloatCurve)
+	{
+		UE_LOG(ACharacterBaseLog, Error, TEXT("时间线的浮点曲线表为空!!"));
+		return;
+	}
+
+	FOnTimelineFloat OnUpdate;
+	FOnTimelineEvent OnFinished;
+	OnUpdate.BindDynamic(this, &ACharacterBase::DissolveTimelineUpdateFunc);
+	OnFinished.BindDynamic(this, &ACharacterBase::DissolveTimelineFinishedFunc);
+
+	DissolveTimelineComponent->AddInterpFloat(DissolveFloatCurve, OnUpdate, "Dissolve", "DissolveTrack");
+	DissolveTimelineComponent->SetTimelineFinishedFunc(OnFinished);
+	DissolveTimelineComponent->SetTimelineLengthMode(ETimelineLengthMode::TL_LastKeyFrame);
+}
+
+
+void ACharacterBase::DissolveTimelineUpdateFunc(float Output)
+{
+	SetScalarParameterValue(MaterialInstanceDynamic_Character, Output, ScalarParam);
+	SetScalarParameterValue(MaterialInstanceDynamic_Weapon, Output, ScalarParam);
+}
+
+void ACharacterBase::DissolveTimelineFinishedFunc()
+{
+	GEngine->AddOnScreenDebugMessage(1, 2, FColor::Red, FString::Printf(TEXT("TimelineFinished")));
+	// 溶解动画完成,角色销毁
+	SetLifeSpan(SelfLifeSpan);
+}
+
+void ACharacterBase::SetDissolveMaterial()
+{
+	if (!DissolveMaterialInstanceCharacter || !DissolveMaterialInstanceWeapon)
+	{
+		UE_LOG(ACharacterBaseLog, Warning, TEXT("材质实例为nullptr!!"));
+		return;
+	}
+
+	MaterialInstanceDynamic_Character = UMaterialInstanceDynamic::Create(DissolveMaterialInstanceCharacter, this);
+	GetMesh()->SetMaterial(0, MaterialInstanceDynamic_Character);
+
+
+	MaterialInstanceDynamic_Weapon = UMaterialInstanceDynamic::Create(DissolveMaterialInstanceWeapon, this);
+	WeaponLogicBaseComponent->SetWeaponMaterial(0, MaterialInstanceDynamic_Weapon);
+}
+
+void ACharacterBase::SetScalarParameterValue(
+	UMaterialInstanceDynamic* MaterialInstance, const float Value, const FName ParameterName)
+{
+	MaterialInstance->SetScalarParameterValue(ParameterName, Value);
+}
+
+
+void ACharacterBase::StartDissolveTimeline()
+{
+	if (!DissolveTimelineComponent) { return; }
+	
+	SetDissolveMaterial();
+
+	// 动态材质实例没有设置 不允许播放时间线
+	if (!MaterialInstanceDynamic_Character || !MaterialInstanceDynamic_Weapon) { return; }
+	
+	DissolveTimelineComponent->PlayFromStart();
+}
+
+void ACharacterBase::Die()
+{
+	WeaponLogicBaseComponent->DetachWeapon();
+	MulticastHandleDeath();
+}
+
+void ACharacterBase::MulticastHandleDeath_Implementation()
+{
+	// 设置武器物理开启
+	WeaponLogicBaseComponent->SetWeaponPhysics(true);
+
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
+
+	// 启用布娃娃
+	GetMesh()->SetEnableGravity(true);
+	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::Type::PhysicsOnly);
+	// Pawn还可以进行物理互动
+	// GetMesh()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+
+
+	// 播放溶解时间线动画,动画完成之后才死亡
+	StartDissolveTimeline();
 }
