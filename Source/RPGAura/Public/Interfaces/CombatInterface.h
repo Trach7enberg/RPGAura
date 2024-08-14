@@ -39,4 +39,13 @@ public:
 	/// @return 受击蒙太奇动画
 	UFUNCTION(BlueprintCallable)
 	virtual UAnimMontage* GetHitReactAnim() =0;
+
+	///  获取死亡蒙太奇动画
+	/// @return 死亡蒙太奇动画
+	UFUNCTION(BlueprintCallable)
+	virtual UAnimMontage* GetDeathAnim() =0;
+
+	/// 只在服务器上调用角色死亡
+	UFUNCTION(BlueprintCallable)
+	virtual void Die() = 0;
 };
