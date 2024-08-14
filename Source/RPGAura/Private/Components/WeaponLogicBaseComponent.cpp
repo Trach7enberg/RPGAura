@@ -9,8 +9,19 @@
 
 DEFINE_LOG_CATEGORY_STATIC(MyWeaponLogicBaseComponentLog, All, All);
 
-UWeaponLogicBaseComponent::UWeaponLogicBaseComponent() { PrimaryComponentTick.bCanEverTick = false; }
+UWeaponLogicBaseComponent::UWeaponLogicBaseComponent()
+{
+	PrimaryComponentTick.bCanEverTick = false;
+	BShouldDestroyWeapon = true;
+}
 
+
+void UWeaponLogicBaseComponent::SetWeaponCollisionEnabled(ECollisionEnabled::Type NewType) const
+{
+	if(!CurrentWeapon){return;}
+
+	CurrentWeapon->SetCollisionEnabled(NewType);
+}
 
 void UWeaponLogicBaseComponent::BeginPlay()
 {
@@ -51,9 +62,17 @@ void UWeaponLogicBaseComponent::DetachWeapon() const
 
 void UWeaponLogicBaseComponent::SetWeaponPhysics(bool Enable) const
 {
-	if(!CurrentWeapon){return;}
+	if (!CurrentWeapon) { return; }
 	CurrentWeapon->SetWeaponPhysics(true);
 }
+
+void UWeaponLogicBaseComponent::SetWeaponMaterial(const int I, UMaterialInstance* MaterialInstance) const
+{
+	if (!CurrentWeapon) { return; }
+
+	CurrentWeapon->SetWeaponMaterial(I, MaterialInstance);
+}
+
 
 void UWeaponLogicBaseComponent::AttachWeaponToSocket(ACharacterBase* Character, FName& SocketName)
 {
@@ -70,4 +89,10 @@ void UWeaponLogicBaseComponent::AttachWeaponToSocket(ACharacterBase* Character, 
 		CurrentWeapon->SetOwner(Character);
 		CurrentWeapon->SetWeaponMeshCollision(false);
 	}
+}
+
+void UWeaponLogicBaseComponent::DestroyComponent(bool bPromoteChildren)
+{
+	if (CurrentWeapon && BShouldDestroyWeapon) { CurrentWeapon->Destroy(); }
+	Super::DestroyComponent(bPromoteChildren);
 }

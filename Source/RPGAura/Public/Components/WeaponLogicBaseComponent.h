@@ -54,8 +54,26 @@ public:
     /// @param Enable 是否开启物理
     void SetWeaponPhysics(bool Enable) const;
 
+    /// 设置武器的材质效果为溶解
+    /// @param I 
+    /// @param MaterialInstance 
+    void SetWeaponMaterial(int I, UMaterialInstance* MaterialInstance) const;
+
+    virtual void DestroyComponent(bool bPromoteChildren) override;
+
+    bool GetShouldDestroyWeapon() const { return BShouldDestroyWeapon; }
+    void SetShouldDestroyWeapon(const bool bBShouldDestroyWeapon) { BShouldDestroyWeapon = bBShouldDestroyWeapon; }
+
+    /// 设置武器的碰撞类型
+    /// @param NewType 
+    void SetWeaponCollisionEnabled(ECollisionEnabled::Type NewType) const;
+
 protected:
     virtual void BeginPlay() override;
+
+    // 武器逻辑组件销毁时是否要 销毁武器
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Weapon")
+    bool BShouldDestroyWeapon;
 
     /// 武器蓝图
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Weapon")
