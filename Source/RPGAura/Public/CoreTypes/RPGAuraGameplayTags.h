@@ -43,7 +43,7 @@ enum class EGameplayTagNum : uint8
 
 	Damage,
 
-	Effects_HitReact,
+	Abilities_Effects_HitReact,
 };
 
 
@@ -88,7 +88,7 @@ struct FRPGAuraGameplayTags
 
 	FGameplayTag Abilities_Damage_FireBolt;
 	
-	FGameplayTag Effects_HitReact;
+	FGameplayTag Abilities_Effects_HitReact;
 
 	
 	// 标签的真实名字

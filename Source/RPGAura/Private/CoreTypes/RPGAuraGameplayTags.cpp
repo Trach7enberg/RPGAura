@@ -76,10 +76,7 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 
 		{
 			GameplayTags.Abilities_Damage_FireBolt = UGameplayTagsManager::Get().AddNativeGameplayTag("Abilities.Damage.FireBolt", FString("伤害"));
-		}
-
-		{
-			GameplayTags.Effects_HitReact = UGameplayTagsManager::Get().AddNativeGameplayTag("Effects.HitReact", FString("被击中时给予的标签"));
+			GameplayTags.Abilities_Effects_HitReact = UGameplayTagsManager::Get().AddNativeGameplayTag("Abilities.Effects.HitReact", FString("被击中时给予的标签"));
 		}
 	}
 
@@ -183,8 +180,7 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 		GameplayTags.TagToNumMap.Add(GameplayTags.Event_Montage_FireBolt, EGameplayTagNum::Event_Montage_FireBolt);
 
 		GameplayTags.TagToNumMap.Add(GameplayTags.Abilities_Damage_FireBolt, EGameplayTagNum::Damage);
-		
-		GameplayTags.TagToNumMap.Add(GameplayTags.Effects_HitReact, EGameplayTagNum::Damage);
+		GameplayTags.TagToNumMap.Add(GameplayTags.Abilities_Effects_HitReact, EGameplayTagNum::Abilities_Effects_HitReact);
 	}
 }
 
