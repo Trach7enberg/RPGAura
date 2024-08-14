@@ -5,6 +5,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "GameplayEffect.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/WeaponLogicBaseComponent.h"
 #include "CoreTypes/RPGAuraGameplayTags.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -20,6 +21,7 @@ ACharacterBase::ACharacterBase()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
+	SelfLifeSpan = 5.f;
 	BIsHitReacting = false;
 	MaxWalkingSpeed = 600.f;
 
@@ -28,13 +30,6 @@ ACharacterBase::ACharacterBase()
 	if (GetMesh()) { GetMesh()->SetRelativeRotation(FRotator(0, -90, 0)); }
 }
 
-
-FVector ACharacterBase::GetCombatSocketLocation()
-{
-	return WeaponLogicBaseComponent->GetWeaponSocketLocByName(WeaponLogicBaseComponent->GetWeaponTipSocketName());
-}
-
-UAnimMontage* ACharacterBase::GetHitReactAnim() { return HitReactAnimMontage.Get(); }
 
 void ACharacterBase::BeginPlay()
 {
@@ -111,9 +106,18 @@ void ACharacterBase::RegisterGameplayTagEvent()
 {
 	// 绑定(注册)当ASC被授予Effects_HitReact标签或者(被完全)移除标签时触发的Event
 	// ( EGameplayTagEventType::AnyCountChange 意味着任何改变都会触发,如果有多个相同的标签只移除一个也会被触发)
-	GetAbilitySystemComponent()->RegisterGameplayTagEvent(FRPGAuraGameplayTags::Get().Effects_HitReact).AddUObject(
-		this, &ACharacterBase::OnGrantedTag_HitReact);
+	GetAbilitySystemComponent()->RegisterGameplayTagEvent(FRPGAuraGameplayTags::Get().Abilities_Effects_HitReact).
+	                             AddUObject(
+		                             this, &ACharacterBase::OnGrantedTag_HitReact);
 }
+
+FVector ACharacterBase::GetCombatSocketLocation()
+{
+	return WeaponLogicBaseComponent->GetWeaponSocketLocByName(WeaponLogicBaseComponent->GetWeaponTipSocketName());
+}
+
+UAnimMontage* ACharacterBase::GetHitReactAnim() { return HitReactAnimMontage.Get(); }
+UAnimMontage* ACharacterBase::GetDeathAnim() { return DeathAnimMontage; }
 
 void ACharacterBase::HighLight()
 {
@@ -130,6 +134,28 @@ void ACharacterBase::UnHighLight()
 FORCEINLINE UAbilitySystemComponent* ACharacterBase::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
+}
+
+void ACharacterBase::MulticastHandleDeath_Implementation()
+{
+	WeaponLogicBaseComponent->SetWeaponPhysics(true);
+
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
+	
+	// 启用布娃娃
+	GetMesh()->SetEnableGravity(true);
+	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::Type::PhysicsOnly);
+	GetMesh()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+
+	
+}
+
+void ACharacterBase::Die()
+{
+	WeaponLogicBaseComponent->DetachWeapon();
+	MulticastHandleDeath();
+	SetLifeSpan(SelfLifeSpan);
 }
 
 void ACharacterBase::OnGrantedTag_HitReact(const FGameplayTag Tag, int32 NewTagCount)

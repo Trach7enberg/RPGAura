@@ -36,6 +36,10 @@ public:
 
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
+	/// 多播RPC,服务器和客户端都会调用
+	UFUNCTION(NetMulticast,Reliable)
+	virtual  void MulticastHandleDeath();
+
 	// ~ IAbilitySystemInterface
 	virtual UAttributeSet* GetAttributeSet() const { return AttributeSet; }
 
@@ -45,11 +49,17 @@ public:
 
 	virtual void UpdateCharacterFacingTarget(const FVector& TargetLoc) override {};
 	virtual UAnimMontage* GetHitReactAnim() override;
+	virtual UAnimMontage* GetDeathAnim() override;
+	virtual void Die() override;
 	// ~ ICombatInterface
 
 protected:
 	virtual void BeginPlay() override;
 
+	// 当前角色的lifeSpan
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Combat")
+	float SelfLifeSpan ;
+	
 	/// 当前角色是否在进行被击中逻辑
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Combat")
 	bool BIsHitReacting ;
@@ -62,6 +72,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Character Class Defaluts")
 	ECharacterClass CharacterClass;
 
+	// 武器逻辑组件
 	UPROPERTY(EditDefaultsOnly, Category="Weapon")
 	TObjectPtr<UWeaponLogicBaseComponent> WeaponLogicBaseComponent;
 
@@ -76,6 +87,10 @@ protected:
 	// 角色的受击动画
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GAS | CombatInterface")
 	TObjectPtr<UAnimMontage> HitReactAnimMontage;
+
+	// 角色的死亡动画
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GAS | CombatInterface")
+	TObjectPtr<UAnimMontage> DeathAnimMontage;
 	
 	/// 给角色授予能力
 	void AddCharacterAbilities() const;
