@@ -29,6 +29,7 @@ public:
 	{
 		return EnemyLevel;
 	};
+	virtual void Die() override;
 	// ~ ICombatInterface
 
 	// 属性变更委托

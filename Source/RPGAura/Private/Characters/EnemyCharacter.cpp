@@ -117,6 +117,8 @@ void AEnemyCharacter::UnHighLightActor()
 	WeaponLogicBaseComponent->UnHighLight();
 }
 
+void AEnemyCharacter::Die() { Super::Die(); }
+
 void AEnemyCharacter::OnMouseOver(AActor* TouchedActor) { Super::HighLight(); }
 
 void AEnemyCharacter::EndMouseOver(AActor* TouchedActor) { Super::UnHighLight(); }
