@@ -47,6 +47,13 @@ public:
     /// @return 武器插槽的位置
     FVector GetWeaponSocketLocByName(const FName& SocketName) const;
 
+    /// 解除武器 (该操作是复制的,服务器上做了客户端就不需要再执行)
+    void DetachWeapon() const;
+
+    /// 设置武器的物理(模拟物理、重力、碰撞)
+    /// @param Enable 是否开启物理
+    void SetWeaponPhysics(bool Enable) const;
+
 protected:
     virtual void BeginPlay() override;
 
@@ -65,7 +72,7 @@ protected:
 private:
     /// 当前持有的武器
     UPROPERTY()
-    ABaseWeapon* CurrentWeapon = nullptr;
+   TObjectPtr<ABaseWeapon>  CurrentWeapon ;
 
     void AttachWeaponToSocket(ACharacterBase* Character, FName& SocketName);
 };

@@ -27,6 +27,10 @@ public:
     /// @return 插槽位置
     FVector GetWeaponSocketLocByName(const FName& SocketName)const ;
 
+	/// 设置武器的物理(模拟物理、重力、碰撞)
+	/// @param Enable 是否开启物理
+	void SetWeaponPhysics(bool Enable) const;
+	
 protected:
 	virtual void BeginPlay() override;
 
