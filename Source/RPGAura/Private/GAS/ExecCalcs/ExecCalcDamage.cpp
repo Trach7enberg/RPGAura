@@ -19,6 +19,10 @@ struct EffectAttributeCapture
 	DECLARE_ATTRIBUTE_CAPTUREDEF(Armor);
 	DECLARE_ATTRIBUTE_CAPTUREDEF(ArmorPenetration);
 	DECLARE_ATTRIBUTE_CAPTUREDEF(BlockChance)
+	DECLARE_ATTRIBUTE_CAPTUREDEF(CriticalHitChance)
+	DECLARE_ATTRIBUTE_CAPTUREDEF(CriticalHitResistance)
+	DECLARE_ATTRIBUTE_CAPTUREDEF(CriticalHitDamage)
+
 
 	EffectAttributeCapture()
 	{
@@ -31,6 +35,9 @@ struct EffectAttributeCapture
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UBaseAttributeSet, Armor, Target, false); // 捕获目标的护甲属性
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UBaseAttributeSet, BlockChance, Target, false); // 捕获目标的格挡属性
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UBaseAttributeSet, ArmorPenetration, Target, false); // 捕获目标的护甲穿透属性
+		DEFINE_ATTRIBUTE_CAPTUREDEF(UBaseAttributeSet, CriticalHitChance, Source, false); // 捕获源 的暴击率
+		DEFINE_ATTRIBUTE_CAPTUREDEF(UBaseAttributeSet, CriticalHitDamage, Source, false); // 捕获源 的暴击伤害
+		DEFINE_ATTRIBUTE_CAPTUREDEF(UBaseAttributeSet, CriticalHitResistance, Target, false); // 捕获 目标的暴击抵抗率
 	}
 };
 
@@ -45,6 +52,9 @@ UExecCalcDamage::UExecCalcDamage()
 	RelevantAttributesToCapture.Add(DamageAttributeCapture().ArmorDef);
 	RelevantAttributesToCapture.Add(DamageAttributeCapture().BlockChanceDef);
 	RelevantAttributesToCapture.Add(DamageAttributeCapture().ArmorPenetrationDef);
+	RelevantAttributesToCapture.Add(DamageAttributeCapture().CriticalHitChanceDef);
+	RelevantAttributesToCapture.Add(DamageAttributeCapture().CriticalHitDamageDef);
+	RelevantAttributesToCapture.Add(DamageAttributeCapture().CriticalHitResistanceDef);
 }
 
 void UExecCalcDamage::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams,
@@ -58,11 +68,23 @@ void UExecCalcDamage::Execute_Implementation(const FGameplayEffectCustomExecutio
 	EvaluateParameters.SourceTags = SourceTags;
 	EvaluateParameters.TargetTags = TargetTags;
 
+	const auto SourceAvatar = ExecutionParams.GetSourceAbilitySystemComponent()->GetAvatarActor();
+	const auto TargetAvatar = ExecutionParams.GetTargetAbilitySystemComponent()->GetAvatarActor();
+
+	// 获取源的属性集
+	const auto SourceAs = Cast<UBaseAttributeSet>(
+		ExecutionParams.GetSourceAbilitySystemComponent()->GetAttributeSet(UBaseAttributeSet::StaticClass()));
+	if (!SourceAs)
+	{
+		UE_LOG(UExecCalcDamageLog, Error, TEXT("[%s]获取源的属性集失败!"), *GetName());
+		return;
+	}
+
 	// 转换成战斗接口
 	const auto SourceCombatInt = Cast<ICombatInterface>(
-		ExecutionParams.GetSourceAbilitySystemComponent()->GetAvatarActor());
+		SourceAvatar);
 	const auto TargetCombatInt = Cast<ICombatInterface>(
-		ExecutionParams.GetTargetAbilitySystemComponent()->GetAvatarActor());
+		TargetAvatar);
 
 	if (!SourceCombatInt || !TargetCombatInt)
 	{
@@ -73,7 +95,7 @@ void UExecCalcDamage::Execute_Implementation(const FGameplayEffectCustomExecutio
 	// 获取GameInstance子系统
 	const auto GiSubSystem = Cast<URPGAuraGameInstanceSubsystem>(
 		USubsystemBlueprintLibrary::GetGameInstanceSubsystem(
-			ExecutionParams.GetSourceAbilitySystemComponent()->GetAvatarActor(),
+			SourceAvatar,
 			URPGAuraGameInstanceSubsystem::StaticClass()));
 	if (!GiSubSystem)
 	{
@@ -101,11 +123,11 @@ void UExecCalcDamage::Execute_Implementation(const FGameplayEffectCustomExecutio
 
 
 	// 护甲值
-	float ArmorMagnitude = 0.f;
-
+	float TargetArmor = 0.f;
+	// 捕获目标护甲值
 	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageAttributeCapture().ArmorDef, EvaluateParameters,
-	                                                           ArmorMagnitude);
-	ArmorMagnitude = FMath::Max<float>(ArmorMagnitude, 0.f);
+	                                                           TargetArmor);
+	TargetArmor = FMath::Max<float>(TargetArmor, 0.f);
 
 
 	// 获取之前以Abilities_Damage_FireBolt游戏标签为键分配给SetByCaller的伤害值 (注意,我们在发射火球的能力的cpp里用能力系统分配设置了这个键值对,所以能获取到)
@@ -114,29 +136,64 @@ void UExecCalcDamage::Execute_Implementation(const FGameplayEffectCustomExecutio
 
 	// 格挡几率
 	float TargetBlockChance = 0.f;
+	// 捕获目标格挡几率
 	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageAttributeCapture().BlockChanceDef,
 	                                                           EvaluateParameters, TargetBlockChance);
 
 
 	// 护甲穿透率
-	float TargetArmorPenetration = 0.f;
-	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageAttributeCapture().ArmorPenetrationDef,
-	                                                           EvaluateParameters, TargetArmorPenetration);
+	const float SourceArmorPenetration = SourceAs->GetArmorPenetration();
 
 	// 有效护甲计算
-	float EffectiveArmor = ArmorMagnitude * ((100 - TargetArmorPenetration * ArmorPenetrationFactor) / 100.f);
+	float EffectiveArmor = TargetArmor * ((100 - SourceArmorPenetration * ArmorPenetrationFactor) / 100.f);
 	EffectiveArmor = FMath::Max<float>(EffectiveArmor, 0.f);
 
-	// 一点有效护甲抵扣一点伤害
+	// 目标暴击抵抗率
+	float TargetCriticalHitResistance = 0.f;
+	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageAttributeCapture().CriticalHitResistanceDef,
+	                                                           EvaluateParameters, TargetCriticalHitResistance);
+
+
+	// 源的暴击率
+	float SourceCriticalHitChance = 0.f;
+	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageAttributeCapture().CriticalHitChanceDef,
+	                                                           EvaluateParameters, SourceCriticalHitChance);
+	// 源的有效暴击几率
+	float SourceEffectiveCriticalHitChance = SourceCriticalHitChance - TargetCriticalHitResistance;
+	SourceEffectiveCriticalHitChance = FMath::Max<float>(SourceEffectiveCriticalHitChance, 0.f);
+
+	// 捕获源的暴击伤害
+	float SourceCriticalHitDamage = 0.f;
+	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageAttributeCapture().CriticalHitDamageDef,
+	                                                           EvaluateParameters, SourceCriticalHitDamage);
+
+	// 一点(有效护甲* EffectiveArmorFactor)抵扣一点伤害
 	Damage *= (100 - EffectiveArmor * EffectiveArmorFactor) / 100.f;
+	// 计算是否暴击
+	Damage = (FMath::RandRange(1, 100) <= SourceEffectiveCriticalHitChance) ? Damage * (2.f) + SourceCriticalHitDamage: Damage;
 	// 根据格挡几率判断是否格挡
 	Damage = (FMath::RandRange(1, 100) <= TargetBlockChance) ? Damage * (0.5f) : Damage;
 
+
 	UE_LOG(UExecCalcDamageLog, Warning,
 	       TEXT(
-		       "[ArmorPenetration-F]:%.2f , [EffectiveArmor-F]:%.2f  ,[Armor]:%.2f ,[ArmorPenetration]:%.2f ,  [EffectiveArmor]:%.2f , [TargetBlockChance]:%.2f , [Damage]: %.2f"
-	       ), ArmorPenetrationFactor, EffectiveArmorFactor, ArmorMagnitude, TargetArmorPenetration,
-	       EffectiveArmor, TargetBlockChance, Damage);
+		       "[Aura护甲穿透因子]:%.2f , "
+		       "[Aura护甲穿透率]:%.2f ,"
+		       "[Aura暴击几率]:%.2f ,"
+		       "[Aura有效暴击几率]:%.2f ,"
+		       "[Aura有效暴击伤害]:%.2f ,"
+		       "[敌方有效护甲因子]:%.2f ,"
+		       "[敌方护甲]:%.2f ,"
+		       "[敌方最终有效护甲]:%.2f ,"
+		       "[敌方抵抗暴击几率]:%.2f ,"
+		       "[敌方格挡几率]:%.2f ,"
+		       "[最终伤害]: %.2f"
+	       ), ArmorPenetrationFactor, SourceArmorPenetration, SourceCriticalHitChance, SourceEffectiveCriticalHitChance,
+	       SourceCriticalHitDamage,
+	       EffectiveArmorFactor,
+	       TargetArmor,
+	       EffectiveArmor, TargetCriticalHitResistance, TargetBlockChance, Damage);
+
 
 	// 修改属性集中名为InComingDamage的属性值
 	const FGameplayModifierEvaluatedData EvaluatedData(UBaseAttributeSet::GetInComingDamageAttribute(),
