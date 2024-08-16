@@ -52,8 +52,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character Class Defaluts")
 	int32 EnemyLevel = 1;
 
+	/// 血条widget
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widget")
-	UWidgetComponent *EnemyHealthBar;
+	TObjectPtr<UWidgetComponent> EnemyHealthBar;
 
 	
 
