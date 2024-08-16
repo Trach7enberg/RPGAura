@@ -5,6 +5,10 @@
 
 #include "CoreTypes/RPGAuraGameplayTags.h"
 #include "GAS/AttributeSet/BaseAttributeSet.h"
+#include "GAS/Data/CharacterClassInfo.h"
+#include "Interfaces/CombatInterface.h"
+#include "SubSystems/RPGAuraGameInstanceSubsystem.h"
+#include "Subsystems/SubsystemBlueprintLibrary.h"
 
 DEFINE_LOG_CATEGORY_STATIC(UExecCalcDamageLog, All, All);
 
@@ -54,11 +58,51 @@ void UExecCalcDamage::Execute_Implementation(const FGameplayEffectCustomExecutio
 	EvaluateParameters.SourceTags = SourceTags;
 	EvaluateParameters.TargetTags = TargetTags;
 
+	// 转换成战斗接口
+	const auto SourceCombatInt = Cast<ICombatInterface>(
+		ExecutionParams.GetSourceAbilitySystemComponent()->GetAvatarActor());
+	const auto TargetCombatInt = Cast<ICombatInterface>(
+		ExecutionParams.GetTargetAbilitySystemComponent()->GetAvatarActor());
+
+	if (!SourceCombatInt || !TargetCombatInt)
+	{
+		UE_LOG(UExecCalcDamageLog, Error, TEXT("[%s]获取化身角色失败!"), *GetName());
+		return;
+	}
+
+	// 获取GameInstance子系统
+	const auto GiSubSystem = Cast<URPGAuraGameInstanceSubsystem>(
+		USubsystemBlueprintLibrary::GetGameInstanceSubsystem(
+			ExecutionParams.GetSourceAbilitySystemComponent()->GetAvatarActor(),
+			URPGAuraGameInstanceSubsystem::StaticClass()));
+	if (!GiSubSystem)
+	{
+		UE_LOG(UExecCalcDamageLog, Error, TEXT("[%s]获取GameInstance子系统失败!"), *GetName());
+		return;
+	}
+
+	// 获取曲线表
+	const auto RealCurveArmorPenetration = GiSubSystem->CharacterClassInfo.Get()->DamageCalculationFactors->FindCurve(
+		FName("ArmorPenetrationFactor"), FString());
+	const auto RealCurveEffectiveArmor = GiSubSystem->CharacterClassInfo.Get()->DamageCalculationFactors->FindCurve(
+		FName("EffectiveArmorFactor"), FString());
+
+	if (!RealCurveArmorPenetration || !RealCurveEffectiveArmor)
+	{
+		UE_LOG(UExecCalcDamageLog, Error, TEXT("[%s]获取曲线表失败!"), *GetName());
+		return;
+	}
+
+
+	// 获取曲线表中的数值 , 获取源的护甲穿透系数
+	const float ArmorPenetrationFactor = RealCurveArmorPenetration->Eval(SourceCombatInt->GetCharacterLevel());
+	// 获取目标的护甲值系数
+	const float EffectiveArmorFactor = RealCurveEffectiveArmor->Eval(TargetCombatInt->GetCharacterLevel());
+
 
 	// 护甲值
 	float ArmorMagnitude = 0.f;
-	// 有效护甲值
-	float EffectiveArmor = 0.f;
+
 	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageAttributeCapture().ArmorDef, EvaluateParameters,
 	                                                           ArmorMagnitude);
 	ArmorMagnitude = FMath::Max<float>(ArmorMagnitude, 0.f);
@@ -80,17 +124,18 @@ void UExecCalcDamage::Execute_Implementation(const FGameplayEffectCustomExecutio
 	                                                           EvaluateParameters, TargetArmorPenetration);
 
 	// 有效护甲计算
-	EffectiveArmor = ArmorMagnitude * ((100 - TargetArmorPenetration) / 100.f);
+	float EffectiveArmor = ArmorMagnitude * ((100 - TargetArmorPenetration * ArmorPenetrationFactor) / 100.f);
 	EffectiveArmor = FMath::Max<float>(EffectiveArmor, 0.f);
 
 	// 一点有效护甲抵扣一点伤害
-	Damage *= (100 - EffectiveArmor) / 100.f;
+	Damage *= (100 - EffectiveArmor * EffectiveArmorFactor) / 100.f;
 	// 根据格挡几率判断是否格挡
 	Damage = (FMath::RandRange(1, 100) <= TargetBlockChance) ? Damage * (0.5f) : Damage;
 
 	UE_LOG(UExecCalcDamageLog, Warning,
-	       TEXT("[Armor]:%.2f ,[ArmorPenetration]:%.2f ,  [EffectiveArmor]:%.2f , [TargetBlockChance]:%.2f , [Damage]: %.2f"
-	       ), ArmorMagnitude, TargetArmorPenetration,
+	       TEXT(
+		       "[ArmorPenetration-F]:%.2f , [EffectiveArmor-F]:%.2f  ,[Armor]:%.2f ,[ArmorPenetration]:%.2f ,  [EffectiveArmor]:%.2f , [TargetBlockChance]:%.2f , [Damage]: %.2f"
+	       ), ArmorPenetrationFactor, EffectiveArmorFactor, ArmorMagnitude, TargetArmorPenetration,
 	       EffectiveArmor, TargetBlockChance, Damage);
 
 	// 修改属性集中名为InComingDamage的属性值
