@@ -39,7 +39,7 @@ void AEnemyCharacter::BeginPlay()
 	check(AbilitySystemComponent);
 	check(GetCharacterMovement());
 
-	
+	CharacterLevel = GetCharacterLevel();
 
 
 	InitAbilityActorInfo();

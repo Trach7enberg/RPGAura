@@ -84,6 +84,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
 	float MaxWalkingSpeed;
 
+	// 角色等级
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
+	float CharacterLevel;
+
 	// 当前角色的职业类别
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Character Class Defaluts")
 	ECharacterClass CharacterClass;

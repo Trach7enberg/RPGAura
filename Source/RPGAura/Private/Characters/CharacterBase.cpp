@@ -22,6 +22,7 @@ ACharacterBase::ACharacterBase()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
+	CharacterLevel = 1;
 	SelfLifeSpan = 1.f;
 	BIsHitReacting = false;
 	MaxWalkingSpeed = 600.f;
@@ -250,7 +251,6 @@ void ACharacterBase::ShowDamageNumber_Implementation(float Damage)
 	// Detach之后就会在原地
 	// DamageText->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
 	DamageText->SetDamageText(Damage);
-	
 }
 
 

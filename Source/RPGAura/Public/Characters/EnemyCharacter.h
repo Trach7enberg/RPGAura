@@ -27,7 +27,7 @@ public:
 	// ~ ICombatInterface
 	virtual int32 GetCharacterLevel() override
 	{
-		return EnemyLevel;
+		return CharacterLevel;
 	};
 	virtual void Die() override;
 	// ~ ICombatInterface
@@ -46,11 +46,6 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void InitAbilityActorInfo() override;
-	
-
-	/// 敌人的等级
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character Class Defaluts")
-	int32 EnemyLevel = 1;
 
 	/// 血条widget
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widget")
