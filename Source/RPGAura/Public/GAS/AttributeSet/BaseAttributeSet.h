@@ -33,27 +33,35 @@ struct FEffectProp
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Effect")
 	FGameplayEffectContextHandle EffectContextHandle;
 
+	// 发起GE的源Asc
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Effect")
 	UAbilitySystemComponent* SourceAsc = nullptr;
 
+	// 发起GE的源Avatar
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Effect")
 	AActor* SourceAvatar = nullptr;
 
+	// 发起GE的源控制器 (如果有的话)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Effect")
 	AController* SourceController = nullptr;
 
+	// 发起GE的源角色 (如果有的话)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Effect")
 	ACharacter* SourceCharacter = nullptr;
 
+	// 接收GE的那个目标Asc
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Effect")
 	UAbilitySystemComponent* TargetAsc = nullptr;
 
+	// 接收GE的那个目标Avatar
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Effect")
 	AActor* TargetAvatar = nullptr;
 
+	// 接收GE的那个目标控制器 (如果有的话)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Effect")
 	AController* TargetController = nullptr;
 
+	// 接收GE的那个目标角色 (如果有的话)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Effect")
 	ACharacter* TargetCharacter = nullptr;
 };
@@ -220,7 +228,7 @@ public:
 	/// 设置FEffectProp,该结构存储着和Data相关的GAS ActorInfo
 	/// @param Data
 	/// @param EffectProp 要设置的FEffectProp结构
-	void InitCurrentGeProp(const FGameplayEffectModCallbackData& Data, FEffectProp& EffectProp);
+	void UpdateCurrentGeProp(const FGameplayEffectModCallbackData& Data, FEffectProp& EffectProp);
 
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual void PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const override;

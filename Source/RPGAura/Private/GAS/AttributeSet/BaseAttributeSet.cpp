@@ -157,12 +157,16 @@ void UBaseAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 void UBaseAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
 	Super::PreAttributeChange(Attribute, NewValue);
+	// if (Attribute == GetBlockChanceAttribute())
+	// {
+	// 	UE_LOG(UBaseAttributeSetLog, Error, TEXT("[%s , %s] , PreOld:%.1f,PreNew:%.1f"), *GetOwningActor()->GetName(),
+	// 		   *Attribute.GetName(), Attribute.GetNumericValue(this), NewValue);
+	// }
 }
 
 void UBaseAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const
 {
 	Super::PreAttributeBaseChange(Attribute, NewValue);
-
 	if (Attribute == GetCurrentHealthAttribute())
 	{
 		const auto temp = NewValue;
@@ -191,16 +195,20 @@ void UBaseAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribu
 	// UE_LOG(UBaseAttributeSetLog, Error, TEXT("[%s,%s]:%.1f"),
 	//        (GetOwningActor())?*GetOwningActor()->GetName():*FString(""),
 	//        *Attribute.GetName(), NewValue);
+	// if (Attribute == GetBlockChanceAttribute())
+	// {
+	// 	UE_LOG(UBaseAttributeSetLog, Error, TEXT("[%s , %s] , Old:%.1f,New:%.1f"), *GetOwningActor()->GetName(),
+	// 	       *Attribute.GetName(), Attribute.GetNumericValue(this), NewValue);
+	// }
 }
 
 
-void UBaseAttributeSet::InitCurrentGeProp(const FGameplayEffectModCallbackData& Data, FEffectProp& EffectProp)
+void UBaseAttributeSet::UpdateCurrentGeProp(const FGameplayEffectModCallbackData& Data, FEffectProp& EffectProp)
 {
 	const auto Context = Data.EffectSpec.GetContext().Get();
 	if (!Context) { return; }
 
 	// Context里的Source是 发起GE的Actor , Target则是被GE影响的Actor
-	// Data里的Target 也是被GE影响的Actor
 	const auto TargetAsc = Context->GetOriginalInstigatorAbilitySystemComponent();
 	EffectProp.EffectContextHandle = Data.EffectSpec.GetEffectContext();
 	if (TargetAsc && TargetAsc->AbilityActorInfo.IsValid() && TargetAsc->AbilityActorInfo.Get()->AvatarActor.IsValid())
@@ -221,17 +229,19 @@ void UBaseAttributeSet::InitCurrentGeProp(const FGameplayEffectModCallbackData& 
 		EffectProp.SourceAvatar = EffectProp.SourceController->GetPawn();
 		EffectProp.SourceCharacter = Cast<ACharacter>(EffectProp.SourceAvatar);
 	}
-	else { EffectProp.TargetAvatar = Cast<AActor>(Context->GetSourceObject()); }
+	else { EffectProp.SourceAvatar = Cast<AActor>(Context->GetSourceObject()); }
 }
 
 void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
 	Super::PostGameplayEffectExecute(Data);
+
 	if (!GetMyCurrentAbilitySystem())
 	{
 		UE_LOG(UBaseAttributeSetLog, Error, TEXT("能力系统组件 为空!"));
 		return;
 	}
+
 	// 检查是否等于 InComingDamage 元属性
 	if (Data.EvaluatedData.Attribute == GetInComingDamageAttribute() && GetInComingDamage() != 0)
 	{
@@ -243,8 +253,15 @@ void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 
 		SetCurrentHealth(FMath::Clamp(TempHealth, 0.f, GetMaxHealth()));
 
+		// 转换成Combat接口获取相应函数
+		const auto CbInterface = Cast<ICombatInterface>(GetMyCurrentAbilitySystem()->GetAvatarActor());
+
+		const auto Instigator = Data.EffectSpec.GetContext().GetSourceObject();
+		const auto Sufferer = GetMyCurrentAbilitySystem()->GetAvatarActor();
+		if (Instigator != Sufferer) { CbInterface->ShowDamageNumber(TempValue); }
+
 		// 是否是致命伤
-		bool BIsFatal = TempHealth <= 0.f;
+		const bool BIsFatal = TempHealth <= 0.f;
 
 		// 非致命伤,给击中的敌人 激活含有标签HitReact的能力
 		if (!BIsFatal)
@@ -254,14 +271,18 @@ void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 			// 使用该函数需要确保能力蓝图类中的AbilityTags容器里有Effects_HitReact标签
 			GetMyCurrentAbilitySystem()->TryActivateAbilitiesByTag(
 				FGameplayTagContainer(FRPGAuraGameplayTags::Get().Abilities_Effects_HitReact));
-		}else
-		{
-			const auto CbInterface = Cast<ICombatInterface>(GetMyCurrentAbilitySystem()->GetAvatarActor());
-			if(CbInterface)
-			{
-				CbInterface->Die();
-			}
 		}
+		else { if (CbInterface) { CbInterface->Die(); } }
+	}
+	if (Data.EvaluatedData.Attribute == GetBlockChanceAttribute() )
+	{
+		
+		// UE_LOG(UBaseAttributeSetLog, Error, TEXT("[%s , %s] Current:%.1f , Final:%.1f"), *GetOwningActor()->GetName(),
+		//        *Data.EvaluatedData.Attribute.GetName(), GetBlockChance(), Data.EvaluatedData.Attribute.GetNumericValue(this));
+	}else
+	{
+		// UE_LOG(UBaseAttributeSetLog, Error, TEXT("All-[%s , %s] Final:%.1f"), *GetOwningActor()->GetName(),
+		// 	   *Data.EvaluatedData.Attribute.GetName(), Data.EvaluatedData.Attribute.GetNumericValue(this));
 	}
 }
 
