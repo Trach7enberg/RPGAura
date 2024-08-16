@@ -19,7 +19,8 @@ class RPGAURA_API URPGAuraGameInstanceSubsystem : public UGameInstanceSubsystem
 
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-	
+
+	// 游戏角色职业信息资产
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="DataAssets|CharacterClassDefaults")
 	TObjectPtr<UCharacterClassInfo> CharacterClassInfo;
 	
@@ -30,6 +31,5 @@ public:
 	/// @param BIsPlayer 是否是玩家
 	UFUNCTION(BlueprintCallable, Category="GAS")
 	void InitializeDefaultAttributes( UAbilitySystemComponent* Asc, ECharacterClass CharacterClass, float Level , bool BIsPlayer = false);
-
-	// TODO 待实现在子系统中创建一个赋予能力的函数
+	
 };

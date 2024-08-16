@@ -50,7 +50,9 @@ void URPGAuraGameInstanceSubsystem::InitializeDefaultAttributes(UAbilitySystemCo
 			? CharacterClassInfo->SecondaryAttributesPlayer
 			: CharacterClassInfo->SecondaryAttributesEnemy, Level,
 		GameplayEffectContextHandle);
-	
+
+
+
 	const auto VitalGeSpecHandle = Asc->MakeOutgoingSpec(
 		CharacterClassInfo->VitalAttributes, Level, GameplayEffectContextHandle);
 
@@ -58,4 +60,7 @@ void URPGAuraGameInstanceSubsystem::InitializeDefaultAttributes(UAbilitySystemCo
 	Asc->ApplyGameplayEffectSpecToSelf(*PrimaryGeSpecHandle.Data.Get());
 	Asc->ApplyGameplayEffectSpecToSelf(*SecondaryGeSpecHandle.Data.Get());
 	Asc->ApplyGameplayEffectSpecToSelf(*VitalGeSpecHandle.Data.Get());
+
+	// TODO 未知BUG,单人模式时,敌人的次要属性部分无法初始化(比如格挡几率),服务器则正常初始化,但数值也有问题,因此只能多加一次调用,暂时查明为敌人GE蓝图类中的持续政策不是无限的原因 所以只能将政策改为infinite了
+	// Asc->ApplyGameplayEffectSpecToSelf(*SecondaryGeSpecHandle.Data.Get());
 }

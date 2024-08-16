@@ -30,13 +30,13 @@ void ADevGEActor::ClientApplyGEToTarget(AActor *Actor, TSubclassOf<UGameplayEffe
 	FGameplayEffectContextHandle EffectContextHandle = ActorAsc->MakeEffectContext();
 
 	// GE上下文可以存储与当前Gameplay effect有关的内容,比如是什么对象导致的这个GE,所以方便后面使用
-	// 为GE上下文添加一个源对象
+	// 为GE上下文添加一个源对象,
 	EffectContextHandle.AddSourceObject(this);
 
 
 	// 从ASC 创建的上下文包装变量 获取 GE Spec handle
 	const FGameplayEffectSpecHandle GeSpec = ActorAsc->MakeOutgoingSpec(GeClass, ActorLevel, EffectContextHandle);
-	
+
 	
 	const FActiveGameplayEffectHandle ActiveGeHandle = ActorAsc->ApplyGameplayEffectSpecToSelf(*GeSpec.Data.Get());
 

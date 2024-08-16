@@ -30,7 +30,7 @@ float UMMCMaxHealth::CalculateBaseMagnitude_Implementation(const FGameplayEffect
 {
 	// const FGameplayEffectSpec &Spec包含当前GE蓝图类里的所有信息数据,谁用了当前这个MMC,那么Spec就是谁的GE数据
 
-	// 从捕获的源或者目标中获取Tag 
+	// 从GE里获取源、目标的CombineTags
 	const auto SourceTags = Spec.CapturedSourceTags.GetAggregatedTags();
 	const auto TargetTags = Spec.CapturedTargetTags.GetAggregatedTags();
 
