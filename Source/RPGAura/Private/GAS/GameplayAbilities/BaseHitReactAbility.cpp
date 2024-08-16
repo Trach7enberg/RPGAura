@@ -9,14 +9,15 @@
 DEFINE_LOG_CATEGORY_STATIC(UBaseHitReactAbilityLog, All, All);
 
 
-UBaseHitReactAbility::UBaseHitReactAbility()
-{
-	
-}
+UBaseHitReactAbility::UBaseHitReactAbility() {}
 
 void UBaseHitReactAbility::ApplyHitReact()
 {
-	if (!GetAvatarActorFromActorInfo()->HasAuthority()) { return; }
+	if (!GetAvatarActorFromActorInfo() || !GetAvatarActorFromActorInfo()->HasAuthority())
+	{
+		UE_LOG(UBaseHitReactAbilityLog, Error, TEXT("[ApplyHitReact]%s无权限!"), *GetName());
+		return;
+	}
 
 	if (!HitReactEffectClass)
 	{
@@ -25,10 +26,10 @@ void UBaseHitReactAbility::ApplyHitReact()
 	}
 	if (!GetOwningActorFromActorInfo() || !GetAvatarActorFromActorInfo() || !GetAbilitySystemComponentFromActorInfo())
 	{
-		UE_LOG(UBaseHitReactAbilityLog, Error, TEXT("Actor信息获取失败!"));
+		UE_LOG(UBaseHitReactAbilityLog, Error, TEXT("[RemoveHitReact]%sActor信息获取失败!"), *GetName());
 		return;
 	}
-	
+
 	auto GameplayEffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
 	GameplayEffectContextHandle.AddSourceObject(GetAvatarActorFromActorInfo());
 
@@ -39,17 +40,21 @@ void UBaseHitReactAbility::ApplyHitReact()
 	                                                                GetCurrentActorInfo(), GetCurrentActivationInfo(),
 	                                                                GameplayEffectSpecHandle.Data.Get()->Def,
 	                                                                GetAbilityLevel());
-
-	
 }
 
 void UBaseHitReactAbility::RemoveHitReact()
 {
-	if (!GetAvatarActorFromActorInfo()->HasAuthority() || !GetAbilitySystemComponentFromActorInfo())
+	if (!GetAvatarActorFromActorInfo())
 	{
-		UE_LOG(UBaseHitReactAbilityLog, Error, TEXT("Actor信息获取失败!"));
+		UE_LOG(UBaseHitReactAbilityLog, Error, TEXT("[RemoveHitReact]%sActor信息获取失败!"), *GetName());
 		return;
 	}
+	if (!GetAvatarActorFromActorInfo()->HasAuthority())
+	{
+		UE_LOG(UBaseHitReactAbilityLog, Error, TEXT("[RemoveHitReact]%s无权限!"), *GetName());
+		return;
+	}
+
 	if (!HitReactActiveGameplayEffectHandle.IsValid())
 	{
 		UE_LOG(UBaseHitReactAbilityLog, Warning, TEXT("未启用相应的GE!"));
@@ -62,8 +67,9 @@ void UBaseHitReactAbility::RemoveHitReact()
 }
 
 void UBaseHitReactAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
-	const FGameplayEventData* TriggerEventData)
+                                           const FGameplayAbilityActorInfo* ActorInfo,
+                                           const FGameplayAbilityActivationInfo ActivationInfo,
+                                           const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 }
