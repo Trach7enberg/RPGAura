@@ -104,8 +104,8 @@ int32 AAuraCharacter::GetCharacterLevel()
 		UE_LOG(AAuraCharacterLog, Error, TEXT("%s:PlayerState Cant be null"), *GetName());
 		return 0;
 	}
-
-	return MyPlayerState->GetPlayerLevel();
+	CharacterLevel = MyPlayerState->GetPlayerLevel();
+	return CharacterLevel;
 }
 
 void AAuraCharacter::UpdateCharacterFacingTarget(const FVector& TargetLoc)
