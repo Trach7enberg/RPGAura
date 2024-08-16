@@ -48,4 +48,9 @@ public:
 	/// 只在服务器上调用角色死亡
 	UFUNCTION(BlueprintCallable)
 	virtual void Die() = 0;
+
+	/// 在角色头顶显示伤害
+	/// @param Damage 伤害
+	UFUNCTION(NetMulticast, Reliable)
+	virtual void ShowDamageNumber(float Damage) = 0;
 };

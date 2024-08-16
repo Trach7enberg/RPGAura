@@ -14,6 +14,7 @@
 #include "CharacterBase.generated.h"
 
 
+class UDamageTextComponent;
 class UGameplayAbility;
 class UGameplayEffect;
 class UAttributeSet;
@@ -59,7 +60,13 @@ public:
 
 	/// 角色死亡 , 只在服务器上调用
 	virtual void Die() override;
-	
+
+	/// 在角色头顶显示伤害
+	/// 对于在服务器控制的角色将会在服务器上执行,对于客户端控制的角色将在服务器上调用这个函数然后客户端执行,无论怎么样确保显示
+	/// @param Damage 需要显示的伤害
+	UFUNCTION(NetMulticast, Reliable)
+	virtual void ShowDamageNumber(float Damage) override;
+
 	// ~ ICombatInterface
 
 protected:
@@ -112,6 +119,10 @@ protected:
 	// 时间线所需要的角色溶解曲线
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="FloatCurve")
 	TObjectPtr<UCurveFloat> DissolveFloatCurve;
+
+	/// 显示伤害的UI组件
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Widget")
+	TSubclassOf<UDamageTextComponent> DamageTextComponentClass;
 
 	/// 给角色授予能力
 	void AddCharacterAbilities() const;

@@ -14,6 +14,7 @@
 #include "Interfaces/HighLightInterface.h"
 #include "SubSystems/RPGAuraGameInstanceSubsystem.h"
 #include "Subsystems/SubsystemBlueprintLibrary.h"
+#include "UI/WidgetComponents/DamageTextComponent.h"
 
 DEFINE_LOG_CATEGORY_STATIC(ACharacterBaseLog, All, All);
 
@@ -218,12 +219,12 @@ void ACharacterBase::SetScalarParameterValue(
 void ACharacterBase::StartDissolveTimeline()
 {
 	if (!DissolveTimelineComponent) { return; }
-	
+
 	SetDissolveMaterial();
 
 	// 动态材质实例没有设置 不允许播放时间线
 	if (!MaterialInstanceDynamic_Character || !MaterialInstanceDynamic_Weapon) { return; }
-	
+
 	DissolveTimelineComponent->PlayFromStart();
 }
 
@@ -232,6 +233,26 @@ void ACharacterBase::Die()
 	WeaponLogicBaseComponent->DetachWeapon();
 	MulticastHandleDeath();
 }
+
+void ACharacterBase::ShowDamageNumber_Implementation(float Damage)
+{
+	if (!DamageTextComponentClass)
+	{
+		UE_LOG(ACharacterBaseLog, Warning, TEXT("无法弹出伤害显示文本!!"));
+		return;
+	}
+	const auto DamageText = NewObject<UDamageTextComponent>(this, DamageTextComponentClass);
+
+	// 如果是在构造函数创建的就不需要注册组件,CreateDefault默认帮我们做了,因此这里得手动注册
+	DamageText->RegisterComponent();
+	DamageText->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	DamageText->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+	// Detach之后就会在原地
+	// DamageText->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+	DamageText->SetDamageText(Damage);
+	
+}
+
 
 void ACharacterBase::MulticastHandleDeath_Implementation()
 {
