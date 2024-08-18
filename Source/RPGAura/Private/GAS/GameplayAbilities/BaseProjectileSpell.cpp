@@ -53,7 +53,7 @@ void UBaseProjectileSpell::SpawnProjectile(const FHitResult HitResult) const
 		ProjectileClass,
 		Transform,
 		GetOwningActorFromActorInfo(),
-		Instigate,
+		Instigate, 
 		ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
 
 
@@ -64,7 +64,14 @@ void UBaseProjectileSpell::SpawnProjectile(const FHitResult HitResult) const
 
 	// 创建GE 上下文
 	FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
-	EffectContextHandle.AddSourceObject(GetAvatarActorFromActorInfo());
+	
+	// 设置GE上下文,添加相关信息
+	EffectContextHandle.SetAbility(this);
+	EffectContextHandle.AddSourceObject(Projectile);
+	TArray<TWeakObjectPtr<AActor>> Actors;
+	Actors.Add(Projectile);
+	EffectContextHandle.AddActors(Actors);
+	EffectContextHandle.AddHitResult(HitResult);
 
 	// 创建GE
 	auto GameplayEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(

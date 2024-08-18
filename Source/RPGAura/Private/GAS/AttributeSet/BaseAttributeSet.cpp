@@ -236,6 +236,8 @@ void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 {
 	Super::PostGameplayEffectExecute(Data);
 
+	
+	
 	if (!GetMyCurrentAbilitySystem())
 	{
 		UE_LOG(UBaseAttributeSetLog, Error, TEXT("能力系统组件 为空!"));
@@ -256,7 +258,7 @@ void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 		// 转换成Combat接口获取相应函数
 		const auto CbInterface = Cast<ICombatInterface>(GetMyCurrentAbilitySystem()->GetAvatarActor());
 
-		const auto Instigator = Data.EffectSpec.GetContext().GetSourceObject();
+		const auto Instigator = Data.EffectSpec.GetContext().GetEffectCauser();
 		const auto Sufferer = GetMyCurrentAbilitySystem()->GetAvatarActor();
 		if (Instigator != Sufferer) { CbInterface->ShowDamageNumber(TempValue); }
 
