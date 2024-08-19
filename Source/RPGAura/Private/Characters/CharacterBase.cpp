@@ -235,22 +235,45 @@ void ACharacterBase::Die()
 	MulticastHandleDeath();
 }
 
-void ACharacterBase::ShowDamageNumber_Implementation(float Damage)
+void ACharacterBase::ShowDamageNumber_Implementation(const float Damage, bool bBlockedHit, bool bCriticalHit)
 {
 	if (!DamageTextComponentClass)
 	{
 		UE_LOG(ACharacterBaseLog, Warning, TEXT("无法弹出伤害显示文本!!"));
 		return;
 	}
-	const auto DamageText = NewObject<UDamageTextComponent>(this, DamageTextComponentClass);
+	const auto DamageTextComponent = NewObject<UDamageTextComponent>(this, DamageTextComponentClass);
 
 	// 如果是在构造函数创建的就不需要注册组件,CreateDefault默认帮我们做了,因此这里得手动注册
-	DamageText->RegisterComponent();
-	DamageText->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	DamageText->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+	DamageTextComponent->RegisterComponent();
+	DamageTextComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	DamageTextComponent->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 	// Detach之后就会在原地
 	// DamageText->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
-	DamageText->SetDamageText(Damage);
+	const FText DamageStr = FText::FromString(FString::Printf(TEXT("%.3f"), Damage));
+
+	FText HitMessageText = FText();
+	if (bCriticalHit && bBlockedHit)
+	{
+		DamageTextComponent->SetDamageTextColor(FLinearColor::Yellow);
+		DamageTextComponent->SetHitMessageTextColor(FLinearColor::Yellow);
+		HitMessageText = FText::FromString(
+			DamageTextComponent->HitMessage_Critical.ToString() + DamageTextComponent->HitMessage_Blocked.ToString() + "!");
+	}
+	else if (bCriticalHit)
+	{
+		DamageTextComponent->SetDamageTextColor(FLinearColor::Red);
+		DamageTextComponent->SetHitMessageTextColor(FLinearColor::Red);
+		HitMessageText = FText::FromString(DamageTextComponent->HitMessage_Critical.ToString() + "!");
+	}
+	else if (bBlockedHit)
+	{
+		DamageTextComponent->SetDamageTextColor(FLinearColor::Gray);
+		DamageTextComponent->SetHitMessageTextColor(FLinearColor::Gray);
+		HitMessageText = FText::FromString(DamageTextComponent->HitMessage_Blocked.ToString() + "!");
+	}
+	DamageTextComponent->SetDamageText(DamageStr);
+	DamageTextComponent->SetHitMessageText(HitMessageText);
 }
 
 

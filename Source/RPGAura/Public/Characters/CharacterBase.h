@@ -64,8 +64,10 @@ public:
 	/// 在角色头顶显示伤害
 	/// 对于在服务器控制的角色将会在服务器上执行,对于客户端控制的角色将在服务器上调用这个函数然后客户端执行,无论怎么样确保显示
 	/// @param Damage 需要显示的伤害
+	/// @param bBlockedHit
+	/// @param bCriticalHit
 	UFUNCTION(NetMulticast, Reliable)
-	virtual void ShowDamageNumber(float Damage) override;
+	virtual void ShowDamageNumber(const float Damage, bool bBlockedHit = false, bool bCriticalHit = false) override;
 
 	// ~ ICombatInterface
 
