@@ -14,5 +14,18 @@ class RPGAURA_API URPGAuraAbilitySystemGlobals : public UAbilitySystemGlobals
 {
 	GENERATED_BODY()
 
+public:
 	virtual FGameplayEffectContext* AllocGameplayEffectContext() const override;
+
+	UFUNCTION(BlueprintCallable, Category="GAS|GameplayEffects")
+	static bool IsBlockedHit(const FGameplayEffectContextHandle& EffectContextHandle);
+
+	UFUNCTION(BlueprintCallable, Category="GAS|GameplayEffects")
+	static bool IsCriticalHit(const FGameplayEffectContextHandle& EffectContextHandle);
+
+	UFUNCTION(BlueprintCallable, Category="GAS|GameplayEffects")
+	static void SetIsBlockedHit(UPARAM(ref) FGameplayEffectContextHandle& EffectContextHandle, bool IsBlockedHit);
+
+	UFUNCTION(BlueprintCallable, Category="GAS|GameplayEffects")
+	static void SetIsCriticalHit(UPARAM(ref) FGameplayEffectContextHandle& EffectContextHandle, bool IsCriticalHit);
 };
