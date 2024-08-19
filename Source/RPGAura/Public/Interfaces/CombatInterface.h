@@ -51,6 +51,8 @@ public:
 
 	/// 在角色头顶显示伤害
 	/// @param Damage 伤害
+	/// @param bBlockedHit 是否格挡
+	/// @param bCriticalHit 是否暴击
 	UFUNCTION(NetMulticast, Reliable)
-	virtual void ShowDamageNumber(float Damage) = 0;
+	virtual void ShowDamageNumber(const float Damage, bool bBlockedHit = false, bool bCriticalHit = false) = 0;
 };
