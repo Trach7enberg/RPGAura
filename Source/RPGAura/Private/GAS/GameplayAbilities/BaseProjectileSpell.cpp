@@ -5,8 +5,6 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
-#include "CoreTypes/RPGAuraGameplayTags.h"
-#include "GAS/AbilityTasks/TargetDataUnderCursor.h"
 #include "Interfaces/CombatInterface.h"
 #include "Weapons/Projectiles/BaseProjectile.h"
 
@@ -77,10 +75,8 @@ void UBaseProjectileSpell::SpawnProjectile(const FHitResult HitResult) const
 	auto GameplayEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(
 		DamageEffectClass, GetAbilityLevel(), EffectContextHandle);
 
-	// 分配一个键值对给SetByCaller,键是游戏标签,值是设定的Magnitude,到时候在GE蓝图中选择我们分配的标签,该GE就会应用我们这里设定的Magnitude值
-	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(GameplayEffectSpecHandle,
-	                                                              FRPGAuraGameplayTags::Get().Abilities_Damage_FireBolt,
-	                                                              ScalableDamage.GetValueAtLevel(GetAbilityLevel()));
+	// 分配SetByCaller
+	AssignTagSetByCallerMagnitudeWithDamageType(GameplayEffectSpecHandle, GetAbilityLevel());
 
 
 	Projectile->DamageEffectSpecHandle = GameplayEffectSpecHandle;

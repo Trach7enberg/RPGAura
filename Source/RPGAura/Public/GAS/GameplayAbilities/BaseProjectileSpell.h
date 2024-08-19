@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GAS/GameplayAbilities/BaseGameplayAbility.h"
+#include "BaseDamageAbility.h"
 #include "BaseProjectileSpell.generated.h"
 
 class ABaseProjectile;
@@ -11,7 +11,7 @@ class ABaseProjectile;
  * 基础投射魔法能力类
  */
 UCLASS()
-class RPGAURA_API UBaseProjectileSpell : public UBaseGameplayAbility
+class RPGAURA_API UBaseProjectileSpell : public UBaseDamageAbility
 {
 	GENERATED_BODY()
 
@@ -25,9 +25,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Class")
 	TSubclassOf<ABaseProjectile> ProjectileClass;
 
-	// 伤害GE实体类
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GameplayEffect")
-	TSubclassOf<UGameplayEffect> DamageEffectClass;
+	
 
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	                             const FGameplayAbilityActivationInfo ActivationInfo,
