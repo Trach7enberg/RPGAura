@@ -26,8 +26,11 @@ enum class EGameplayTagNum : uint8
 	CriticalHitDamage,
 	HealthRegeneration,
 	ManaRegeneration,
+	
+	FireResistance,
 	PhysicalResistance,
-	MagicalResistance,
+	LightningResistance,
+	ArcaneResistance,
 
 	InputLMB,
 	InputRMB,
@@ -41,7 +44,10 @@ enum class EGameplayTagNum : uint8
 
 	Event_Montage_FireBolt,
 
-	Damage,
+	Abilities_Damage_Spell_Fire,
+	Abilities_Damage_Spell_Lightning,
+	Abilities_Damage_Spell_Arcane,
+	Abilities_Damage_Spell_Physical,
 
 	Abilities_Effects_HitReact,
 };
@@ -77,6 +83,12 @@ struct FRPGAuraGameplayTags
 	FGameplayTag Attribute_Secondary_MaxHealth;
 	FGameplayTag Attribute_Secondary_MaxMana;
 
+	// 伤害抵抗属性
+	FGameplayTag Attributes_Secondary_Resistance_Fire;
+	FGameplayTag Attributes_Secondary_Resistance_Lightning;
+	FGameplayTag Attributes_Secondary_Resistance_Arcane;
+	FGameplayTag Attributes_Secondary_Resistance_Physical;
+
 	FGameplayTag InputTag_LMB;
 	FGameplayTag InputTag_RMB;
 	FGameplayTag InputTag_1;
@@ -84,39 +96,20 @@ struct FRPGAuraGameplayTags
 	FGameplayTag InputTag_3;
 	FGameplayTag InputTag_4;
 
+	// 在AM中用于标识发送GameplayEvent的标签
 	FGameplayTag Event_Montage_FireBolt;
 
-	FGameplayTag Abilities_Damage_FireBolt;
+	// 用于GA的伤害类型, 法术伤害
+	FGameplayTag Abilities_Damage_Spell; // 父节点标签
+	FGameplayTag Abilities_Damage_Spell_Fire; // 火焰法术伤害
+	FGameplayTag Abilities_Damage_Spell_Lightning; // 雷电法术伤害
+	FGameplayTag Abilities_Damage_Spell_Arcane; // 奥术伤害
+	FGameplayTag Abilities_Damage_Spell_Physical; // 物理伤害
+
 	
+
+	// 受击反应
 	FGameplayTag Abilities_Effects_HitReact;
-
-	
-	// 标签的真实名字
-	FString CurrentHealth = "Attributes.Vital.CurrentHealth";
-	FString CurrentMana = "Attributes.Vital.CurrentMana";
-
-	FString Strength = "Attributes.Primary.Strength";
-	FString Intelligence = "Attributes.Primary.Intelligence";
-	FString Resilience = "Attributes.Primary.Resilience";
-	FString Vigor = "Attributes.Primary.Vigor";
-
-	FString Armor = "Attributes.Secondary.Armor";
-	FString ArmorPenetration = "Attributes.Secondary.ArmorPenetration";
-	FString BlockChance = "Attributes.Secondary.BlockChance";
-	FString CriticalHitChance = "Attributes.Secondary.CriticalHitChance";
-	FString CriticalHitResistance = "Attributes.Secondary.CriticalHitResistance";
-	FString CriticalHitDamage = "Attributes.Secondary.CriticalHitDamage";
-	FString HealthRegeneration = "Attributes.Secondary.HealthRegeneration";
-	FString ManaRegeneration = "Attributes.Secondary.ManaRegeneration";
-	FString PhysicalResistance = "Attributes.Secondary.PhysicalResistance";
-	FString MagicalResistance = "Attributes.Secondary.MagicalResistance";
-
-	FString InputLMB = "InputTag.LMB";
-	FString InputRMB = "InputTag.RMB";
-	FString Input1 = "InputTag.1";
-	FString Input2 = "InputTag.2";
-	FString Input3 = "InputTag.3";
-	FString Input4 = "InputTag.4";
 
 	/// 获取GameplayTags静态实例
 	/// @return GameplayTags单例
@@ -129,19 +122,23 @@ struct FRPGAuraGameplayTags
 
 
 	static EGameplayTagNum* FindEnumByTag(const FGameplayTag& GameplayTag);
-	
+
 
 	// 标签映射到枚举的Map
 	static TMap<FGameplayTag, EGameplayTagNum> TagToNumMap;
+
+	// 伤害类型映射到对应的抵抗类型的Map
+	static TMap<FGameplayTag, FGameplayTag> DamageTypesToResistancesMap;
 
 	// 包含当前项目所有标签的标签容器
 	static FGameplayTagContainer GameplayTagsContainer;
 	static FGameplayTagContainer VitalGameplayTagsContainer;
 	static FGameplayTagContainer PrimaryGameplayTagsContainer;
 	static FGameplayTagContainer SecondaryGameplayTagsContainer;
+	static FGameplayTagContainer DamageTypesTagsContainer; // 所有伤害类型
+
 
 private:
 	// 存储所有游戏标签的静态类的实例
 	static FRPGAuraGameplayTags GameplayTags;
-	
 };
