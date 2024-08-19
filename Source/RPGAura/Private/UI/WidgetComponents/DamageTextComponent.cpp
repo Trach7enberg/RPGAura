@@ -3,3 +3,7 @@
 
 #include "UI/WidgetComponents/DamageTextComponent.h"
 
+UDamageTextComponent::UDamageTextComponent()
+{
+	
+}
