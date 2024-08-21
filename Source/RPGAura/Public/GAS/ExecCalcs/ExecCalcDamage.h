@@ -6,6 +6,10 @@
 #include "GameplayEffectExecutionCalculation.h"
 #include "ExecCalcDamage.generated.h"
 
+
+
+
+
 /**
  * 自定义执行计算伤害类
  */
@@ -17,6 +21,10 @@ class RPGAURA_API UExecCalcDamage : public UGameplayEffectExecutionCalculation
 public:
 	UExecCalcDamage();
 
+	// 抗性属性标签对应的捕获Def
+
+	
+	
 	/// 执行计算类
 	/// @param ExecutionParams 
 	/// @param OutExecutionOutput 

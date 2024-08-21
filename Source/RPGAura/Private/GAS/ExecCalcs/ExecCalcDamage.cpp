@@ -4,8 +4,10 @@
 #include "GAS/ExecCalcs/ExecCalcDamage.h"
 
 #include "CoreTypes/RPGAuraGameplayTags.h"
+#include "CoreTypes/RPGAuraGasCoreTypes.h"
 #include "GAS/AttributeSet/BaseAttributeSet.h"
 #include "GAS/Data/CharacterClassInfo.h"
+#include "GAS/Globals/GameAbilitySystemGlobals.h"
 #include "Interfaces/CombatInterface.h"
 #include "SubSystems/RPGAuraGameInstanceSubsystem.h"
 #include "Subsystems/SubsystemBlueprintLibrary.h"
@@ -13,7 +15,7 @@
 DEFINE_LOG_CATEGORY_STATIC(UExecCalcDamageLog, All, All);
 
 /// 定义用于捕获的属性结构,辅助自定义计算使用,不用暴露给蓝图
-struct EffectAttributeCapture
+struct FEffectAttributeCapture
 {
 	// 声明属性捕获结构,这里的Armor可以是任意值,只是变量的名字罢了
 	DECLARE_ATTRIBUTE_CAPTUREDEF(Armor);
@@ -22,9 +24,16 @@ struct EffectAttributeCapture
 	DECLARE_ATTRIBUTE_CAPTUREDEF(CriticalHitChance)
 	DECLARE_ATTRIBUTE_CAPTUREDEF(CriticalHitResistance)
 	DECLARE_ATTRIBUTE_CAPTUREDEF(CriticalHitDamage)
+	DECLARE_ATTRIBUTE_CAPTUREDEF(Intelligence)
 
+	DECLARE_ATTRIBUTE_CAPTUREDEF(FireResistance)
+	DECLARE_ATTRIBUTE_CAPTUREDEF(PhysicalResistance)
+	DECLARE_ATTRIBUTE_CAPTUREDEF(LightingResistance)
+	DECLARE_ATTRIBUTE_CAPTUREDEF(ArcaneResistance)
 
-	EffectAttributeCapture()
+	TMap<FGameplayTag, FGameplayEffectAttributeCaptureDefinition> TagToCaptureDefsMap;
+
+	FEffectAttributeCapture()
 	{
 		// 定义属性捕获结构,必须先声明才能定义
 		// 比如你想创建捕获护甲的结构数据用于捕获,那就先DECLARE..(Armor)再DEFINE...(...,Armor,xxx)
@@ -38,31 +47,48 @@ struct EffectAttributeCapture
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UBaseAttributeSet, CriticalHitChance, Source, false); // 捕获源 的暴击率
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UBaseAttributeSet, CriticalHitDamage, Source, false); // 捕获源 的暴击伤害
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UBaseAttributeSet, CriticalHitResistance, Target, false); // 捕获 目标的暴击抵抗率
+		DEFINE_ATTRIBUTE_CAPTUREDEF(UBaseAttributeSet, Intelligence, Source, false); // 捕获 源的智力值
+
+		DEFINE_ATTRIBUTE_CAPTUREDEF(UBaseAttributeSet, FireResistance, Target, false); // 捕获目标的火焰抗性
+		DEFINE_ATTRIBUTE_CAPTUREDEF(UBaseAttributeSet, PhysicalResistance, Target, false); // 捕获目标的物理抗性
+		DEFINE_ATTRIBUTE_CAPTUREDEF(UBaseAttributeSet, LightingResistance, Target, false); // 捕获目标的雷电抗性
+		DEFINE_ATTRIBUTE_CAPTUREDEF(UBaseAttributeSet, ArcaneResistance, Target, false); // 捕获目标的奥术 抗性
 	}
+
+	TMap<FGameplayTag, FGameplayEffectAttributeCaptureDefinition>& GetMap() { return TagToCaptureDefsMap; }
 };
 
-static EffectAttributeCapture DamageAttributeCapture()
+static FEffectAttributeCapture GetStaticStruct()
 {
-	static const EffectAttributeCapture DamageCaptures;
-	return DamageCaptures;
+	static FEffectAttributeCapture EffectAttributeCapture;
+	return EffectAttributeCapture;
 }
 
 UExecCalcDamage::UExecCalcDamage()
 {
-	RelevantAttributesToCapture.Add(DamageAttributeCapture().ArmorDef);
-	RelevantAttributesToCapture.Add(DamageAttributeCapture().BlockChanceDef);
-	RelevantAttributesToCapture.Add(DamageAttributeCapture().ArmorPenetrationDef);
-	RelevantAttributesToCapture.Add(DamageAttributeCapture().CriticalHitChanceDef);
-	RelevantAttributesToCapture.Add(DamageAttributeCapture().CriticalHitDamageDef);
-	RelevantAttributesToCapture.Add(DamageAttributeCapture().CriticalHitResistanceDef);
+	RelevantAttributesToCapture.Add(GetStaticStruct().ArmorDef);
+	RelevantAttributesToCapture.Add(GetStaticStruct().BlockChanceDef);
+	RelevantAttributesToCapture.Add(GetStaticStruct().ArmorPenetrationDef);
+	RelevantAttributesToCapture.Add(GetStaticStruct().CriticalHitChanceDef);
+	RelevantAttributesToCapture.Add(GetStaticStruct().CriticalHitDamageDef);
+	RelevantAttributesToCapture.Add(GetStaticStruct().CriticalHitResistanceDef);
+	RelevantAttributesToCapture.Add(GetStaticStruct().IntelligenceDef);
+
+	RelevantAttributesToCapture.Add(GetStaticStruct().FireResistanceDef);
+	RelevantAttributesToCapture.Add(GetStaticStruct().PhysicalResistanceDef);
+	RelevantAttributesToCapture.Add(GetStaticStruct().LightingResistanceDef);
+	RelevantAttributesToCapture.Add(GetStaticStruct().ArcaneResistanceDef);
 }
 
 void UExecCalcDamage::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams,
                                              FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const
 {
+	auto GeSpec = ExecutionParams.GetOwningSpec();
+	const auto CaptureAttributes = GetStaticStruct();
+
 	// 从GE里获取源、目标的CombineTags
-	const auto SourceTags = ExecutionParams.GetOwningSpec().CapturedSourceTags.GetAggregatedTags();
-	const auto TargetTags = ExecutionParams.GetOwningSpec().CapturedTargetTags.GetAggregatedTags();
+	const auto SourceTags = GeSpec.CapturedSourceTags.GetAggregatedTags();
+	const auto TargetTags = GeSpec.CapturedTargetTags.GetAggregatedTags();
 
 	FAggregatorEvaluateParameters EvaluateParameters;
 	EvaluateParameters.SourceTags = SourceTags;
@@ -71,6 +97,15 @@ void UExecCalcDamage::Execute_Implementation(const FGameplayEffectCustomExecutio
 	const auto SourceAvatar = ExecutionParams.GetSourceAbilitySystemComponent()->GetAvatarActor();
 	const auto TargetAvatar = ExecutionParams.GetTargetAbilitySystemComponent()->GetAvatarActor();
 
+
+	auto GeContextHandle = GeSpec.GetContext();
+	const auto MyGeContext = static_cast<FRPGAuraGameplayEffectContext*>(GeContextHandle.Get());
+
+	if (!MyGeContext)
+	{
+		UE_LOG(UExecCalcDamageLog, Error, TEXT("[%s]获取GE上下文失败!"), *GetName());
+		return;
+	}
 	// 获取源的属性集
 	const auto SourceAs = Cast<UBaseAttributeSet>(
 		ExecutionParams.GetSourceAbilitySystemComponent()->GetAttributeSet(UBaseAttributeSet::StaticClass()));
@@ -125,38 +160,93 @@ void UExecCalcDamage::Execute_Implementation(const FGameplayEffectCustomExecutio
 	// 护甲值
 	float TargetArmor = 0.f;
 	// 捕获目标护甲值
-	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageAttributeCapture().ArmorDef, EvaluateParameters,
+	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(CaptureAttributes.ArmorDef,
+	                                                           EvaluateParameters,
 	                                                           TargetArmor);
 	TargetArmor = FMath::Max<float>(TargetArmor, 0.f);
 
+	// 捕获智力值
+	float SourceIntelligence = 1.f;
+	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(CaptureAttributes.IntelligenceDef,
+	                                                           EvaluateParameters,
+	                                                           SourceIntelligence);
 
-	// 获取之前以Abilities_Damage_FireBolt游戏标签为键分配给SetByCaller的伤害值 (注意,我们在发射火球的能力的cpp里用能力系统分配设置了这个键值对,所以能获取到)
-	float Damage = ExecutionParams.GetOwningSpec().GetSetByCallerMagnitude(
-		FRPGAuraGameplayTags::Get().Abilities_Damage_FireBolt);
+
+	// 获得基础伤害
+	// 是游戏标签为键分配给SetByCaller的伤害值 (注意,我们在发射火球的能力的cpp里用能力系统分配设置了这个键值对,所以能获取到)
+	float Damage = 0.f;
+
+
+	for (const auto& DamageType : MyGeContext->GetDamageTypes())
+	{
+		float ResistanceValue = 0;
+		// 获得伤害类型对应的抗性标签
+		const auto ResistanceAttributeTag = FRPGAuraGameplayTags::Get().DamageTypesToResistancesMap[DamageType];
+
+
+		// 用抗性标签获取要捕获的属性
+		const auto GameplayEnum = FRPGAuraGameplayTags::FindEnumByTag(ResistanceAttributeTag);
+		if (GameplayEnum)
+		{
+			switch (*GameplayEnum)
+			{
+			case EGameplayTagNum::FireResistance:
+				ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(CaptureAttributes.FireResistanceDef,
+				                                                           EvaluateParameters,
+				                                                           ResistanceValue);
+				break;
+			case EGameplayTagNum::PhysicalResistance:
+				ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(CaptureAttributes.PhysicalResistanceDef,
+				                                                           EvaluateParameters,
+				                                                           ResistanceValue);
+				break;
+			case EGameplayTagNum::LightningResistance:
+				ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(CaptureAttributes.LightingResistanceDef,
+				                                                           EvaluateParameters,
+				                                                           ResistanceValue);
+				break;
+			case EGameplayTagNum::ArcaneResistance:
+				ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(CaptureAttributes.ArcaneResistanceDef,
+				                                                           EvaluateParameters,
+				                                                           ResistanceValue);
+				break;
+
+			default: ;
+			}
+		}
+
+		ResistanceValue = FMath::Clamp(ResistanceValue, 0.f, 100.f);
+
+		Damage += ((GeSpec.GetSetByCallerMagnitude(DamageType) + SourceIntelligence * .25f) * ((100.f - ResistanceValue)
+			/ 100.f));
+	}
+
 
 	// 格挡几率
 	float TargetBlockChance = 0.f;
 	// 捕获目标格挡几率
-	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageAttributeCapture().BlockChanceDef,
+	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(CaptureAttributes.BlockChanceDef,
 	                                                           EvaluateParameters, TargetBlockChance);
 
 
 	// 护甲穿透率
-	const float SourceArmorPenetration = SourceAs->GetArmorPenetration();
+	float SourceArmorPenetration = SourceAs->GetArmorPenetration();
+	SourceArmorPenetration = FMath::Clamp(SourceArmorPenetration * ArmorPenetrationFactor, 0, 100);
 
 	// 有效护甲计算
-	float EffectiveArmor = TargetArmor * ((100 - SourceArmorPenetration * ArmorPenetrationFactor) / 100.f);
+	float EffectiveArmor = TargetArmor * ((100 - SourceArmorPenetration)
+		/ 100.f);
 	EffectiveArmor = FMath::Max<float>(EffectiveArmor, 0.f);
 
 	// 目标暴击抵抗率
 	float TargetCriticalHitResistance = 0.f;
-	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageAttributeCapture().CriticalHitResistanceDef,
+	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(CaptureAttributes.CriticalHitResistanceDef,
 	                                                           EvaluateParameters, TargetCriticalHitResistance);
 
 
 	// 源的暴击率
 	float SourceCriticalHitChance = 0.f;
-	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageAttributeCapture().CriticalHitChanceDef,
+	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(CaptureAttributes.CriticalHitChanceDef,
 	                                                           EvaluateParameters, SourceCriticalHitChance);
 	// 源的有效暴击几率
 	float SourceEffectiveCriticalHitChance = SourceCriticalHitChance - TargetCriticalHitResistance;
@@ -164,16 +254,25 @@ void UExecCalcDamage::Execute_Implementation(const FGameplayEffectCustomExecutio
 
 	// 捕获源的暴击伤害
 	float SourceCriticalHitDamage = 0.f;
-	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageAttributeCapture().CriticalHitDamageDef,
+	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(CaptureAttributes.CriticalHitDamageDef,
 	                                                           EvaluateParameters, SourceCriticalHitDamage);
 
 	// 一点(有效护甲* EffectiveArmorFactor)抵扣一点伤害
-	Damage *= (100 - EffectiveArmor * EffectiveArmorFactor) / 100.f;
-	// 计算是否暴击
-	Damage = (FMath::RandRange(1, 100) <= SourceEffectiveCriticalHitChance) ? Damage * (2.f) + SourceCriticalHitDamage: Damage;
-	// 根据格挡几率判断是否格挡
-	Damage = (FMath::RandRange(1, 100) <= TargetBlockChance) ? Damage * (0.5f) : Damage;
+	EffectiveArmor = FMath::Clamp(EffectiveArmor * EffectiveArmorFactor, 0, 100);
 
+	Damage *= (100 - EffectiveArmor) / 100.f;
+	// 计算是否暴击
+	const auto bIsCriticalHit = (FMath::RandRange(1, 100) <= SourceEffectiveCriticalHitChance);
+	Damage = bIsCriticalHit
+		         ? Damage * (2.f) + SourceCriticalHitDamage
+		         : Damage;
+
+	// 根据格挡几率判断是否格挡
+	const auto bIsBlock = (FMath::RandRange(1, 100) <= TargetBlockChance);
+	Damage = bIsBlock ? Damage * (0.5f) : Damage;
+
+	MyGeContext->SetBIsBlockedHit(bIsBlock);
+	MyGeContext->SetBIsBlockedHit(bIsCriticalHit);
 
 	UE_LOG(UExecCalcDamageLog, Warning,
 	       TEXT(
