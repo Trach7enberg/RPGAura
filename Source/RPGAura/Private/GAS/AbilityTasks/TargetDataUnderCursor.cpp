@@ -41,8 +41,6 @@ void UTargetDataUnderCursor::SendTargetDataToServer()
 
 	if (!ActorInfo->PlayerController.Get()) { return; }
 
-	if (!ActorInfo->PlayerController.Get()) { return; }
-
 
 	// 创建一个范围的预测窗口,说明当前这个函数(SendTargetDataToServer)的范围内所有内容都应该被预测
 	FScopedPredictionWindow ScopedPredictionWindow(ActorInfo->AbilitySystemComponent.Get());
