@@ -18,8 +18,6 @@ UAttributeInfo::UAttributeInfo()
 
 FRPGAuraAttributeInfo UAttributeInfo::FindAttributeInfoByTag(const FGameplayTag& AttributeTag)
 {
-
-    // TODO 莫名其妙有时候RPGAuraAttributeInfos的地址无效,因此会引发异常 待修复
     for (const auto& AttributeInfo : RPGAuraAttributeInfos)
     {
         if (AttributeInfo.AttributeTag.MatchesTag(AttributeTag))

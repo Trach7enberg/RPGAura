@@ -43,15 +43,15 @@ void UBaseProjectileSpell::SpawnProjectile(const FHitResult HitResult) const
 	FRotator Rotation = (HitResult.ImpactPoint - CombatInter->GetCombatSocketLocation()).Rotation();
 
 	// 飞弹的倾斜度是与地面平行
-	Rotation.Pitch = 0.f;
+	// Rotation.Pitch = 0.f;
 	Transform.SetRotation(Rotation.Quaternion());
 
 
 	const auto Projectile = GetWorld()->SpawnActorDeferred<ABaseProjectile>(
 		ProjectileClass,
 		Transform,
-		GetOwningActorFromActorInfo(),
-		Instigate, 
+		GetAvatarActorFromActorInfo(),
+		Instigate,
 		ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
 
 
@@ -62,22 +62,16 @@ void UBaseProjectileSpell::SpawnProjectile(const FHitResult HitResult) const
 
 	// 创建GE 上下文
 	FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
-	
 	// 设置GE上下文,添加相关信息
-	EffectContextHandle.SetAbility(this);
 	EffectContextHandle.AddSourceObject(Projectile);
-	TArray<TWeakObjectPtr<AActor>> Actors;
-	Actors.Add(Projectile);
-	EffectContextHandle.AddActors(Actors);
-	EffectContextHandle.AddHitResult(HitResult);
+
 
 	// 创建GE
-	auto GameplayEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(
+	const auto GameplayEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(
 		DamageEffectClass, GetAbilityLevel(), EffectContextHandle);
 
 	// 分配SetByCaller
-	AssignTagSetByCallerMagnitudeWithDamageType(GameplayEffectSpecHandle, GetAbilityLevel());
-
+	AssignTagSetByCallerMagnitudeWithDamageType(GameplayEffectSpecHandle,GetAbilityLevel());
 
 	Projectile->DamageEffectSpecHandle = GameplayEffectSpecHandle;
 
@@ -92,10 +86,4 @@ void UBaseProjectileSpell::ActivateAbility(const FGameplayAbilitySpecHandle Hand
                                            const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
-
-	// 飞弹能力(投射物)仅在服务器上生成
-	if (!HasAuthority(&ActivationInfo)) { return; }
-
-
-	// SpawnProjectile();
 }

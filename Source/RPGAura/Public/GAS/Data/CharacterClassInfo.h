@@ -30,6 +30,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite,Category="Common Class Defaults|GameplayEffects")
 	TSubclassOf<UGameplayEffect> SecondaryAttributesPlayer;
 
+	
+
 	// 角色的共同属性(Vital)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite,Category="Common Class Defaults|GameplayEffects")
 	TSubclassOf<UGameplayEffect> VitalAttributes;

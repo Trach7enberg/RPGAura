@@ -32,6 +32,11 @@ public:
 		return WidgetControllerParams;
 	}
 
+	/// 绑定一系列的回调函数,用于当前控制器的Owner的GAS中的属性值更改时绑定的回调函数
+	/// 必须在BroadcastInitialValues前使用
+	UFUNCTION(BlueprintCallable, Category="Broadcast")
+	virtual void BindCallBack();
+	
 	/// 广播初始值
 	UFUNCTION(BlueprintCallable, Category="Broadcast")
 	virtual void BroadcastInitialValues();
@@ -40,9 +45,7 @@ public:
 	/// @return 有效则为true
 	bool IsWidgetControllerParamsValid() const;
 
-	/// 绑定一系列的回调函数,用于当前控制器的Owner的GAS中的属性值更改时绑定的回调函数
-	/// 一般在创建控制器(UWidgetControllerBpFuncLib::CreateWidgetController)中自动调用
-	virtual void BindCallBack();
+	
 
 private:
 	FWidgetControllerParams WidgetControllerParams;

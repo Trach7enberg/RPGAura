@@ -20,13 +20,15 @@ class RPGAURA_API ABasePlayerState : public APlayerState, public IAbilitySystemI
 public:
 	ABasePlayerState();
 
-	virtual UAbilitySystemComponent *GetAbilitySystemComponent() const override;
-
-	// ~ IAbilitySystemInterface Begin
+	
 	virtual UAttributeSet *GetAttributeSet() const
 	{
 		return AttributeSet;
 	}
+	
+	// ~ IAbilitySystemInterface Begin
+	
+	virtual UAbilitySystemComponent *GetAbilitySystemComponent() const override;
 
 	// ~ IAbilitySystemInterface End
 
@@ -50,12 +52,12 @@ protected:
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 
 	/// GAS的属性集
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite, Category = "AbilitySystem")
 	TObjectPtr<UAttributeSet> AttributeSet;
 
 private:
 	/// 玩家等级
-	UPROPERTY(VisibleAnywhere, ReplicatedUsing=OnRep_PlayerLevel, Category = "PlayerLevel")
+	UPROPERTY(EditAnywhere, ReplicatedUsing=OnRep_PlayerLevel, Category = "PlayerLevel")
 	int32 PlayerLevel = 1;
 
 	UFUNCTION()

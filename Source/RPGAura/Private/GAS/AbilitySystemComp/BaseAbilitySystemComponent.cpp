@@ -15,6 +15,7 @@ void UBaseAbilitySystemComponent::BeginPlay() { Super::BeginPlay(); }
 
 void UBaseAbilitySystemComponent::InitSetting()
 {
+	
 	OnGameplayEffectAppliedDelegateToSelf.AddUObject(this, &UBaseAbilitySystemComponent::ClientOnGEAppliedToSelf);
 }
 
@@ -122,14 +123,19 @@ void UBaseAbilitySystemComponent::ClientOnGEAppliedToSelf_Implementation(
 	const FGameplayEffectSpec& GameplayEffectSpec,
 	FActiveGameplayEffectHandle ActiveEffectHandle)
 {
+	
+	// UE_LOG(UBaseAbilitySystemComponentLog, Warning, TEXT("[%s]In , GeSpec[%s]"),*GetOwner()->GetName(),*GameplayEffectSpec.Def.GetName());
+	
+	
 	FGameplayTagContainer Tags;
 
-	// 获取资产标签的容器
+	
 	GameplayEffectSpec.GetAllAssetTags(Tags);
 
-	if (Tags.Num() > 0)
+	if (Tags.Num())
 	{
-		// 广播资产标签给UI的main控制器
+		
 		OnGetAssetTagsDelegate.Broadcast(Tags);
 	}
 }
+
