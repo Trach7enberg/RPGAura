@@ -87,7 +87,8 @@ private:
     /// @param TagContainer 标签容器
     /// @param GameplayTagType 标签类型
     /// @param VerticalArea 垂直区域
+    /// @param WidgetClass
     void CreateVerticalAreaWidgets(const FGameplayTagContainer& TagContainer,
                                    const EGameplayTagType GameplayTagType,
-                                   UVerticalBox* VerticalArea);
+                                   UVerticalBox* VerticalArea,TSubclassOf<UBaseUserWidget> WidgetClass);
 };
