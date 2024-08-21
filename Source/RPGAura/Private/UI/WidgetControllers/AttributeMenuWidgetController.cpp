@@ -3,15 +3,35 @@
 
 #include "UI/WidgetControllers/AttributeMenuWidgetController.h"
 
-#include "CoreTypes/RPGAuraGameplayTags.h"
 #include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
 #include "GAS/AttributeSet/BaseAttributeSet.h"
 #include "GAS/Data/AttributeInfo.h"
+#include "SubSystems/RPGAuraGameInstanceSubsystem.h"
+
 
 DEFINE_LOG_CATEGORY_STATIC(UAttributeMenuWidgetControllerLog, All, All);
 
 
-UAttributeMenuWidgetController::UAttributeMenuWidgetController() {}
+void UAttributeMenuWidgetController::BindCallBack()
+{
+	if (!IsWidgetControllerParamsValid())
+	{
+		UE_LOG(UAttributeMenuWidgetControllerLog, Error, TEXT("控制器的基本参数无效!"));
+		return;
+	}
+
+	const auto MyAs = Cast<UBaseAttributeSet>(GetWidgetControllerParams().CurrentAttributeSet);
+	if (!MyAs) { return; }
+
+	const auto GameInstanceSubSystem = GetWidgetControllerParams().CurrentPlayerController->GetGameInstance()->
+	                                                               GetSubsystem<URPGAuraGameInstanceSubsystem>();
+	if (!GameInstanceSubSystem)
+	{
+		UE_LOG(UAttributeMenuWidgetControllerLog, Error, TEXT("GameInstance子系统获取失败!"));
+		return;
+	}
+	for (const auto& Pair : MyAs->TagToAttributeMap) { HandleAnyAttributeChange(GameInstanceSubSystem,MyAs, Pair.Key, Pair.Value()); }
+}
 
 void UAttributeMenuWidgetController::BroadcastInitialValues()
 {
@@ -33,48 +53,41 @@ void UAttributeMenuWidgetController::BroadcastInitialValues()
 	const auto MyAcs = Cast<UBaseAbilitySystemComponent>(GetWidgetControllerParams().CurrentAbilitySystemComponent);
 	if (!MyAcs) { return; }
 
+	const auto GameInstanceSubSystem = GetWidgetControllerParams().CurrentPlayerController->GetGameInstance()->
+																   GetSubsystem<URPGAuraGameInstanceSubsystem>();
+	if (!GameInstanceSubSystem)
+	{
+		UE_LOG(UAttributeMenuWidgetControllerLog, Error, TEXT("GameInstance子系统获取失败!"));
+		return;
+	}
+
 	// UE_LOG(UAttributeMenuWidgetControllerLog, Error, TEXT("ALL:%d"), FRPGAuraGameplayTags::GetGameplayTagsMap().Num());
 	// UE_LOG(UAttributeMenuWidgetControllerLog, Error, TEXT("ALL:%d"), MyAs->TagToAttributeMap.Num());
 
 	// 遍历属性集的主要和次要属性,广播属性信息
 	// DoFirstBroadcast(MyAs, FRPGAuraGameplayTags::PrimaryGameplayTagsArray);
 	// DoFirstBroadcast(MyAs, FRPGAuraGameplayTags::SecondaryGameplayTagsArray);
-	for (const auto& Pair : MyAs->TagToAttributeMap) { BroadcastAttributeInfoStruct(MyAs, Pair.Key, Pair.Value()); }
+	for (const auto& Pair : MyAs->TagToAttributeMap) { BroadcastAttributeInfoStruct(GameInstanceSubSystem,MyAs, Pair.Key, Pair.Value()); }
 }
 
-void UAttributeMenuWidgetController::BindCallBack()
-{
-	if (!IsWidgetControllerParamsValid())
-	{
-		UE_LOG(UAttributeMenuWidgetControllerLog, Error, TEXT("控制器的基本参数无效!"));
-		return;
-	}
-
-	const auto MyAs = Cast<UBaseAttributeSet>(GetWidgetControllerParams().CurrentAttributeSet);
-	if (!MyAs) { return; }
-
-	for (const auto& Pair : MyAs->TagToAttributeMap) { HandleAnyAttributeChange(MyAs, Pair.Key, Pair.Value()); }
-}
-
-
-void UAttributeMenuWidgetController::HandleAnyAttributeChange(const UBaseAttributeSet* MyAs,
+void UAttributeMenuWidgetController::HandleAnyAttributeChange(const URPGAuraGameInstanceSubsystem* Subsystem,const UBaseAttributeSet* MyAs,
                                                               const FGameplayTag& GameplayTag,
-                                                              const FGameplayAttribute& Attribute)
+                                                              const FGameplayAttribute& Attribute) const
 {
 	GetWidgetControllerParams().CurrentAbilitySystemComponent->
 	                            GetGameplayAttributeValueChangeDelegate(Attribute)
-	                            .AddLambda([this,MyAs, GameplayTag, Attribute](const FOnAttributeChangeData& Data)
+	                            .AddLambda([this,Subsystem,MyAs, GameplayTag, Attribute](const FOnAttributeChangeData& Data)
 	                            {
-		                            BroadcastAttributeInfoStruct(MyAs, GameplayTag, Attribute);
+		                            BroadcastAttributeInfoStruct(Subsystem,MyAs, GameplayTag, Attribute);
 	                            });
 }
 
-
-void UAttributeMenuWidgetController::BroadcastAttributeInfoStruct(const UBaseAttributeSet* MyAs,
+void UAttributeMenuWidgetController::BroadcastAttributeInfoStruct(const URPGAuraGameInstanceSubsystem* Subsystem,
+                                                                  const UBaseAttributeSet* MyAs,
                                                                   const FGameplayTag& GameplayTag,
-                                                                  const FGameplayAttribute& Attribute)
+                                                                  const FGameplayAttribute& Attribute) const
 {
-	if (!AttributeInfo)
+	if (!AttributeInfo || !Subsystem)
 	{
 		UE_LOG(UAttributeMenuWidgetControllerLog, Warning, TEXT("致命错误"));
 		return;
@@ -90,6 +103,6 @@ void UAttributeMenuWidgetController::BroadcastAttributeInfoStruct(const UBaseAtt
 
 	AttributeInfoStruct.AttributeValue = Attribute.GetNumericValue(MyAs);
 
-	// TODO Bug待修复,多人模式下一广播就报错Crash,和在WBP_TextValueRow里绑定的回调函数通知属性变化有关系
-	OnAttributeChanged.Broadcast(AttributeInfoStruct);
+
+	Subsystem->OnAttributeChanged.Broadcast(AttributeInfoStruct);
 }
