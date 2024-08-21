@@ -65,7 +65,7 @@ struct FRPGAuraAttributeInfo
 
 /// ---UAttributeInfo类使用
 
-/// ---MainWidgetController使用
+/// ---URPGAuraGameInstanceSubsystem使用
 /// 用于显示Message Widget的结构体,当角色拾取到什么东西时就会弹出
 USTRUCT(BlueprintType)
 struct FUIWidgetRow : public FTableRowBase
@@ -89,6 +89,9 @@ struct FUIWidgetRow : public FTableRowBase
 	UTexture2D* Image = nullptr;
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMessageWidgetRowSignature, const FUIWidgetRow, Row);
+
+/// UGlobeBarWidgetController使用
 /// 给生命值、魔力值属性变化时的委托,BIsIncreased 增加还是减少,增加则为true
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnVitalAttributeChangedSignature,
                                              float,
@@ -97,9 +100,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnVitalAttributeChangedSignature,
                                              /* BIsIncreased增加还是减少,增加则为true */
                                              BIsIncreased);
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMessageWidgetRowSignature, const FUIWidgetRow, Row);
 
-/// ---MainWidgetController使用
+
 
 /// ---UAttributeMenuWidgetController类使用
 /// 用于广播GAS属性变化的结构体,更新属性菜单的属性值显示 (包括vital、primary、secondary属性)
@@ -138,10 +140,14 @@ struct FCharacterClassDefaultInfo
 	GENERATED_BODY()
 
 	// 角色的主要GE属性
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "DefaultAttributes")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "DefaultAttributes|Primary")
 	TSubclassOf<UGameplayEffect> PrimaryAttributes;
 
 	// 角色的主要初始能力
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "DefaultAbilities")
 	TArray<TSubclassOf<UGameplayAbility>> PrimaryStartUpAbilities;
+
+	// 角色的初始伤害抗性
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite,Category="DefaultAttributes|Secondary")
+	TSubclassOf<UGameplayEffect> SecondaryResistanceAttributes;
 };
