@@ -3,11 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CoreTypes/RPGAuraCoreTypes.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "RPGAuraGameInstanceSubsystem.generated.h"
 
-class UAbilitySystemComponent;
-enum class ECharacterClass : uint8;
+
+class UPickupMessageAsset;
 class UCharacterClassInfo;
 /**
  * GameInstance子系统类
@@ -19,6 +20,10 @@ class RPGAURA_API URPGAuraGameInstanceSubsystem : public UGameInstanceSubsystem
 
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+
+	/// 属性值变化时的委托
+	UPROPERTY(BlueprintAssignable, Category="GAS | Attributes")
+	FOnAttributeChangedSignature OnAttributeChanged;
 
 	// 游戏角色职业信息资产
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="DataAssets|CharacterClassDefaults")
@@ -32,4 +37,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category="GAS")
 	void InitializeDefaultAttributes( UAbilitySystemComponent* Asc, ECharacterClass CharacterClass, float Level , bool BIsPlayer = false);
 	
+
+	// 消息数据资产,不同的Tag对应不同的消息
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="DataAsset")
+	TObjectPtr<UPickupMessageAsset> MessageWidgetDataAsset ;
 };
