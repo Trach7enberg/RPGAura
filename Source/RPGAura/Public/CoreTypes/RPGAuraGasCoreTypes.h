@@ -42,6 +42,13 @@ public:
 	bool IsCriticalHit() const { return bIsCriticalHit; }
 	void SetBIsCriticalHit(const bool NewBIsCriticalHit) { this->bIsCriticalHit = NewBIsCriticalHit; }
 
+	/// 添加伤害类型
+	/// @param DamageTag 
+	void AddDamageType(const FGameplayTag& DamageTag){DamageTypes.AddTag(DamageTag);}
+	
+	/// 获取伤害类型容器
+	/// @return 
+	FGameplayTagContainer GetDamageTypes() const { return DamageTypes; }
 protected:
 	
 	// 攻击是否被格挡
@@ -51,11 +58,15 @@ protected:
 	// 攻击是否暴击
 	UPROPERTY()
 	bool bIsCriticalHit  = false;
+
+	// 当前GE拥有的伤害类型
+	UPROPERTY()
+	FGameplayTagContainer DamageTypes ;
 };
 
 // 结构体特征选项结构
 template<>
-struct TStructOpsTypeTraits< FRPGAuraGameplayEffectContext > : public TStructOpsTypeTraitsBase2< FGameplayEffectContext >
+struct TStructOpsTypeTraits< FRPGAuraGameplayEffectContext > : public TStructOpsTypeTraitsBase2< FRPGAuraGameplayEffectContext >
 {
 	enum
 	{
