@@ -146,13 +146,34 @@ public:
 	FGameplayAttributeData MaxMana;
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxMana);
 
+	// Secondary Resistance属性
+	UPROPERTY(ReplicatedUsing = OnRep_FireResistance, BlueprintReadOnly,
+		Category = "Second Primary Attribute|Resistance")
+	FGameplayAttributeData FireResistance;
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, FireResistance);
+
+	UPROPERTY(ReplicatedUsing = OnRep_PhysicalResistance, BlueprintReadOnly,
+		Category = "Second Primary Attribute|Resistance")
+	FGameplayAttributeData PhysicalResistance;
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, PhysicalResistance);
+
+	UPROPERTY(ReplicatedUsing = OnRep_LightingResistance, BlueprintReadOnly,
+		Category = "Second Primary Attribute|Resistance")
+	FGameplayAttributeData LightingResistance;
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, LightingResistance);
+
+	UPROPERTY(ReplicatedUsing = OnRep_ArcaneResistance, BlueprintReadOnly,
+		Category = "Second Primary Attribute|Resistance")
+	FGameplayAttributeData ArcaneResistance;
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, ArcaneResistance);
+
 
 	// Vital 属性
-	UPROPERTY(ReplicatedUsing = OnRep_CurrentHealth, BlueprintReadOnly, Category = "Vital Attribute")
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentHealth, BlueprintReadOnly, Category = "Vital Attributes")
 	FGameplayAttributeData CurrentHealth;
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, CurrentHealth);
 
-	UPROPERTY(ReplicatedUsing = OnRep_CurrentMana, BlueprintReadOnly, Category = "Vital Attribute")
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentMana, BlueprintReadOnly, Category = "Vital Attributes")
 	FGameplayAttributeData CurrentMana;
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, CurrentMana);
 
@@ -160,7 +181,6 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category="Meta Attributes")
 	FGameplayAttributeData InComingDamage;
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, InComingDamage);
-
 
 	// Primary OnRep
 	UFUNCTION()
@@ -176,7 +196,7 @@ public:
 	void OnRep_Vigor(const FGameplayAttributeData& OldValue) const;
 	// Primary OnRep
 
-	// Second Primary OnRep
+	// Secondary OnRep
 	UFUNCTION()
 	void OnRep_Armor(const FGameplayAttributeData& OldValue) const;
 
@@ -202,11 +222,23 @@ public:
 	void OnRep_ManaRegeneration(const FGameplayAttributeData& OldValue) const;
 
 	UFUNCTION()
-	void OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth) const;
+	void OnRep_MaxHealth(const FGameplayAttributeData& OldValue) const;
 
 	UFUNCTION()
-	void OnRep_MaxMana(const FGameplayAttributeData& OldMaxMana) const;
-	// Second Primary OnRep
+	void OnRep_MaxMana(const FGameplayAttributeData& OldValue) const;
+
+	// Secondary Resistance OnRep
+	UFUNCTION()
+	void OnRep_FireResistance(const FGameplayAttributeData& OldValue) const;
+
+	UFUNCTION()
+	void OnRep_PhysicalResistance(const FGameplayAttributeData& OldValue) const;
+
+	UFUNCTION()
+	void OnRep_LightingResistance(const FGameplayAttributeData& OldValue) const;
+
+	UFUNCTION()
+	void OnRep_ArcaneResistance(const FGameplayAttributeData& OldValue) const;
 
 	/**
 	 *  Vital OnRep
@@ -215,14 +247,11 @@ public:
 	 *  当有一个参数时,它将是旧值作为参数
 	 */
 	UFUNCTION()
-	void OnRep_CurrentHealth(const FGameplayAttributeData& OldHealth) const;
+	void OnRep_CurrentHealth(const FGameplayAttributeData& OldValue) const;
 
 
 	UFUNCTION()
-	void OnRep_CurrentMana(const FGameplayAttributeData& OldCurrentMana) const;
-	/**
-	 *  Vital OnRep
-	 */
+	void OnRep_CurrentMana(const FGameplayAttributeData& OldValue) const;
 
 
 	/// 设置FEffectProp,该结构存储着和Data相关的GAS ActorInfo

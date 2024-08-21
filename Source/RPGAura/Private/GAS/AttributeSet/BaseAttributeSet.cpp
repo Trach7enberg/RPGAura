@@ -8,6 +8,7 @@
 #include "CoreTypes/RPGAuraGameplayTags.h"
 #include "GameFramework/Character.h"
 #include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
+#include "GAS/Globals/GameAbilitySystemGlobals.h"
 #include "Interfaces/CombatInterface.h"
 #include "Net/UnrealNetwork.h"
 
@@ -41,27 +42,32 @@ UBaseAttributeSet::UBaseAttributeSet()
 	TagToAttributeMap.Add(GameplayTags.Attribute_Secondary_CriticalHitChance, GetCriticalHitChanceAttribute);
 	TagToAttributeMap.Add(GameplayTags.Attribute_Secondary_CriticalHitDamage, GetCriticalHitDamageAttribute);
 	TagToAttributeMap.Add(GameplayTags.Attribute_Secondary_CriticalHitResistance, GetCriticalHitResistanceAttribute);
+
+	TagToAttributeMap.Add(GameplayTags.Attributes_Secondary_Resistance_Fire, GetFireResistanceAttribute);
+	TagToAttributeMap.Add(GameplayTags.Attributes_Secondary_Resistance_Physical, GetPhysicalResistanceAttribute);
+	TagToAttributeMap.Add(GameplayTags.Attributes_Secondary_Resistance_Lightning, GetLightingResistanceAttribute);
+	TagToAttributeMap.Add(GameplayTags.Attributes_Secondary_Resistance_Arcane, GetArcaneResistanceAttribute);
 }
 
-void UBaseAttributeSet::OnRep_CurrentHealth(const FGameplayAttributeData& OldHealth) const
+void UBaseAttributeSet::OnRep_CurrentHealth(const FGameplayAttributeData& OldValue) const
 {
 	// 通知GAS currentHealth刚刚被复制了,使GAS整个系统协调工作,让能力系统记录这一变化并保存旧值的跟踪,以防止需要回滚
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, CurrentHealth, OldHealth);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, CurrentHealth, OldValue);
 }
 
-void UBaseAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth) const
+void UBaseAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldValue) const
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, MaxHealth, OldMaxHealth);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, MaxHealth, OldValue);
 }
 
-void UBaseAttributeSet::OnRep_CurrentMana(const FGameplayAttributeData& OldCurrentMana) const
+void UBaseAttributeSet::OnRep_CurrentMana(const FGameplayAttributeData& OldValue) const
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, CurrentMana, OldCurrentMana);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, CurrentMana, OldValue);
 }
 
-void UBaseAttributeSet::OnRep_MaxMana(const FGameplayAttributeData& OldMaxMana) const
+void UBaseAttributeSet::OnRep_MaxMana(const FGameplayAttributeData& OldValue) const
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, MaxMana, OldMaxMana);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, MaxMana, OldValue);
 }
 
 void UBaseAttributeSet::OnRep_Strength(const FGameplayAttributeData& OldValue) const
@@ -124,11 +130,31 @@ void UBaseAttributeSet::OnRep_ManaRegeneration(const FGameplayAttributeData& Old
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, ManaRegeneration, OldValue);
 }
 
+void UBaseAttributeSet::OnRep_FireResistance(const FGameplayAttributeData& OldValue) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, FireResistance, OldValue);
+}
+
+void UBaseAttributeSet::OnRep_PhysicalResistance(const FGameplayAttributeData& OldValue) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, PhysicalResistance, OldValue);
+}
+
+void UBaseAttributeSet::OnRep_LightingResistance(const FGameplayAttributeData& OldValue) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, LightingResistance, OldValue);
+}
+
+void UBaseAttributeSet::OnRep_ArcaneResistance(const FGameplayAttributeData& OldValue) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseAttributeSet, ArcaneResistance, OldValue);
+}
 
 void UBaseAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	// Vital
 	// 注册health变量用于复制,这是复制任何变量所需的步骤
 	// 复制条件 COND_None ,也就是没有条件的复制
 	// REPNOTIFY_Always 意味着如果在服务器上设置了值,就复制给客户端,那个值将被更新和设置,这里的值就是我们的CurrentHealth
@@ -152,6 +178,11 @@ void UBaseAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, ManaRegeneration, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, MaxHealth, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, MaxMana, COND_None, REPNOTIFY_Always);
+
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, FireResistance, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, PhysicalResistance, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, LightingResistance, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseAttributeSet, ArcaneResistance, COND_None, REPNOTIFY_Always);
 }
 
 void UBaseAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
@@ -236,13 +267,15 @@ void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 {
 	Super::PostGameplayEffectExecute(Data);
 
-	
-	
 	if (!GetMyCurrentAbilitySystem())
 	{
-		UE_LOG(UBaseAttributeSetLog, Error, TEXT("能力系统组件 为空!"));
+		UE_LOG(UBaseAttributeSetLog, Error, TEXT("能力系统组件为空!"));
 		return;
 	}
+
+	const auto Instigator = Data.EffectSpec.GetContext().GetEffectCauser();
+	const auto Sufferer = GetMyCurrentAbilitySystem()->GetAvatarActor();
+	const auto InstigatorCharacter = Cast<ACharacter>(Instigator);
 
 	// 检查是否等于 InComingDamage 元属性
 	if (Data.EvaluatedData.Attribute == GetInComingDamageAttribute() && GetInComingDamage() != 0)
@@ -256,11 +289,11 @@ void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 		SetCurrentHealth(FMath::Clamp(TempHealth, 0.f, GetMaxHealth()));
 
 		// 转换成Combat接口获取相应函数
-		const auto CbInterface = Cast<ICombatInterface>(GetMyCurrentAbilitySystem()->GetAvatarActor());
+		const auto CbInterface = Cast<ICombatInterface>(Sufferer);
+		const auto IsBlockHit = UGameAbilitySystemGlobals::IsBlockedHit(Data.EffectSpec.GetContext());
+		const auto IsCriticalHit = UGameAbilitySystemGlobals::IsCriticalHit(Data.EffectSpec.GetContext());
 
-		const auto Instigator = Data.EffectSpec.GetContext().GetEffectCauser();
-		const auto Sufferer = GetMyCurrentAbilitySystem()->GetAvatarActor();
-		if (Instigator != Sufferer) { CbInterface->ShowDamageNumber(TempValue); }
+		CbInterface->ShowDamageNumber(TempValue,IsBlockHit,IsCriticalHit);
 
 		// 是否是致命伤
 		const bool BIsFatal = TempHealth <= 0.f;
@@ -268,23 +301,18 @@ void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 		// 非致命伤,给击中的敌人 激活含有标签HitReact的能力
 		if (!BIsFatal)
 		{
-			// GetMyCurrentAbilitySystem()->TryActivateAbilityByTag(FRPGAuraGameplayTags::Get().Abilities_Effects_HitReact);
-
 			// 使用该函数需要确保能力蓝图类中的AbilityTags容器里有Effects_HitReact标签
 			GetMyCurrentAbilitySystem()->TryActivateAbilitiesByTag(
 				FGameplayTagContainer(FRPGAuraGameplayTags::Get().Abilities_Effects_HitReact));
+
+			// UE_LOG(UBaseAttributeSetLog, Error, TEXT("是否暴击[%d] 是否格挡[%d]"), IsCriticalHit, IsBlockHit);
 		}
 		else { if (CbInterface) { CbInterface->Die(); } }
 	}
-	if (Data.EvaluatedData.Attribute == GetBlockChanceAttribute() )
+	if (Data.EvaluatedData.Attribute == GetBlockChanceAttribute())
 	{
-		
 		// UE_LOG(UBaseAttributeSetLog, Error, TEXT("[%s , %s] Current:%.1f , Final:%.1f"), *GetOwningActor()->GetName(),
 		//        *Data.EvaluatedData.Attribute.GetName(), GetBlockChance(), Data.EvaluatedData.Attribute.GetNumericValue(this));
-	}else
-	{
-		// UE_LOG(UBaseAttributeSetLog, Error, TEXT("All-[%s , %s] Final:%.1f"), *GetOwningActor()->GetName(),
-		// 	   *Data.EvaluatedData.Attribute.GetName(), Data.EvaluatedData.Attribute.GetNumericValue(this));
 	}
 }
 
