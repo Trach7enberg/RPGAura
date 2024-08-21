@@ -73,7 +73,7 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 				"Attributes.Secondary.Resistance.Physical");
 			GameplayTags.Attributes_Secondary_Resistance_Lightning = UGameplayTagsManager::Get().AddNativeGameplayTag(
 				"Attributes.Secondary.Resistance.Lightning");
-			GameplayTags.Abilities_Damage_Spell_Arcane = UGameplayTagsManager::Get().AddNativeGameplayTag(
+			GameplayTags.Attributes_Secondary_Resistance_Arcane = UGameplayTagsManager::Get().AddNativeGameplayTag(
 				"Attributes.Secondary.Resistance.Arcane");
 		}
 
