@@ -4,9 +4,8 @@
 #include "UI/HUD/BaseHUD.h"
 
 #include "FunctionLibrary/WidgetControllerBpFuncLib.h"
-#include "UI/WidgetControllers/AttributeMenuWidgetController.h"
-#include "UI/Widgets/BaseUserWidget.h"
 #include "UI/WidgetControllers/MainWidgetController.h"
+#include "UI/Widgets/MainWidget.h"
 
 DEFINE_LOG_CATEGORY_STATIC(ABaseHUDLog, All, All);
 
@@ -54,9 +53,7 @@ void ABaseHUD::InitHudMainWidget()
 		return;
 	}
 
-	CurrentMainWidget->GetWidgetController<UBaseWidgetController>()->BroadcastInitialValues();
-
-	// TODO 把蓝图中设置的属性菜单换到这里统一创建属性菜单,并且设置属性菜单的控制器、BroadcastInitialValues();
+	CurrentMainWidgetController->BroadcastInitialValues();
 
 	CurrentMainWidget->AddToViewport();
 }
