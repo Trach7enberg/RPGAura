@@ -4,11 +4,16 @@
 #include "FunctionLibrary/WidgetControllerBpFuncLib.h"
 
 #include "PlayerStates/BasePlayerState.h"
-#include "UI/HUD/BaseHUD.h"
 #include "UI/WidgetControllers/BaseWidgetController.h"
 
 
 DEFINE_LOG_CATEGORY_STATIC(UWidgetControllerBpFuncLibLog, All, All);
+
+
+UWidgetControllerBpFuncLib::UWidgetControllerBpFuncLib()
+{
+	
+}
 
 void UWidgetControllerBpFuncLib::CreateWidgetControllerParams(AController* OwnerController,
                                                               FWidgetControllerParams& Params)
@@ -67,35 +72,4 @@ UBaseWidgetController* UWidgetControllerBpFuncLib::CreateWidgetController(
 	}
 
 	return WidgetController;
-}
-
-UMainWidgetController* UWidgetControllerBpFuncLib::GetMainWidgetController(const APlayerController* PlayerController)
-{
-	if (!PlayerController) { return nullptr; }
-	const auto Hud = Cast<ABaseHUD>(PlayerController->GetHUD());
-
-	if (!Hud) { return nullptr; }
-
-	return Hud->GetMainWidgetController();
-}
-
-void UWidgetControllerBpFuncLib::SetHudAttributeMenuWidgetController(const APlayerController* PlayerController,
-                                                                     UAttributeMenuWidgetController*
-                                                                     AttributeMenuWidgetController)
-{
-	if (!PlayerController) { return; }
-	const auto Hud = Cast<ABaseHUD>(PlayerController->GetHUD());
-	if (!Hud) { return; }
-	Hud->SetAttributeMenuWidgetController(AttributeMenuWidgetController);
-}
-
-UAttributeMenuWidgetController* UWidgetControllerBpFuncLib::GetAttributeMenuWidgetController(
-	const APlayerController* PlayerController)
-{
-	if (!PlayerController) { return nullptr; }
-	const auto Hud = Cast<ABaseHUD>(PlayerController->GetHUD());
-
-	if (!Hud) { return nullptr; }
-
-	return Hud->GetAttributeMenuWidgetController();
 }

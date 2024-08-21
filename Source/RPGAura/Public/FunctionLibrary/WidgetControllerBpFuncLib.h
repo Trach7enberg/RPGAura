@@ -4,13 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "CoreTypes/RPGAuraCoreTypes.h"
 #include "WidgetControllerBpFuncLib.generated.h"
 
-class UAttributeMenuWidgetController;
-class UMainWidgetController;
-class UBaseWidgetController;
 struct FWidgetControllerParams;
+class UBaseWidgetController;
 /**
  * Widget控制器的蓝图函数库
  */
@@ -20,6 +17,8 @@ class RPGAURA_API UWidgetControllerBpFuncLib : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
+	UWidgetControllerBpFuncLib();
+
 	/// 获取创建Widget控制器所需要的基本参数
 	/// @param OwnerController Widget控制器的拥有者(得是玩家控制器!)
 	/// @param Params 控制器的基本参数
@@ -34,22 +33,7 @@ public:
 	static UBaseWidgetController* CreateWidgetController(TSubclassOf<UBaseWidgetController> WidgetControllerClass,
 	                                                     AController* OwnerController);
 
-	/// 根据玩家控制器获取主Widget的小部件控制器
-	/// @param PlayerController 玩家控制器
-	/// @return MainWidgetController
-	UFUNCTION(BlueprintPure, Category="WidgetController")
-	static UMainWidgetController* GetMainWidgetController(const APlayerController* PlayerController);
 
-	/// 设置Hud里的属性菜单小部件控制器的引用
-	/// @param PlayerController 玩家控制器
-	/// @param AttributeMenuWidgetController 属性菜单小部件控制器
-	UFUNCTION(BlueprintCallable, Category="WidgetController")
-	static void SetHudAttributeMenuWidgetController(const APlayerController* PlayerController,
-	                                                UAttributeMenuWidgetController* AttributeMenuWidgetController);
-
-	/// 根据玩家控制器获取主Widget里的属性菜单小部件控制器
-	/// @param PlayerController 玩家控制器
-	/// @return AttributeMenuWidgetController
-	UFUNCTION(BlueprintPure, Category="WidgetController")
-	static UAttributeMenuWidgetController* GetAttributeMenuWidgetController(const APlayerController* PlayerController);
+	
+	
 };
