@@ -11,8 +11,8 @@ AEnemyGoblinCharacter::AEnemyGoblinCharacter()
 {
 	if (GetMesh())
 	{
-		GetCapsuleComponent()->SetCapsuleHalfHeight(51.f);
-		GetMesh()->SetRelativeLocation(FVector(0, 0, -50));
+		GetCapsuleComponent()->SetCapsuleHalfHeight(55.f);
+		GetMesh()->SetRelativeLocation(FVector(0, 0, -55));
 	}
 	
 }
