@@ -26,7 +26,7 @@ enum class EGameplayTagNum : uint8
 	CriticalHitDamage,
 	HealthRegeneration,
 	ManaRegeneration,
-	
+
 	FireResistance,
 	PhysicalResistance,
 	LightningResistance,
@@ -106,7 +106,10 @@ struct FRPGAuraGameplayTags
 	FGameplayTag Abilities_Damage_Spell_Arcane; // 奥术伤害
 	FGameplayTag Abilities_Damage_Spell_Physical; // 物理伤害
 
-	
+	// 简单的Actor标签
+	FName Player = "Player";
+	FName Enemy = "Enemy";
+
 
 	// 受击反应
 	FGameplayTag Abilities_Effects_HitReact;
