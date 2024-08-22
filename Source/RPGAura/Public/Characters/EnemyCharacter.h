@@ -7,6 +7,8 @@
 #include "Interfaces/HighLightInterface.h"
 #include "EnemyCharacter.generated.h"
 
+class ABaseAIController;
+class UBehaviorTree;
 class UWidgetComponent;
 /**
  * 所有敌人的基类
@@ -25,13 +27,11 @@ public:
 	// ~ IHighLightInterface
 
 	// ~ ICombatInterface
-	virtual int32 GetCharacterLevel() override
-	{
-		return CharacterLevel;
-	};
+	virtual int32 GetCharacterLevel() override { return CharacterLevel; };
 	virtual void Die() override;
 	// ~ ICombatInterface
 
+	virtual void PossessedBy(AController* NewController) override;
 	// 属性变更委托
 	UPROPERTY(BlueprintAssignable)
 	FOnVitalAttributeChangedSignature OnCurrentHealthAttributeChanged;
@@ -51,20 +51,21 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widget")
 	TObjectPtr<UWidgetComponent> EnemyHealthBar;
 
-	
+	UPROPERTY(EditAnywhere, Category ="AI")
+	TObjectPtr<UBehaviorTree> BehaviorTree;
 
 	
 
 private:
 	// ~ IHighLightInterface Begin
 	UFUNCTION()
-	void OnMouseOver(AActor *TouchedActor);
+	void OnMouseOver(AActor* TouchedActor);
 
 
 	UFUNCTION()
-	void EndMouseOver(AActor *TouchedActor);
+	void EndMouseOver(AActor* TouchedActor);
 	// ~IHighLightInterface End
-
 	
-
+	UPROPERTY()
+	TObjectPtr<ABaseAIController> CurrentAiController;
 };

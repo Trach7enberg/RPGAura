@@ -3,10 +3,14 @@
 
 #include "Characters/EnemyCharacter.h"
 
+#include "BehaviorTree/BehaviorTree.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WeaponLogicBaseComponent.h"
 #include "Components/WidgetComponent.h"
+#include "Controller/BaseAIController.h"
 #include "CoreTypes/RPGAuraGameplayTags.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
 #include "GAS/AttributeSet/BaseAttributeSet.h"
 #include "RPGAura/RPGAura.h"
@@ -16,6 +20,9 @@ DEFINE_LOG_CATEGORY_STATIC(AEnemyCharacterLog, All, All);
 
 AEnemyCharacter::AEnemyCharacter()
 {
+	// 敌人有敌人标签
+	Tags.Add(FRPGAuraGameplayTags::Get().Enemy);
+
 	AbilitySystemComponent = CreateDefaultSubobject<UBaseAbilitySystemComponent>("AbilitySystemComponent");
 
 	// 多人联机设置
@@ -28,8 +35,21 @@ AEnemyCharacter::AEnemyCharacter()
 	EnemyHealthBar = CreateDefaultSubobject<UWidgetComponent>("EnemyHealthBar");
 	EnemyHealthBar->SetupAttachment(RootComponent);
 
-	
 	MaxWalkingSpeed = 250.f;
+
+	AIControllerClass = ABaseAIController::StaticClass();
+	AutoPossessAI = EAutoPossessAI::PlacedInWorld;
+	
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationRoll = false;
+	bUseControllerRotationYaw = false;
+	if (GetCharacterMovement())
+	{
+		// 设置AI转向的丝滑度
+		GetCharacterMovement()->bUseControllerDesiredRotation = true;
+		// 注意是YAW!! Z 对应 YAW
+		GetCharacterMovement()->RotationRate = FRotator(0, 200.0f, 0);
+	}
 }
 
 
@@ -78,8 +98,6 @@ void AEnemyCharacter::BeginPlay()
 		                             });
 
 	BroadCastHealthBarInit();
-
-	
 }
 
 void AEnemyCharacter::InitAbilityActorInfo()
@@ -93,10 +111,10 @@ void AEnemyCharacter::InitAbilityActorInfo()
 	}
 
 	MyAsc->InitSetting();
-	
+
 	InitAllAttributes();
 	RegisterGameplayTagEvent();
-	
+
 	AddCharacterAbilities();
 }
 
@@ -119,6 +137,24 @@ void AEnemyCharacter::UnHighLightActor()
 
 void AEnemyCharacter::Die() { Super::Die(); }
 
+void AEnemyCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	// 只在服务器上设置AI控制器,可以检查这个CurrentAiController为null就是不在服务器
+	if (!HasAuthority()) { return; }
+	CurrentAiController = Cast<ABaseAIController>(NewController);
+
+	if (CurrentAiController && BehaviorTree)
+	{
+		// 初始化黑板和运行行为树
+		CurrentAiController->GetBlackboardComponent()->InitializeBlackboard(*BehaviorTree->GetBlackboardAsset());
+		CurrentAiController->RunBehaviorTree(BehaviorTree);
+		// 设置黑板键,当前角色是不是远程攻击角色
+		CurrentAiController->GetBlackboardComponent()->SetValueAsBool("IsRangCharacter", CharacterClass == ECharacterClass::Warrior);
+	}
+}
+
 void AEnemyCharacter::OnMouseOver(AActor* TouchedActor) { Super::HighLight(); }
 
 void AEnemyCharacter::EndMouseOver(AActor* TouchedActor) { Super::UnHighLight(); }
@@ -131,11 +167,10 @@ void AEnemyCharacter::BroadCastHealthBarInit() const
 		UE_LOG(AEnemyCharacterLog, Error, TEXT("AttributeSet 不能为 null"));
 		return;
 	}
+
 	const auto MyAs = Cast<UBaseAttributeSet>(AttributeSet);
 	OnCurrentHealthAttributeChanged.Broadcast(
 		MyAs->GetCurrentHealth(), false);
 	OnMaxHealthAttributeChanged.Broadcast(
 		MyAs->GetMaxHealth(), false);
 }
-
-
