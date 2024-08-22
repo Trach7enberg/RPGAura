@@ -6,10 +6,10 @@
 #include "AbilitySystemComponent.h"
 #include "MotionWarpingComponent.h"
 #include "Camera/CameraComponent.h"
+#include "CoreTypes/RPGAuraGameplayTags.h"
 #include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "Kismet/GameplayStatics.h"
 #include "PlayerStates/BasePlayerState.h"
 #include "UI/HUD/BaseHUD.h"
 
@@ -17,6 +17,9 @@ DEFINE_LOG_CATEGORY_STATIC(AAuraCharacterLog, All, All);
 
 AAuraCharacter::AAuraCharacter()
 {
+
+	Tags.Add(FRPGAuraGameplayTags::Get().Player);
+	
 	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>("SpringArm");
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>("Camera");
 	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>("MotionWarping");
