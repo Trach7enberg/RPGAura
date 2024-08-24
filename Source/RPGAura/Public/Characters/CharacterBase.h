@@ -14,6 +14,7 @@
 #include "CharacterBase.generated.h"
 
 
+class UMotionWarpingComponent;
 class UDamageTextComponent;
 class UGameplayAbility;
 class UGameplayEffect;
@@ -53,13 +54,13 @@ public:
 	// ~ ICombatInterface
 	virtual int32 GetCharacterLevel() override { return 0; };
 	virtual FVector GetCombatSocketLocation() override;
-
-	virtual void UpdateCharacterFacingTarget(const FVector& TargetLoc) override {};
+	virtual void UpdateCharacterFacingTarget(const FVector& TargetLoc) override;
 	virtual UAnimMontage* GetHitReactAnim() override;
 	virtual UAnimMontage* GetDeathAnim() override;
 
 	/// 角色死亡 , 只在服务器上调用
 	virtual void Die() override;
+	virtual bool IsCharacterDie() override;
 
 	/// 在角色头顶显示伤害
 	/// 对于在服务器控制的角色将会在服务器上执行,对于客户端控制的角色将在服务器上调用这个函数然后客户端执行,无论怎么样确保显示
@@ -88,12 +89,16 @@ protected:
 
 	// 角色等级
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
-	float CharacterLevel;
-
+	 float CharacterLevel;
+	
 	// 当前角色的职业类别
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Character Class Defaluts")
 	ECharacterClass CharacterClass;
 
+	/// 动画蒙太奇中的运动扭曲的WarpTargetName
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Animation")
+	FName WarpTargetName = "FacingTarget";
+	
 	// 武器逻辑组件
 	UPROPERTY(EditDefaultsOnly, Category="Weapon")
 	TObjectPtr<UWeaponLogicBaseComponent> WeaponLogicBaseComponent;
@@ -130,8 +135,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Widget")
 	TSubclassOf<UDamageTextComponent> DamageTextComponentClass;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Animation")
+	UMotionWarpingComponent* MotionWarpingComponent;
+
 	/// 给角色授予能力
-	void AddCharacterAbilities() const;
+	void AddCharacterAbilities();
 
 	/// 接受一个GE用来初始化角色身上的属性,次要属性必须得在主要属性初始化之后
 	/// @param AttributesGameplayEffect GE类
@@ -153,6 +161,9 @@ protected:
 	virtual void RegisterGameplayTagEvent();
 
 private:
+	/// 当前角色是否死亡
+	bool bIsDie ;
+	
 	/// 当ASC 被授予或者被完全移除HitReact标签时的回调函数
 	/// @param Tag 指定标签被移除或者被添加的标签
 	/// @param NewTagCount 当前标签被移除或者被添加 多个同样的签标的计数时 (可以同时有相同类型的标签)

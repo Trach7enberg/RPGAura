@@ -5,6 +5,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "GameplayEffect.h"
+#include "MotionWarpingComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WeaponLogicBaseComponent.h"
 #include "CoreTypes/RPGAuraGameplayTags.h"
@@ -26,9 +27,14 @@ ACharacterBase::ACharacterBase()
 	SelfLifeSpan = 1.f;
 	BIsHitReacting = false;
 	MaxWalkingSpeed = 600.f;
+	bIsDie = false;
+
+	// 角色能改变导航网格,不会让一堆角色撞在一起
+	// SetCanAffectNavigationGeneration(true);
 
 	WeaponLogicBaseComponent = CreateDefaultSubobject<UWeaponLogicBaseComponent>("WeaponLogicComponent");
 	DissolveTimelineComponent = CreateDefaultSubobject<UTimelineComponent>("DissolveTimelineComponent");
+	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>("MotionWarping");
 
 	if (GetMesh()) { GetMesh()->SetRelativeRotation(FRotator(0, -90, 0)); }
 }
@@ -45,7 +51,7 @@ void ACharacterBase::BeginPlay()
 }
 
 
-void ACharacterBase::AddCharacterAbilities() const
+void ACharacterBase::AddCharacterAbilities()
 {
 	const auto GiSubSystem = GetGameInstance()->GetSubsystem<URPGAuraGameInstanceSubsystem>();
 	if (!HasAuthority() || !GiSubSystem) { return; }
@@ -61,11 +67,12 @@ void ACharacterBase::AddCharacterAbilities() const
 	if (!Asc) { return; }
 
 	// 赋予角色的通用能力
-	Asc->AddCharacterAbilities(GiSubSystem->CharacterClassInfo->CommonAbilities);
+	Asc->AddCharacterAbilities(GiSubSystem->CharacterClassInfo->CommonAbilities, GetCharacterLevel());
 
 	// 赋予相应角色的初始能力
 	Asc->AddCharacterAbilities(
-		GiSubSystem->CharacterClassInfo->FindClassDefaultInfo(CharacterClass).PrimaryStartUpAbilities);
+		GiSubSystem->CharacterClassInfo->FindClassDefaultInfo(CharacterClass).PrimaryStartUpAbilities,
+		GetCharacterLevel());
 }
 
 void ACharacterBase::InitAttributes(const TSubclassOf<UGameplayEffect> AttributesGameplayEffect,
@@ -121,6 +128,11 @@ FVector ACharacterBase::GetCombatSocketLocation()
 	return WeaponLogicBaseComponent->GetWeaponSocketLocByName(WeaponLogicBaseComponent->GetWeaponTipSocketName());
 }
 
+void ACharacterBase::UpdateCharacterFacingTarget(const FVector& TargetLoc)
+{
+	MotionWarpingComponent->AddOrUpdateWarpTargetFromLocation(WarpTargetName, TargetLoc);
+}
+
 UAnimMontage* ACharacterBase::GetHitReactAnim() { return HitReactAnimMontage.Get(); }
 UAnimMontage* ACharacterBase::GetDeathAnim() { return DeathAnimMontage; }
 
@@ -155,7 +167,7 @@ void ACharacterBase::OnGrantedTag_HitReact(const FGameplayTag Tag, int32 NewTagC
 	BIsHitReacting = NewTagCount > 0;
 
 	// 触发回调函数时,NewTagCount不大于0意味着当前标签正在移除,所以继续行走 否则停止走动
-	GetCharacterMovement()->MaxWalkSpeed = BIsHitReacting ? MaxWalkingSpeed/2.f : MaxWalkingSpeed;
+	GetCharacterMovement()->MaxWalkSpeed = BIsHitReacting ? MaxWalkingSpeed / 2.f : MaxWalkingSpeed;
 
 	GEngine->AddOnScreenDebugMessage(1, 2, FColor::Red,
 	                                 FString::Printf(
@@ -203,11 +215,16 @@ void ACharacterBase::SetDissolveMaterial()
 	}
 
 	MaterialInstanceDynamic_Character = UMaterialInstanceDynamic::Create(DissolveMaterialInstanceCharacter, this);
-	GetMesh()->SetMaterial(0, MaterialInstanceDynamic_Character);
-
-
 	MaterialInstanceDynamic_Weapon = UMaterialInstanceDynamic::Create(DissolveMaterialInstanceWeapon, this);
+	
+	// TODO 角色的身上材质插槽可能有多个,目前全部只用同一个溶解材质
+	for (int i = 0;i<GetMesh()->GetMaterials().Num();++i)
+	{
+		
+		GetMesh()->SetMaterial(i, MaterialInstanceDynamic_Character);
+	}
 	WeaponLogicBaseComponent->SetWeaponMaterial(0, MaterialInstanceDynamic_Weapon);
+	
 }
 
 void ACharacterBase::SetScalarParameterValue(
@@ -219,7 +236,7 @@ void ACharacterBase::SetScalarParameterValue(
 
 void ACharacterBase::StartDissolveTimeline()
 {
-	if (!DissolveTimelineComponent) { return; }
+	if (!DissolveTimelineComponent || !GetMesh()) { return; }
 
 	SetDissolveMaterial();
 
@@ -234,6 +251,8 @@ void ACharacterBase::Die()
 	WeaponLogicBaseComponent->DetachWeapon();
 	MulticastHandleDeath();
 }
+
+bool ACharacterBase::IsCharacterDie() { return bIsDie; }
 
 void ACharacterBase::ShowDamageNumber_Implementation(const float Damage, bool bBlockedHit, bool bCriticalHit)
 {
@@ -258,7 +277,8 @@ void ACharacterBase::ShowDamageNumber_Implementation(const float Damage, bool bB
 		DamageTextComponent->SetDamageTextColor(FLinearColor::Yellow);
 		DamageTextComponent->SetHitMessageTextColor(FLinearColor::Yellow);
 		HitMessageText = FText::FromString(
-			DamageTextComponent->HitMessage_Critical.ToString() + DamageTextComponent->HitMessage_Blocked.ToString() + "!");
+			DamageTextComponent->HitMessage_Critical.ToString() + DamageTextComponent->HitMessage_Blocked.ToString() +
+			"!");
 	}
 	else if (bCriticalHit)
 	{
@@ -279,6 +299,7 @@ void ACharacterBase::ShowDamageNumber_Implementation(const float Damage, bool bB
 
 void ACharacterBase::MulticastHandleDeath_Implementation()
 {
+	bIsDie = true;
 	// 设置武器物理开启
 	WeaponLogicBaseComponent->SetWeaponPhysics(true);
 

@@ -4,7 +4,6 @@
 #include "Characters/AuraCharacter.h"
 
 #include "AbilitySystemComponent.h"
-#include "MotionWarpingComponent.h"
 #include "Camera/CameraComponent.h"
 #include "CoreTypes/RPGAuraGameplayTags.h"
 #include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
@@ -22,7 +21,7 @@ AAuraCharacter::AAuraCharacter()
 	
 	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>("SpringArm");
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>("Camera");
-	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>("MotionWarping");
+	
 
 	SpringArmComponent->SetupAttachment(GetRootComponent());
 	CameraComponent->SetupAttachment(SpringArmComponent);
@@ -111,10 +110,7 @@ int32 AAuraCharacter::GetCharacterLevel()
 	return CharacterLevel;
 }
 
-void AAuraCharacter::UpdateCharacterFacingTarget(const FVector& TargetLoc)
-{
-	MotionWarpingComponent->AddOrUpdateWarpTargetFromLocation(WarpTargetName, TargetLoc);
-}
+
 
 void AAuraCharacter::PossessedBy(AController* NewController)
 {

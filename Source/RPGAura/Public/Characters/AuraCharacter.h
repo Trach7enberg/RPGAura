@@ -36,8 +36,7 @@ public:
 
 	// ~ ICombatInterface
 	virtual int32 GetCharacterLevel() override;
-
-	virtual void UpdateCharacterFacingTarget(const FVector& TargetLoc) override;
+	
 	// ~ ICombatInterface
 
 protected:
@@ -49,15 +48,7 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Camera")
 	USpringArmComponent* SpringArmComponent;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Animation")
-	UMotionWarpingComponent* MotionWarpingComponent;
-
-	/// 动画蒙太奇中的运动扭曲的WarpTargetName
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Animation")
-	FName WarpTargetName = "FacingTarget";
-
-
+	
 	/// 初始化当前ACS的能力组件、属性集和ACS的AbilityActorInfo
 	virtual void InitAbilityActorInfo() override;
 
