@@ -27,7 +27,8 @@ public:
 	virtual int32 GetCharacterLevel() = 0;
 
 	/// 获取武器攻击的socket位置(比如子弹、火球发射的位置)
-	/// @return 
+	/// @return
+	UFUNCTION(BlueprintCallable)
 	virtual FVector GetCombatSocketLocation() = 0;
 
 	/// 使角色朝向目标位置
@@ -49,7 +50,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void Die() = 0;
 
-	/// 在角色头顶显示伤害
+	UFUNCTION(BlueprintCallable)
+	virtual bool IsCharacterDie() = 0;
+
+	/// 在角色头顶显示伤害  //TODO 只在本地客户端上显示伤害数值
 	/// @param Damage 伤害
 	/// @param bBlockedHit 是否格挡
 	/// @param bCriticalHit 是否暴击
