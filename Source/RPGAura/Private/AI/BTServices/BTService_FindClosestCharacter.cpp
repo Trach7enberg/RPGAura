@@ -6,6 +6,7 @@
 #include "AIController.h"
 #include "BehaviorTree/BTFunctionLibrary.h"
 #include "CoreTypes/RPGAuraGameplayTags.h"
+#include "Interfaces/CombatInterface.h"
 #include "Kismet/GameplayStatics.h"
 
 UBTService_FindClosestCharacter::UBTService_FindClosestCharacter() { NodeName = "FindClosestCharacter"; }
@@ -23,6 +24,8 @@ void UBTService_FindClosestCharacter::TickNode(UBehaviorTreeComponent& OwnerComp
 	AActor* ClosestActor = nullptr;
 	for (const auto Actor : ActorsWithTag)
 	{
+		const auto CombatInterface = Cast<ICombatInterface>(Actor);
+		if(!CombatInterface || CombatInterface->IsCharacterDie()){continue;}
 		if (!IsValid(Actor) || !IsValid(AiPawn)) { continue; }
 
 		const auto Dist = AiPawn->GetDistanceTo(Actor);
