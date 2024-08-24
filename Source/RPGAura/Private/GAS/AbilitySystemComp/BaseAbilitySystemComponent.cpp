@@ -19,18 +19,18 @@ void UBaseAbilitySystemComponent::InitSetting()
 	OnGameplayEffectAppliedDelegateToSelf.AddUObject(this, &UBaseAbilitySystemComponent::ClientOnGEAppliedToSelf);
 }
 
-void UBaseAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& Abilities)
+void UBaseAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& Abilities, const float CharacterLevel)
 {
 	if (!Abilities.Num()) { return; }
 	for (const auto& AbilityClass : Abilities)
 	{
-		AddCharacterAbility(AbilityClass);
+		AddCharacterAbility(AbilityClass, CharacterLevel);
 	}
 }
 
-void UBaseAbilitySystemComponent::AddCharacterAbility(const TSubclassOf<UGameplayAbility>& AbilityClass)
+void UBaseAbilitySystemComponent::AddCharacterAbility(const TSubclassOf<UGameplayAbility>& AbilityClass, const float CharacterLevel)
 {
-	FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass);
+	FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass,CharacterLevel);
 	const auto MyAbility = Cast<UBaseGameplayAbility>(AbilitySpec.Ability);
 
 	if (!MyAbility)

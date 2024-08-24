@@ -31,11 +31,13 @@ public:
 
 	/// 给玩家添加初始能力,可能有多个
 	/// @param Abilities 能力列表
-	void AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& Abilities);
+	/// @param CharacterLevel
+	void AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& Abilities, float CharacterLevel = 1);
 
 	/// 给玩家添加一个能力
 	/// @param AbilityClass 能力类
-	void AddCharacterAbility(const TSubclassOf<UGameplayAbility>& AbilityClass);
+	/// @param CharacterLevel
+	void AddCharacterAbility(const TSubclassOf<UGameplayAbility>& AbilityClass, float CharacterLevel = 1);
 
 	/// 处理InputAction按下时的能力触发问题
 	/// @param InputTag 输入的游戏标签
