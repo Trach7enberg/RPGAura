@@ -14,18 +14,24 @@ class RPGAURA_API UBaseDamageAbility : public UBaseGameplayAbility
 {
 	GENERATED_BODY()
 
+public:
+	/// 造成伤害(给对象应用GE)
+	/// @param Targets 对象数组
+	UFUNCTION(BlueprintCallable, Category="GameplayEffect")
+	void CauseDamage(TArray<AActor*> Targets);
+	
 protected:
 	// 伤害GE实体类
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GameplayEffect")
 	TSubclassOf<UGameplayEffect> DamageEffectClass;
 
-	// 伤害类型,GT映射到对应的曲线表
+	// 当前能力所造成的伤害类型,GT映射到对应的曲线表
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Damage")
 	TMap<FGameplayTag, FScalableFloat> DamageTypesMap;
 
 	/// 分配一个键值对给SetByCaller,并且将当前的伤害类型传递到GE上下中
 	/// @param SpecHandle 
-	/// @param AbilityLevel 
+	/// @param AbilityLevel
 	void AssignTagSetByCallerMagnitudeWithDamageType(const FGameplayEffectSpecHandle& SpecHandle,
 	                                                 const float AbilityLevel) const;
 };
