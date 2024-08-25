@@ -83,6 +83,10 @@ UExecCalcDamage::UExecCalcDamage()
 void UExecCalcDamage::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams,
                                              FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const
 {
+	if(!ExecutionParams.GetSourceAbilitySystemComponent() || !ExecutionParams.GetTargetAbilitySystemComponent())
+	{
+		return;
+	}
 	auto GeSpec = ExecutionParams.GetOwningSpec();
 	const auto CaptureAttributes = GetStaticStruct();
 
@@ -199,6 +203,7 @@ void UExecCalcDamage::Execute_Implementation(const FGameplayEffectCustomExecutio
 				ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(CaptureAttributes.PhysicalResistanceDef,
 				                                                           EvaluateParameters,
 				                                                           ResistanceValue);
+				
 				break;
 			case EGameplayTagNum::LightningResistance:
 				ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(CaptureAttributes.LightingResistanceDef,
@@ -216,7 +221,7 @@ void UExecCalcDamage::Execute_Implementation(const FGameplayEffectCustomExecutio
 		}
 
 		ResistanceValue = FMath::Clamp(ResistanceValue, 0.f, 100.f);
-
+		UE_LOG(UExecCalcDamageLog,Error,TEXT("物理抗性:[%.2f]"),ResistanceValue);
 		Damage += ((GeSpec.GetSetByCallerMagnitude(DamageType) + SourceIntelligence * .25f) * ((100.f - ResistanceValue)
 			/ 100.f));
 	}
@@ -272,7 +277,7 @@ void UExecCalcDamage::Execute_Implementation(const FGameplayEffectCustomExecutio
 	Damage = bIsBlock ? Damage * (0.5f) : Damage;
 
 	MyGeContext->SetBIsBlockedHit(bIsBlock);
-	MyGeContext->SetBIsBlockedHit(bIsCriticalHit);
+	MyGeContext->SetBIsCriticalHit(bIsCriticalHit);
 
 	UE_LOG(UExecCalcDamageLog, Warning,
 	       TEXT(
