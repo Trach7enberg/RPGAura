@@ -5,12 +5,13 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "CoreTypes/RPGAuraGameplayTags.h"
 #include "Interfaces/CombatInterface.h"
 #include "Weapons/Projectiles/BaseProjectile.h"
 
 DEFINE_LOG_CATEGORY_STATIC(UBaseProjectileSpellLog, All, All);
 
-void UBaseProjectileSpell::SpawnProjectile(const FHitResult HitResult) const
+void UBaseProjectileSpell::SpawnProjectile(const FHitResult& HitResult) 
 {
 	// 飞弹能力(投射物)仅在服务器上生成
 	if (!GetAvatarActorFromActorInfo()->HasAuthority()) { return; }
@@ -25,7 +26,7 @@ void UBaseProjectileSpell::SpawnProjectile(const FHitResult HitResult) const
 		UE_LOG(UBaseProjectileSpellLog, Error, TEXT("Actor信息获取失败!"));
 		return;
 	}
-
+	
 	// Instigate : 引发者就是引发我们正在进行的事情的角色 , 必须是Pawn
 	const auto Instigate = Cast<APawn>(GetAvatarActorFromActorInfo());
 	if (!Instigate) { return; }
@@ -38,9 +39,10 @@ void UBaseProjectileSpell::SpawnProjectile(const FHitResult HitResult) const
 	}
 
 	FTransform Transform;
-	Transform.SetLocation(CombatInter->GetCombatSocketLocation());
+	const auto AttackSocketLoc = CombatInter->GetCombatSocketLocation(FRPGAuraGameplayTags::Get().Montage_Attack_Normal);
+	Transform.SetLocation(AttackSocketLoc);
 
-	FRotator Rotation = (HitResult.ImpactPoint - CombatInter->GetCombatSocketLocation()).Rotation();
+	const FRotator Rotation =  (HitResult.ImpactPoint - AttackSocketLoc).Rotation();
 
 	// 飞弹的倾斜度是与地面平行
 	// Rotation.Pitch = 0.f;

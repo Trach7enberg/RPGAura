@@ -18,7 +18,7 @@ class RPGAURA_API UBaseProjectileSpell : public UBaseDamageAbility
 public:
 	/// 生成投射物
 	UFUNCTION(BlueprintCallable, Category="Spawn")
-	void SpawnProjectile(const FHitResult HitResult) const;
+	void SpawnProjectile(const FHitResult&  HitResult) ;
 
 protected:
 	// 飞弹实体类
