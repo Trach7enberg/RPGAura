@@ -53,11 +53,13 @@ public:
 
 	// ~ ICombatInterface
 	virtual int32 GetCharacterLevel() override { return 0; };
-	virtual FVector GetCombatSocketLocation() override;
+
+	
+	virtual FVector GetCombatSocketLocation(const FGameplayTag& GameplayTag) override;
 	virtual void UpdateCharacterFacingTarget(const FVector& TargetLoc) override;
 	virtual UAnimMontage* GetHitReactAnim() override;
 	virtual UAnimMontage* GetDeathAnim() override;
-
+	virtual TArray<FMontageWithTag> GetAttackAnims() override;
 	/// 角色死亡 , 只在服务器上调用
 	virtual void Die() override;
 	virtual bool IsCharacterDie() override;
@@ -90,15 +92,25 @@ protected:
 	// 角色等级
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
 	 float CharacterLevel;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
+	FName AttackSocketName_LeftHand;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
+	FName AttackSocketName_RightHand;
 	
 	// 当前角色的职业类别
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Character Class Defaluts")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Character Class Defaluts")
 	ECharacterClass CharacterClass;
 
 	/// 动画蒙太奇中的运动扭曲的WarpTargetName
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Animation")
 	FName WarpTargetName = "FacingTarget";
-	
+
+	/// 标签到对应的攻击动画蒙太奇数组
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
+	TArray<FMontageWithTag> AttackMontageWithTagArray;
+
 	// 武器逻辑组件
 	UPROPERTY(EditDefaultsOnly, Category="Weapon")
 	TObjectPtr<UWeaponLogicBaseComponent> WeaponLogicBaseComponent;

@@ -123,9 +123,24 @@ void ACharacterBase::RegisterGameplayTagEvent()
 		                             this, &ACharacterBase::OnGrantedTag_HitReact);
 }
 
-FVector ACharacterBase::GetCombatSocketLocation()
+
+FVector ACharacterBase::GetCombatSocketLocation(const FGameplayTag& GameplayTag)
 {
-	return WeaponLogicBaseComponent->GetWeaponSocketLocByName(WeaponLogicBaseComponent->GetWeaponTipSocketName());
+	if (!GetMesh()) { return FVector::Zero(); }
+
+	if (GameplayTag == FRPGAuraGameplayTags::Get().Montage_Attack_Normal)
+	{
+		return WeaponLogicBaseComponent->GetWeaponSocketLocByName(WeaponLogicBaseComponent->GetWeaponTipSocketName());
+	}
+	if (GameplayTag == FRPGAuraGameplayTags::Get().Montage_Attack_LeftHand)
+	{
+		return GetMesh()->GetSocketLocation(AttackSocketName_LeftHand);
+	}
+	if (GameplayTag == FRPGAuraGameplayTags::Get().Montage_Attack_RightHand)
+	{
+		return GetMesh()->GetSocketLocation(AttackSocketName_RightHand);
+	}
+	return FVector::Zero();
 }
 
 void ACharacterBase::UpdateCharacterFacingTarget(const FVector& TargetLoc)
@@ -135,6 +150,7 @@ void ACharacterBase::UpdateCharacterFacingTarget(const FVector& TargetLoc)
 
 UAnimMontage* ACharacterBase::GetHitReactAnim() { return HitReactAnimMontage.Get(); }
 UAnimMontage* ACharacterBase::GetDeathAnim() { return DeathAnimMontage; }
+TArray<FMontageWithTag> ACharacterBase::GetAttackAnims() { return AttackMontageWithTagArray; }
 
 void ACharacterBase::HighLight()
 {
@@ -216,15 +232,13 @@ void ACharacterBase::SetDissolveMaterial()
 
 	MaterialInstanceDynamic_Character = UMaterialInstanceDynamic::Create(DissolveMaterialInstanceCharacter, this);
 	MaterialInstanceDynamic_Weapon = UMaterialInstanceDynamic::Create(DissolveMaterialInstanceWeapon, this);
-	
+
 	// TODO 角色的身上材质插槽可能有多个,目前全部只用同一个溶解材质
-	for (int i = 0;i<GetMesh()->GetMaterials().Num();++i)
+	for (int i = 0; i < GetMesh()->GetMaterials().Num(); ++i)
 	{
-		
 		GetMesh()->SetMaterial(i, MaterialInstanceDynamic_Character);
 	}
 	WeaponLogicBaseComponent->SetWeaponMaterial(0, MaterialInstanceDynamic_Weapon);
-	
 }
 
 void ACharacterBase::SetScalarParameterValue(
