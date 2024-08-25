@@ -113,10 +113,13 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 				"Abilities.Effects.HitReact", FString("被击中时给予的标签"));
 		}
 
-		// 攻击能力标签
 		{
-			GameplayTags.Abilities_MeleeAttack = UGameplayTagsManager::Get().AddNativeGameplayTag(
-				"Abilities.MeleeAttack", FString("近战攻击能力"));
+			GameplayTags.Montage_Attack_Normal = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Montage.Attack.Normal", FString(""));
+			GameplayTags.Montage_Attack_LeftHand = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Montage.Attack.LeftHand", FString(""));
+			GameplayTags.Montage_Attack_RightHand = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Montage.Attack.RightHand", FString(""));
 		}
 	}
 
@@ -203,7 +206,9 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Event_Montage_FireBolt);
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Event_Montage_Attack_Melee);
 		
-		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Abilities_MeleeAttack);
+		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Montage_Attack_Normal);
+		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Montage_Attack_LeftHand);
+		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Montage_Attack_RightHand);
 	}
 
 	// 标签到枚举的映射
@@ -261,8 +266,12 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 		GameplayTags.TagToNumMap.Add(GameplayTags.Abilities_Effects_HitReact,
 		                             EGameplayTagNum::Abilities_Effects_HitReact);
 		
-		GameplayTags.TagToNumMap.Add(GameplayTags.Abilities_MeleeAttack,
-		                             EGameplayTagNum::Abilities_MeleeAttack);
+		GameplayTags.TagToNumMap.Add(GameplayTags.Montage_Attack_Normal,
+		                             EGameplayTagNum::Montage_Attack_Normal);
+		GameplayTags.TagToNumMap.Add(GameplayTags.Montage_Attack_Normal,
+		                             EGameplayTagNum::Montage_Attack_LeftHand);
+		GameplayTags.TagToNumMap.Add(GameplayTags.Montage_Attack_Normal,
+		                             EGameplayTagNum::Montage_Attack_RightHand);
 	}
 
 	// 伤害类型到对应的抵抗类型映射

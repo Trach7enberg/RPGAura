@@ -52,7 +52,9 @@ enum class EGameplayTagNum : uint8
 
 	Abilities_Effects_HitReact,
 
-	Abilities_MeleeAttack,
+	Montage_Attack_Normal,
+	Montage_Attack_LeftHand,
+	Montage_Attack_RightHand,
 };
 
 
@@ -110,9 +112,10 @@ struct FRPGAuraGameplayTags
 	FGameplayTag Abilities_DamageType_Arcane; // 奥术伤害
 	FGameplayTag Abilities_DamageType_Physical; // 物理伤害
 
-	// 近战攻击能力
-	FGameplayTag Abilities_MeleeAttack;
-
+	// 和动画蒙太奇相关联的标签
+	FGameplayTag Montage_Attack_Normal;	// 普通攻击动画标签
+	FGameplayTag Montage_Attack_LeftHand;	// 左手攻击动画标签
+	FGameplayTag Montage_Attack_RightHand;	// 右手攻击动画标签
 	
 	// 简单的Actor标签
 	FName Player = "Player";
