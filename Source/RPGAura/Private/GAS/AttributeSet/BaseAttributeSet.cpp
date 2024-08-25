@@ -304,7 +304,6 @@ void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 			// 使用该函数需要确保能力蓝图类中的AbilityTags容器里有Effects_HitReact标签
 			GetMyCurrentAbilitySystem()->TryActivateAbilitiesByTag(
 				FGameplayTagContainer(FRPGAuraGameplayTags::Get().Abilities_Effects_HitReact));
-
 			// UE_LOG(UBaseAttributeSetLog, Error, TEXT("是否暴击[%d] 是否格挡[%d]"), IsCriticalHit, IsBlockHit);
 		}
 		else { if (CbInterface) { CbInterface->Die(); } }

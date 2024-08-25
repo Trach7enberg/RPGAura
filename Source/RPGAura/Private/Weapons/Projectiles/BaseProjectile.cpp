@@ -64,7 +64,7 @@ void ABaseProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, 
                                       UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
                                       const FHitResult& SweepResult)
 {
-	if (LoopSoundAudioComponent) { LoopSoundAudioComponent->Stop(); }
+	
 	if (!DamageEffectSpecHandle.IsValid() || DamageEffectSpecHandle.Data.Get()->GetContext().GetEffectCauser() ==
 		OtherActor) { return; }
 
@@ -97,6 +97,6 @@ void ABaseProjectile::Destroyed()
 {
 	if (!BIsHit && !HasAuthority()) { SpawnVfxAndSound(); }
 
-	if (LoopSoundAudioComponent) { LoopSoundAudioComponent->Stop(); }
+	if ( LoopSoundAudioComponent) { LoopSoundAudioComponent->Stop(); }
 	Super::Destroyed();
 }
