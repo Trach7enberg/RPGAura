@@ -12,8 +12,10 @@ class UBaseUserWidget;
 class UAttributeSet;
 class UAbilitySystemComponent;
 
-/// ---BaseWidgetController类 使用
-/// Widget控制器需要的基本参数的结构体
+	/*-------------------------------
+		BaseWidgetController类使用
+		Widget控制器需要的基本参数的结构体
+	-------------------------------*/
 USTRUCT(BlueprintType)
 struct FWidgetControllerParams
 {
@@ -41,10 +43,11 @@ struct FWidgetControllerParams
 	TObjectPtr<UAttributeSet> CurrentAttributeSet = nullptr;
 };
 
-/// ---BaseWidgetController类 使用
 
-/// ---UAttributeInfo类使用
-/// 用于广播GAS属性的结构体
+	/*-----------------------------
+		UAttributeInfo类使用
+		用于广播GAS属性的结构体
+	-----------------------------*/
 USTRUCT(BlueprintType)
 struct FRPGAuraAttributeInfo
 {
@@ -63,10 +66,11 @@ struct FRPGAuraAttributeInfo
 	float AttributeValue = 0.f;
 };
 
-/// ---UAttributeInfo类使用
 
-/// ---URPGAuraGameInstanceSubsystem使用
-/// 用于显示Message Widget的结构体,当角色拾取到什么东西时就会弹出
+	/*-------------------------------------------------------
+		URPGAuraGameInstanceSubsystem使用
+		用于显示Message Widget的结构体,当角色拾取到什么东西时就会弹出
+	-------------------------------------------------------*/
 USTRUCT(BlueprintType)
 struct FUIWidgetRow : public FTableRowBase
 {
@@ -91,8 +95,14 @@ struct FUIWidgetRow : public FTableRowBase
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMessageWidgetRowSignature, const FUIWidgetRow, Row);
 
-/// UGlobeBarWidgetController使用
-/// 给生命值、魔力值属性变化时的委托,BIsIncreased 增加还是减少,增加则为true
+/// 用于广播GAS属性变化的结构体,更新属性菜单的属性值显示 (包括vital、primary、secondary属性)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributeChangedSignature, const FRPGAuraAttributeInfo&, Info);
+
+
+	/*-----------------------------------------------------------------
+		UGlobeBarWidgetController使用
+		给生命值、魔力值属性变化时的委托,BIsIncreased 增加还是减少,增加则为true
+	-----------------------------------------------------------------*/
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnVitalAttributeChangedSignature,
                                              float,
                                              NewValue,
@@ -100,15 +110,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnVitalAttributeChangedSignature,
                                              /* BIsIncreased增加还是减少,增加则为true */
                                              BIsIncreased);
 
-
-
-
-/// ---UAttributeMenuWidgetController类使用
-/// 用于广播GAS属性变化的结构体,更新属性菜单的属性值显示 (包括vital、primary、secondary属性)
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributeChangedSignature, const FRPGAuraAttributeInfo&, Info);
-
-
-/// ---FRPGAuraGameplayTags结构类使用
+	/*-------------------------------
+		FRPGAuraGameplayTags结构类使用
+	-------------------------------*/
 UENUM(BlueprintType)
 enum class EGameplayTagType:uint8
 {
@@ -118,8 +122,11 @@ enum class EGameplayTagType:uint8
 	SecondaryGameplayTags UMETA(DisplayName = "次要标签(Secondary)")
 };
 
-/// ---UCharacterClassInfo 数据资产使用
-/// 角色职业枚举类
+
+	/*------------------------------------
+		UCharacterClassInfo 数据资产使用
+		角色职业枚举类
+	------------------------------------*/
 UENUM(BlueprintType)
 enum class ECharacterClass :uint8
 {
@@ -148,6 +155,26 @@ struct FCharacterClassDefaultInfo
 	TArray<TSubclassOf<UGameplayAbility>> PrimaryStartUpAbilities;
 
 	// 角色的初始伤害抗性
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite,Category="DefaultAttributes|Secondary")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="DefaultAttributes|Secondary")
 	TSubclassOf<UGameplayEffect> SecondaryResistanceAttributes;
 };
+
+
+	/*-----------------------
+		CombatInterface使用
+	-----------------------*/
+/// 标签对应的角色攻击蒙太奇动画
+USTRUCT(BlueprintType)
+struct FMontageWithTag
+{
+	GENERATED_BODY()
+
+	// 动画蒙太奇
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TObjectPtr<UAnimMontage> AnimMontage = nullptr;
+	
+	// 动画的标签
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	FGameplayTag MontageTag = FGameplayTag();
+};
+
