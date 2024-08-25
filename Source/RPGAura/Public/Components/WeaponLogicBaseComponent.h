@@ -68,12 +68,19 @@ public:
     /// @param NewType 
     void SetWeaponCollisionEnabled(ECollisionEnabled::Type NewType) const;
 
+    bool IsBDoesNeedWeapon() const { return BDoesNeedWeapon; }
+    void SetBDoesNeedWeapon(const bool bBDoesNeedWeapon) { BDoesNeedWeapon = bBDoesNeedWeapon; }
+
 protected:
     virtual void BeginPlay() override;
 
     // 武器逻辑组件销毁时是否要 销毁武器
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Weapon")
     bool BShouldDestroyWeapon;
+
+    // 组件拥有者是否需要武器
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Weapon")
+    bool BDoesNeedWeapon;
 
     /// 武器蓝图
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Weapon")

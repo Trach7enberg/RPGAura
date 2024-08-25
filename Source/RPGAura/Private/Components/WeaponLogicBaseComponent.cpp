@@ -13,12 +13,13 @@ UWeaponLogicBaseComponent::UWeaponLogicBaseComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 	BShouldDestroyWeapon = true;
+	BDoesNeedWeapon = true;
 }
 
 
 void UWeaponLogicBaseComponent::SetWeaponCollisionEnabled(ECollisionEnabled::Type NewType) const
 {
-	if(!CurrentWeapon){return;}
+	if (!CurrentWeapon) { return; }
 
 	CurrentWeapon->SetCollisionEnabled(NewType);
 }
@@ -26,14 +27,16 @@ void UWeaponLogicBaseComponent::SetWeaponCollisionEnabled(ECollisionEnabled::Typ
 void UWeaponLogicBaseComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (!GetOwner() || !WeaponBp)
+	if (BDoesNeedWeapon)
 	{
-		UE_LOG(MyWeaponLogicBaseComponentLog, Error, TEXT("Owner Error"));
-		return;
-	}
+		if (!GetOwner() || !WeaponBp)
+		{
+			UE_LOG(MyWeaponLogicBaseComponentLog, Error, TEXT("Owner Error"));
+			return;
+		}
 
-	AttachWeaponToSocket(Cast<ACharacterBase>(GetOwner()), WeaponAttachSocketName);
+		AttachWeaponToSocket(Cast<ACharacterBase>(GetOwner()), WeaponAttachSocketName);
+	}
 }
 
 void UWeaponLogicBaseComponent::HighLight() const
@@ -50,25 +53,25 @@ void UWeaponLogicBaseComponent::UnHighLight() const
 
 FVector UWeaponLogicBaseComponent::GetWeaponSocketLocByName(const FName& SocketName) const
 {
-	if (!CurrentWeapon) { return FVector::Zero(); }
+	if (!CurrentWeapon || !BDoesNeedWeapon) { return FVector::Zero(); }
 	return CurrentWeapon->GetWeaponSocketLocByName(SocketName);
 }
 
 void UWeaponLogicBaseComponent::DetachWeapon() const
 {
-	if (!CurrentWeapon) { return; }
+	if (!CurrentWeapon || !BDoesNeedWeapon) { return; }
 	CurrentWeapon->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
 }
 
 void UWeaponLogicBaseComponent::SetWeaponPhysics(bool Enable) const
 {
-	if (!CurrentWeapon) { return; }
+	if (!CurrentWeapon || !BDoesNeedWeapon) { return; }
 	CurrentWeapon->SetWeaponPhysics(true);
 }
 
 void UWeaponLogicBaseComponent::SetWeaponMaterial(const int I, UMaterialInstance* MaterialInstance) const
 {
-	if (!CurrentWeapon) { return; }
+	if (!CurrentWeapon || !BDoesNeedWeapon) { return; }
 
 	CurrentWeapon->SetWeaponMaterial(I, MaterialInstance);
 }
@@ -77,7 +80,7 @@ void UWeaponLogicBaseComponent::SetWeaponMaterial(const int I, UMaterialInstance
 void UWeaponLogicBaseComponent::AttachWeaponToSocket(ACharacterBase* Character, FName& SocketName)
 {
 	const auto Mesh = Character->GetMesh();
-	if (!Character || !Mesh) { return; }
+	if (!Character || !Mesh || !BDoesNeedWeapon) { return; }
 
 	CurrentWeapon = Cast<ABaseWeapon>(GetWorld()->SpawnActor(WeaponBp));
 
@@ -93,6 +96,6 @@ void UWeaponLogicBaseComponent::AttachWeaponToSocket(ACharacterBase* Character, 
 
 void UWeaponLogicBaseComponent::DestroyComponent(bool bPromoteChildren)
 {
-	if (CurrentWeapon && BShouldDestroyWeapon) { CurrentWeapon->Destroy(); }
+	if (CurrentWeapon && BShouldDestroyWeapon && BDoesNeedWeapon) { CurrentWeapon->Destroy(); }
 	Super::DestroyComponent(bPromoteChildren);
 }
