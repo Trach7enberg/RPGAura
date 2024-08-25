@@ -6,6 +6,8 @@
 #include "UObject/Interface.h"
 #include "CombatInterface.generated.h"
 
+struct FGameplayTag;
+struct FMontageWithTag;
 class UAnimMontage;
 /// 和战斗相关的接口
 UINTERFACE(MinimalAPI, meta=(CannotImplementInterfaceInBlueprint))
@@ -29,7 +31,7 @@ public:
 	/// 获取武器攻击的socket位置(比如子弹、火球发射的位置)
 	/// @return
 	UFUNCTION(BlueprintCallable)
-	virtual FVector GetCombatSocketLocation() = 0;
+	virtual FVector GetCombatSocketLocation(const FGameplayTag& GameplayTag) = 0;
 
 	/// 使角色朝向目标位置
 	/// @param TargetLoc 目标位置
@@ -46,6 +48,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual UAnimMontage* GetDeathAnim() =0;
 
+	UFUNCTION(BlueprintCallable)
+	virtual TArray<FMontageWithTag> GetAttackAnims() =0;
+	
 	/// 只在服务器上调用角色死亡
 	UFUNCTION(BlueprintCallable)
 	virtual void Die() = 0;
