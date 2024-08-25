@@ -39,10 +39,18 @@ AEnemyCharacter::AEnemyCharacter()
 
 	AIControllerClass = ABaseAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorld;
-	
+
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
 	bUseControllerRotationYaw = false;
+
+	// AI移动防止拥挤功能
+	// GetCharacterMovement()->bUseRVOAvoidance = true;
+
+	EnemyHealthBar->SetWidgetSpace(EWidgetSpace::Screen);
+	EnemyHealthBar->SetDrawAtDesiredSize(true);
+	
+
 	if (GetCharacterMovement())
 	{
 		// 设置AI转向的丝滑度
@@ -59,6 +67,17 @@ void AEnemyCharacter::BeginPlay()
 	check(AbilitySystemComponent);
 	check(GetCharacterMovement());
 
+	if (!EnemyHealthBar->GetUserWidgetObject())
+	{
+		const auto Widget = LoadObject<UBaseUserWidget>(
+			this,TEXT(
+				"/Script/UMGEditor.WidgetBlueprint'/Game/Blueprints/UI/Widgets/SubWidgets/ProgressBars/WBP_ProgressBar_EnemyHealth.WBP_ProgressBar_EnemyHealth'"));
+		EnemyHealthBar->SetWidget(Widget);
+	}
+
+	
+	checkf(EnemyHealthBar->GetUserWidgetObject(), TEXT("血条的widgetClass不能为nullptr!"));
+
 	CharacterLevel = GetCharacterLevel();
 
 
@@ -71,7 +90,6 @@ void AEnemyCharacter::BeginPlay()
 	OnEndCursorOver.AddDynamic(this, &AEnemyCharacter::EndMouseOver);
 
 	const auto MyWidget = Cast<UBaseUserWidget>(EnemyHealthBar->GetUserWidgetObject());
-	if (!MyWidget) { UE_LOG(AEnemyCharacterLog, Error, TEXT("设置血条widg的控制器失败")); }
 
 	// 设置敌人血条的小部件控制器为当前角色 TODO 应该为敌人血条widget单独创建一个控制器类
 	MyWidget->SetWidgetController(this);
@@ -151,7 +169,8 @@ void AEnemyCharacter::PossessedBy(AController* NewController)
 		CurrentAiController->GetBlackboardComponent()->InitializeBlackboard(*BehaviorTree->GetBlackboardAsset());
 		CurrentAiController->RunBehaviorTree(BehaviorTree);
 		// 设置黑板键,当前角色是不是远程攻击角色
-		CurrentAiController->GetBlackboardComponent()->SetValueAsBool("IsRangCharacter", CharacterClass == ECharacterClass::Warrior);
+		CurrentAiController->GetBlackboardComponent()->SetValueAsBool("IsRangCharacter",
+		                                                              CharacterClass == ECharacterClass::Warrior);
 	}
 }
 
