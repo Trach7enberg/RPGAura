@@ -10,9 +10,10 @@
 
 DEFINE_LOG_CATEGORY_STATIC(UBaseDamageAbilityLog, All, All);
 
-void UBaseDamageAbility::CauseDamage(TArray<AActor*> Targets)
+void UBaseDamageAbility::CauseDamage(AActor* Suffer)
 {
-	if (!Targets.Num()) { return; }
+	const auto TargetActorAsc = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Suffer);
+	if (!TargetActorAsc) { return; }
 
 	if (!GetAvatarActorFromActorInfo()->HasAuthority()) { return; }
 
@@ -37,19 +38,15 @@ void UBaseDamageAbility::CauseDamage(TArray<AActor*> Targets)
 	// 分配SetByCaller
 	AssignTagSetByCallerMagnitudeWithDamageType(GameplayEffectSpecHandle, GetAbilityLevel());
 
-	for (const auto& Actor : Targets)
-	{
-		const auto TargetActorAsc = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor);
-		if (!TargetActorAsc) { continue; }
-		GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToTarget(
-			*GameplayEffectSpecHandle.Data.Get(), TargetActorAsc);
-	}
+	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToTarget(
+		*GameplayEffectSpecHandle.Data.Get(), TargetActorAsc);
 }
 
-void UBaseDamageAbility::AssignTagSetByCallerMagnitudeWithDamageType(const FGameplayEffectSpecHandle& SpecHandle, const float AbilityLevel) const
+void UBaseDamageAbility::AssignTagSetByCallerMagnitudeWithDamageType(const FGameplayEffectSpecHandle& SpecHandle,
+                                                                     const float AbilityLevel) const
 {
 	const auto Context = UGameAbilitySystemGlobals::GetCustomGeContext(SpecHandle.Data.Get()->GetContext().Get());
-	if (!Context||!DamageTypesMap.Num() || !SpecHandle.IsValid()  )
+	if (!Context || !DamageTypesMap.Num() || !SpecHandle.IsValid())
 	{
 		UE_LOG(UBaseDamageAbilityLog, Warning, TEXT("DamageTypesMap为空或者SepcHandle无效!"));
 		return;

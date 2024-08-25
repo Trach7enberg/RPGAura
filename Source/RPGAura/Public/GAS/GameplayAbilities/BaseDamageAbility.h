@@ -16,9 +16,9 @@ class RPGAURA_API UBaseDamageAbility : public UBaseGameplayAbility
 
 public:
 	/// 造成伤害(给对象应用GE)
-	/// @param Targets 对象数组
+	/// @param Suffer
 	UFUNCTION(BlueprintCallable, Category="GameplayEffect")
-	void CauseDamage(TArray<AActor*> Targets);
+	void CauseDamage(AActor* Suffer);
 	
 protected:
 	// 伤害GE实体类
