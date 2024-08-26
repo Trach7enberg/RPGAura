@@ -6,6 +6,7 @@
 #include "GAS/GameplayAbilities/BaseGameplayAbility.h"
 #include "BaseDamageAbility.generated.h"
 
+struct FMontageWithTag;
 /**
  *  基础伤害类型的能力
  */
@@ -19,6 +20,13 @@ public:
 	/// @param Suffer
 	UFUNCTION(BlueprintCallable, Category="GameplayEffect")
 	void CauseDamage(AActor* Suffer);
+
+
+	/// 获取随机的攻击动画
+	/// @param MontageWithTags 
+	/// @return 
+	UFUNCTION(BlueprintCallable,Category="Combat")
+	FMontageWithTag GetRandomAttackAnim(const TArray<FMontageWithTag> MontageWithTags);
 	
 protected:
 	// 伤害GE实体类

@@ -5,6 +5,7 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "CoreTypes/RPGAuraCoreTypes.h"
 #include "CoreTypes/RPGAuraGasCoreTypes.h"
 #include "GAS/Globals/GameAbilitySystemGlobals.h"
 
@@ -40,6 +41,13 @@ void UBaseDamageAbility::CauseDamage(AActor* Suffer)
 
 	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToTarget(
 		*GameplayEffectSpecHandle.Data.Get(), TargetActorAsc);
+}
+
+FMontageWithTag UBaseDamageAbility::GetRandomAttackAnim(const TArray<FMontageWithTag> MontageWithTags)
+{
+	if (MontageWithTags.Num() == 0) { return FMontageWithTag(); }
+	if (MontageWithTags.Num() == 1) { return MontageWithTags[0]; }
+	return MontageWithTags[FMath::RandRange(0, MontageWithTags.Num() - 1)];
 }
 
 void UBaseDamageAbility::AssignTagSetByCallerMagnitudeWithDamageType(const FGameplayEffectSpecHandle& SpecHandle,
