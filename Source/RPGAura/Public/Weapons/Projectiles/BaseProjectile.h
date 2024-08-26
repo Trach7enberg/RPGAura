@@ -21,10 +21,11 @@ class RPGAURA_API ABaseProjectile : public AActor
 
 public:
 	ABaseProjectile();
-	
+
+	/// 用于造成伤害的GeSpecHandle
 	UPROPERTY(BlueprintReadWrite, meta=(ExposeOnSpawn=true), Category="GameplayEffect")
 	FGameplayEffectSpecHandle DamageEffectSpecHandle;
-	
+
 	virtual void Destroyed() override;
 
 protected:
@@ -38,35 +39,17 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Projectile")
 	TObjectPtr<UProjectileMovementComponent> ProjectileMovementComponent;
 
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Niagara")
-	TObjectPtr<UNiagaraComponent> FireBoltNiagaraComponent;
-
-	// 投射物冲击时的效果
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Niagara")
-	TObjectPtr<UNiagaraSystem> ImpactEffect;
-
-	// 冲击声
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Sound")
-	TObjectPtr<USoundBase> ImpactSound;
-
-	// 循环声
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Sound")
-	TObjectPtr<USoundBase> LoopingSound;
-
-
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Mesh")
+	TObjectPtr<UStaticMeshComponent> StaticMeshComponent;
+	
 	virtual void BeginPlay() override;
 
 private:
-	// 当前投射物有没有Overlap
-	bool BIsHit;
-
+	
 	UFUNCTION()
-	void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-	                     int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	                             UPrimitiveComponent* OtherComp,
+	                             int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-	/// 生成特效和声音
-	void SpawnVfxAndSound() const;
-
-	TObjectPtr<UAudioComponent> LoopSoundAudioComponent;
+	
 };
