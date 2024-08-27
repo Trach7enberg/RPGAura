@@ -91,9 +91,10 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 		{
 			GameplayTags.Event_Montage_FireBolt = UGameplayTagsManager::Get().AddNativeGameplayTag(
 				"Event.Montage.FireBolt", FString("识别GameplayEvent的标签,用于当播放火箭蒙太奇触发某个通知时发送gameplay事件"));
-
 			GameplayTags.Event_Montage_Attack_Melee = UGameplayTagsManager::Get().AddNativeGameplayTag(
 				"Event.Montage.Attack.Melee", FString("蒙太奇中的近战攻击动作时发送的事件标签"));
+			GameplayTags.Event_Montage_Attack_Ranged = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Event.Montage.Attack.Ranged", FString("蒙太奇中的远程攻击动作时发送的事件标签"));
 		}
 
 		// 伤害类型标签
@@ -120,6 +121,16 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 				"Montage.Attack.LeftHand", FString(""));
 			GameplayTags.Montage_Attack_RightHand = UGameplayTagsManager::Get().AddNativeGameplayTag(
 				"Montage.Attack.RightHand", FString(""));
+		}
+
+		{
+			GameplayTags.Abilities_Attack_Melee = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Attack.Melee", FString("启动近战攻击能力的标签"));
+			GameplayTags.Abilities_Attack_Range = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Attack.Range", FString("启动远程攻击能力的标签"));
+			GameplayTags.Abilities_Attack_ShamanSpell = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Attack.ShamanSpell", FString("启动萨满法术攻击能力的标签"));
+			
 		}
 	}
 
@@ -205,10 +216,15 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Event_Montage_FireBolt);
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Event_Montage_Attack_Melee);
+		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Event_Montage_Attack_Ranged);
 		
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Montage_Attack_Normal);
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Montage_Attack_LeftHand);
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Montage_Attack_RightHand);
+		
+		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Abilities_Attack_Melee);
+		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Abilities_Attack_Range);
+		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Abilities_Attack_ShamanSpell);
 	}
 
 	// 标签到枚举的映射
@@ -254,6 +270,7 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 
 		GameplayTags.TagToNumMap.Add(GameplayTags.Event_Montage_FireBolt, EGameplayTagNum::Event_Montage_FireBolt);
 		GameplayTags.TagToNumMap.Add(GameplayTags.Event_Montage_Attack_Melee, EGameplayTagNum::Event_Montage_Attack_Melee);
+		GameplayTags.TagToNumMap.Add(GameplayTags.Event_Montage_Attack_Ranged, EGameplayTagNum::Event_Montage_Attack_Ranged);
 
 		GameplayTags.TagToNumMap.Add(GameplayTags.Abilities_DamageType_Physical,
 		                             EGameplayTagNum::Abilities_Damage_Spell_Physical);

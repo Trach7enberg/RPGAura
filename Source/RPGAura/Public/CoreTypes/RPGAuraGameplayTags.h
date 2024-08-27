@@ -44,6 +44,7 @@ enum class EGameplayTagNum : uint8
 
 	Event_Montage_FireBolt,
 	Event_Montage_Attack_Melee,
+	Event_Montage_Attack_Ranged,
 
 	Abilities_Damage_Spell_Fire,
 	Abilities_Damage_Spell_Lightning,
@@ -55,6 +56,7 @@ enum class EGameplayTagNum : uint8
 	Montage_Attack_Normal,
 	Montage_Attack_LeftHand,
 	Montage_Attack_RightHand,
+	
 };
 
 
@@ -104,6 +106,7 @@ struct FRPGAuraGameplayTags
 	// 在AM中用于标识发送GameplayEvent的标签
 	FGameplayTag Event_Montage_FireBolt;
 	FGameplayTag Event_Montage_Attack_Melee;
+	FGameplayTag Event_Montage_Attack_Ranged;
 
 	// 用于GA的伤害类型, 法术伤害
 	FGameplayTag Abilities_DamageType_Spell; // 父节点标签
@@ -116,6 +119,11 @@ struct FRPGAuraGameplayTags
 	FGameplayTag Montage_Attack_Normal;	// 普通攻击动画标签
 	FGameplayTag Montage_Attack_LeftHand;	// 左手攻击动画标签
 	FGameplayTag Montage_Attack_RightHand;	// 右手攻击动画标签
+
+	// 启动攻击能力的标签
+	FGameplayTag Abilities_Attack_Melee;	// 近战标签
+	FGameplayTag Abilities_Attack_Range;	// 远程标签
+	FGameplayTag Abilities_Attack_ShamanSpell;	// 萨满法术攻击标签
 	
 	// 简单的Actor标签
 	FName Player = "Player";
