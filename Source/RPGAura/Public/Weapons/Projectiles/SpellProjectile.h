@@ -32,6 +32,8 @@ protected:
 	// 循环声
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Sound")
 	TObjectPtr<USoundBase> LoopingSound;
+
+	
 	
 	virtual void BeginPlay() override;
 	virtual void Destroyed() override;

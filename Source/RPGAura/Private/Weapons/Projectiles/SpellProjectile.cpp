@@ -9,6 +9,7 @@
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Components/AudioComponent.h"
+#include "FunctionLibrary/RPGAuraBlueprintFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
 
 DEFINE_LOG_CATEGORY_STATIC(ASpellProjectileLog, All, All);
@@ -42,9 +43,13 @@ void ASpellProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent,
                                        UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
                                        const FHitResult& SweepResult)
 {
-	if (!DamageEffectSpecHandle.IsValid() || DamageEffectSpecHandle.Data.Get()->GetContext().GetEffectCauser() ==
-		OtherActor) { return; }
-
+	// 检查Ge上下文是否有效
+	if (!DamageEffectSpecHandle.IsValid() || !DamageEffectSpecHandle.Data.IsValid()) { return; }
+	
+	if (DamageEffectSpecHandle.Data.Get()->GetContext().GetEffectCauser() ==OtherActor) { return; }
+	
+	if (bIgnoreFriend && URPGAuraBlueprintFunctionLibrary::IsFriendly(
+		DamageEffectSpecHandle.Data.Get()->GetContext().GetEffectCauser(), OtherActor)) { return; }
 	if (!BIsHit) { SpawnVfxAndSound(); }
 
 

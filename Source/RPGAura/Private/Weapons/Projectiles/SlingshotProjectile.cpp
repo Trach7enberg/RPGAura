@@ -14,7 +14,7 @@ DEFINE_LOG_CATEGORY_STATIC(ASlingshotProjectileLog, All, All);
 
 ASlingshotProjectile::ASlingshotProjectile()
 {
-	bIgnoreFriendly = true;
+	bIgnoreFriend = true;
 	ProjectileMovementComponent->InitialSpeed = 1500.f;
 	ProjectileMovementComponent->MaxSpeed = 1500.f;
 	ProjectileMovementComponent->ProjectileGravityScale = 1.f;
@@ -30,11 +30,14 @@ void ASlingshotProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedCompon
                                            UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
                                            const FHitResult& SweepResult)
 {
-	const auto EffectCauser = DamageEffectSpecHandle.Data.Get()->GetContext().GetEffectCauser();
-	if (!EffectCauser || !DamageEffectSpecHandle.IsValid() || EffectCauser ==
-		OtherActor) { return; }
+	// 检查Ge上下文是否有效
+	if (!DamageEffectSpecHandle.IsValid() || !DamageEffectSpecHandle.Data.IsValid()) { return; }
 
-	if (URPGAuraBlueprintFunctionLibrary::IsFriendly(EffectCauser, OtherActor)) { return; }
+	const auto EffectCauser = DamageEffectSpecHandle.Data.Get()->GetContext().GetEffectCauser();
+
+	if (!EffectCauser || EffectCauser == OtherActor) { return; }
+
+	if (bIgnoreFriend && URPGAuraBlueprintFunctionLibrary::IsFriendly(EffectCauser, OtherActor)) { return; }
 
 	if (HasAuthority())
 	{

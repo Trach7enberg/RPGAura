@@ -21,9 +21,6 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	/// 飞弹忽视友军
-	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Projectile")
-	bool bIgnoreFriendly;
 private:
 	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	                             UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
