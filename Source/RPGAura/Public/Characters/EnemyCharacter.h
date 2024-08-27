@@ -29,6 +29,8 @@ public:
 	// ~ ICombatInterface
 	virtual int32 GetCharacterLevel() override { return CharacterLevel; };
 	virtual void Die() override;
+	virtual AActor* GetCombatTarget() override;
+	virtual void SetCombatTarget(AActor* NewCombatTarget) override;
 	// ~ ICombatInterface
 
 	virtual void PossessedBy(AController* NewController) override;
@@ -54,6 +56,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category ="AI")
 	TObjectPtr<UBehaviorTree> BehaviorTree;
 
+	/// 当前角色的攻击目标
+	UPROPERTY()
+	TWeakObjectPtr<AActor> CombatTarget = nullptr;
 	
 
 private:

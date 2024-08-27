@@ -5,6 +5,7 @@
 
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "BehaviorTree/BTFunctionLibrary.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WeaponLogicBaseComponent.h"
 #include "Components/WidgetComponent.h"
@@ -49,7 +50,7 @@ AEnemyCharacter::AEnemyCharacter()
 
 	EnemyHealthBar->SetWidgetSpace(EWidgetSpace::Screen);
 	EnemyHealthBar->SetDrawAtDesiredSize(true);
-	
+
 
 	if (GetCharacterMovement())
 	{
@@ -75,7 +76,7 @@ void AEnemyCharacter::BeginPlay()
 		EnemyHealthBar->SetWidget(Widget);
 	}
 
-	
+
 	checkf(EnemyHealthBar->GetUserWidgetObject(), TEXT("血条的widgetClass不能为nullptr!"));
 
 	CharacterLevel = GetCharacterLevel();
@@ -153,7 +154,19 @@ void AEnemyCharacter::UnHighLightActor()
 	WeaponLogicBaseComponent->UnHighLight();
 }
 
-void AEnemyCharacter::Die() { Super::Die(); }
+void AEnemyCharacter::Die()
+{
+	if(CurrentAiController)
+	{
+		CurrentAiController->GetBlackboardComponent()->SetValueAsBool("IsDead",true);
+		UE_LOG(AEnemyCharacterLog, Error, TEXT("key:%d"),CurrentAiController->GetBlackboardComponent()->GetValueAsBool("IsDead"));
+	}
+	Super::Die();
+}
+AActor* AEnemyCharacter::GetCombatTarget() { return CombatTarget.Get(); }
+void AEnemyCharacter::SetCombatTarget(AActor* NewCombatTarget) { 
+	CombatTarget = NewCombatTarget;
+}
 
 void AEnemyCharacter::PossessedBy(AController* NewController)
 {
@@ -163,7 +176,7 @@ void AEnemyCharacter::PossessedBy(AController* NewController)
 	if (!HasAuthority()) { return; }
 	CurrentAiController = Cast<ABaseAIController>(NewController);
 
-	if (CurrentAiController && BehaviorTree)
+	if (CurrentAiController && BehaviorTree && CurrentAiController->GetBlackboardComponent())
 	{
 		// 初始化黑板和运行行为树
 		CurrentAiController->GetBlackboardComponent()->InitializeBlackboard(*BehaviorTree->GetBlackboardAsset());

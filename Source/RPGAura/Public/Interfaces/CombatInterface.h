@@ -58,6 +58,17 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual bool IsCharacterDie() = 0;
 
+	/// 获取和当前角色正在战斗的目标角色
+	/// @return 
+	UFUNCTION(BlueprintCallable)
+	virtual AActor* GetCombatTarget()=0;
+
+	/// 设置暂存当前角色正在战斗的目标角色
+	/// @param CombatTarget 
+	UFUNCTION(BlueprintCallable)
+	virtual void SetCombatTarget(AActor* CombatTarget)=0;
+	
+
 	/// 在角色头顶显示伤害  //TODO 只在本地客户端上显示伤害数值
 	/// @param Damage 伤害
 	/// @param bBlockedHit 是否格挡
