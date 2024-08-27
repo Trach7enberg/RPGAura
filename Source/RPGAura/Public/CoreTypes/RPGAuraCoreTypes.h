@@ -131,13 +131,17 @@ UENUM(BlueprintType)
 enum class ECharacterClass :uint8
 {
 	// 法术师
-	Elementalist,
+	Elementalist UMETA(DisplayName = "AI法术师"),
 
 	// 战士
-	Warrior,
+	Warrior UMETA(DisplayName = "AI战士"),
 
 	//游侠
-	Ranger,
+	Ranger UMETA(DisplayName = "AI游侠"),
+
+	Elementalist_Player UMETA(DisplayName = "玩家法术师"),
+	Warrior_Player UMETA(DisplayName = "玩家战士"),
+	Ranger_Player UMETA(DisplayName = "玩家游侠")
 };
 
 /// 每个角色职业的默认属性数据
