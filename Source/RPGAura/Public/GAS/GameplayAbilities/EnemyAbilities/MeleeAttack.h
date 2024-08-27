@@ -18,9 +18,5 @@ class RPGAURA_API UMeleeAttack : public UBaseEnemyAttack
 
 
 public:
-	/// 获取随机的攻击动画
-	/// @param MontageWithTags 
-	/// @return 
-	UFUNCTION(BlueprintCallable,Category="Combat")
-	FMontageWithTag GetRandomAttackAnim(const TArray<FMontageWithTag> MontageWithTags);
+	
 };
