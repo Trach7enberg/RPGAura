@@ -1,29 +1,28 @@
 // Copyright GGBAO 
 
 
-#include "GAS/GameplayAbilities/BaseProjectileSpell.h"
+#include "GAS/GameplayAbilities/BaseProjectileAbility.h"
 
-#include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
-#include "CoreTypes/RPGAuraGameplayTags.h"
 #include "Interfaces/CombatInterface.h"
 #include "Weapons/Projectiles/BaseProjectile.h"
 
-DEFINE_LOG_CATEGORY_STATIC(UBaseProjectileSpellLog, All, All);
+DEFINE_LOG_CATEGORY_STATIC(UBaseProjectileAbilityLog,All,All);
 
-void UBaseProjectileSpell::SpawnProjectile(const FHitResult& HitResult) 
+void UBaseProjectileAbility::SpawnProjectile(const FHitResult& HitResult,
+                                             const FGameplayTag SocketAssociatedWithMontageTag)
 {
-	// 飞弹能力(投射物)仅在服务器上生成
-	if (!GetAvatarActorFromActorInfo()->HasAuthority()) { return; }
+	// 飞弹能力(投射物)仅在服务器上生成 , 世界正在摧毁也不能生成
+	if (!GetAvatarActorFromActorInfo()->HasAuthority() || !GetWorld()) { return; }
 
 	if (!ProjectileClass || !DamageEffectClass)
 	{
-		UE_LOG(UBaseProjectileSpellLog, Error, TEXT("GE Class不能为nullptr!"));
+		UE_LOG(UBaseProjectileAbilityLog, Error, TEXT("GE Class不能为nullptr!"));
 		return;
 	}
 	if (!GetOwningActorFromActorInfo() || !GetAvatarActorFromActorInfo() || !GetAbilitySystemComponentFromActorInfo())
 	{
-		UE_LOG(UBaseProjectileSpellLog, Error, TEXT("Actor信息获取失败!"));
+		UE_LOG(UBaseProjectileAbilityLog, Error, TEXT("Actor信息获取失败!"));
 		return;
 	}
 	
@@ -34,12 +33,12 @@ void UBaseProjectileSpell::SpawnProjectile(const FHitResult& HitResult)
 	const auto CombatInter = Cast<ICombatInterface>(GetAvatarActorFromActorInfo());
 	if (!CombatInter)
 	{
-		UE_LOG(UBaseProjectileSpellLog, Error, TEXT("转换失败!"));
+		UE_LOG(UBaseProjectileAbilityLog, Error, TEXT("转换失败!"));
 		return;
 	}
 
 	FTransform Transform;
-	const auto AttackSocketLoc = CombatInter->GetCombatSocketLocation(FRPGAuraGameplayTags::Get().Montage_Attack_Normal);
+	const auto AttackSocketLoc = CombatInter->GetCombatSocketLocation(SocketAssociatedWithMontageTag);
 	Transform.SetLocation(AttackSocketLoc);
 
 	const FRotator Rotation =  (HitResult.ImpactPoint - AttackSocketLoc).Rotation();
@@ -75,17 +74,20 @@ void UBaseProjectileSpell::SpawnProjectile(const FHitResult& HitResult)
 	// 分配SetByCaller
 	AssignTagSetByCallerMagnitudeWithDamageType(GameplayEffectSpecHandle,GetAbilityLevel());
 
-	Projectile->DamageEffectSpecHandle = GameplayEffectSpecHandle;
-
-
-	// 完成飞弹生成
-	Projectile->FinishSpawning(Transform);
+	if(Projectile && IsValid(Projectile))
+	{
+		Projectile->DamageEffectSpecHandle = GameplayEffectSpecHandle;
+		// 完成飞弹生成
+		Projectile->FinishSpawning(Transform);
+	}else
+	{
+		UE_LOG(UBaseProjectileAbilityLog, Error, TEXT("[%s]生成飞弹失败!"),*GetName());
+	}
 }
 
-void UBaseProjectileSpell::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
-                                           const FGameplayAbilityActorInfo* ActorInfo,
-                                           const FGameplayAbilityActivationInfo ActivationInfo,
-                                           const FGameplayEventData* TriggerEventData)
+void UBaseProjectileAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
+                                             const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
+                                             const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 }
