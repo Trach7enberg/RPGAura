@@ -19,13 +19,15 @@ void UBTService_FindClosestCharacter::TickNode(UBehaviorTreeComponent& OwnerComp
 	UGameplayStatics::GetAllActorsWithTag(this, FRPGAuraGameplayTags::Get().Player, ActorsWithTag);
 
 	const auto AiPawn = AIOwner->GetPawn();
+	
+	
 	auto NumericLimits = TNumericLimits<float>();
 	float ClosestDistance = NumericLimits.Max();
 	AActor* ClosestActor = nullptr;
 	for (const auto Actor : ActorsWithTag)
 	{
 		const auto CombatInterface = Cast<ICombatInterface>(Actor);
-		if(!CombatInterface || CombatInterface->IsCharacterDie()){continue;}
+		if(!CombatInterface || CombatInterface->IsCharacterDie()){continue;} 
 		if (!IsValid(Actor) || !IsValid(AiPawn)) { continue; }
 
 		const auto Dist = AiPawn->GetDistanceTo(Actor);
