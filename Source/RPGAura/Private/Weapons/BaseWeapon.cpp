@@ -5,6 +5,8 @@
 
 #include "Interfaces/HighLightInterface.h"
 
+DEFINE_LOG_CATEGORY_STATIC(ABaseWeaponLog,All,All);
+
 ABaseWeapon::ABaseWeapon()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -12,9 +14,16 @@ ABaseWeapon::ABaseWeapon()
 
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>("WeaponMesh");
 	SetRootComponent(WeaponMesh);
+	
+	
 }
 
-void ABaseWeapon::BeginPlay() { Super::BeginPlay(); }
+void ABaseWeapon::BeginPlay()
+{
+	Super::BeginPlay();
+
+	
+}
 
 bool ABaseWeapon::CanHighLight()
 {
@@ -59,12 +68,18 @@ void ABaseWeapon::SetWeaponPhysics(const bool Enable) const
 
 void ABaseWeapon::SetWeaponMaterial(const int I, UMaterialInstance* MaterialInstance) const
 {
-	if(!WeaponMesh){return;}
-	WeaponMesh->SetMaterial(I,MaterialInstance);
+	if (!WeaponMesh) { return; }
+	WeaponMesh->SetMaterial(I, MaterialInstance);
 }
 
 void ABaseWeapon::SetCollisionEnabled(const ECollisionEnabled::Type NewType) const
 {
-	if(!WeaponMesh){return;}
+	if (!WeaponMesh) { return; }
 	WeaponMesh->SetCollisionEnabled(NewType);
+}
+
+UAnimInstance* ABaseWeapon::GetWeaponAnimInstance() const
+{
+	if (!WeaponMesh) { return nullptr; }
+	return WeaponMesh->GetAnimInstance();
 }

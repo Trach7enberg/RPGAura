@@ -38,6 +38,11 @@ public:
 	/// @param NewType 碰撞类型
 	void SetCollisionEnabled(ECollisionEnabled::Type NewType) const;
 
+	/// 获取武器骨骼的AnimInstance
+	/// @return 
+	UAnimInstance* GetWeaponAnimInstance() const;
+
+
 protected:
 	virtual void BeginPlay() override;
 
