@@ -60,6 +60,8 @@ public:
 	virtual UAnimMontage* GetHitReactAnim() override;
 	virtual UAnimMontage* GetDeathAnim() override;
 	virtual TArray<FMontageWithTag> GetAttackAnims() override;
+	virtual AActor* GetCombatTarget() override;
+	virtual void SetCombatTarget(AActor* CombatTarget) override;
 	/// 角色死亡 , 只在服务器上调用
 	virtual void Die() override;
 	virtual bool IsCharacterDie() override;
@@ -94,10 +96,10 @@ protected:
 	 float CharacterLevel;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
-	FName AttackSocketName_LeftHand;
+	FName AttackSocketName_LeftHand = "LeftHandAttackSocket";
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
-	FName AttackSocketName_RightHand;
+	FName AttackSocketName_RightHand = "RightHandAttackSocket";
 	
 	// 当前角色的职业类别
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Character Class Defaluts")
@@ -107,12 +109,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Animation")
 	FName WarpTargetName = "FacingTarget";
 
+	
+	
 	/// 标签到对应的攻击动画蒙太奇数组
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
 	TArray<FMontageWithTag> AttackMontageWithTagArray;
 
 	// 武器逻辑组件
-	UPROPERTY(EditDefaultsOnly, Category="Weapon")
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite, Category="Weapon")
 	TObjectPtr<UWeaponLogicBaseComponent> WeaponLogicBaseComponent;
 
 	/// GAS的能力组件

@@ -30,7 +30,7 @@ ACharacterBase::ACharacterBase()
 	bIsDie = false;
 
 	// 角色能改变导航网格,不会让一堆角色撞在一起
-	// SetCanAffectNavigationGeneration(true);
+	SetCanAffectNavigationGeneration(true);
 
 	WeaponLogicBaseComponent = CreateDefaultSubobject<UWeaponLogicBaseComponent>("WeaponLogicComponent");
 	DissolveTimelineComponent = CreateDefaultSubobject<UTimelineComponent>("DissolveTimelineComponent");
@@ -151,6 +151,12 @@ void ACharacterBase::UpdateCharacterFacingTarget(const FVector& TargetLoc)
 UAnimMontage* ACharacterBase::GetHitReactAnim() { return HitReactAnimMontage.Get(); }
 UAnimMontage* ACharacterBase::GetDeathAnim() { return DeathAnimMontage; }
 TArray<FMontageWithTag> ACharacterBase::GetAttackAnims() { return AttackMontageWithTagArray; }
+AActor* ACharacterBase::GetCombatTarget()
+{
+	return nullptr;
+}
+
+void ACharacterBase::SetCombatTarget(AActor* CombatTarget) {}
 
 void ACharacterBase::HighLight()
 {
