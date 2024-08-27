@@ -4,6 +4,7 @@
 #include "Components/WeaponLogicBaseComponent.h"
 
 #include "Characters/CharacterBase.h"
+#include "Kismet/GameplayStatics.h"
 #include "Weapons/BaseWeapon.h"
 
 
@@ -14,6 +15,7 @@ UWeaponLogicBaseComponent::UWeaponLogicBaseComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 	BShouldDestroyWeapon = true;
 	BDoesNeedWeapon = true;
+	
 }
 
 
@@ -22,6 +24,12 @@ void UWeaponLogicBaseComponent::SetWeaponCollisionEnabled(ECollisionEnabled::Typ
 	if (!CurrentWeapon) { return; }
 
 	CurrentWeapon->SetCollisionEnabled(NewType);
+}
+
+UAnimInstance* UWeaponLogicBaseComponent::GetCurrentWeaponAnimInstanceClass() const
+{
+	if (!CurrentWeapon) { return nullptr; }
+	return CurrentWeapon->GetWeaponAnimInstance();
 }
 
 void UWeaponLogicBaseComponent::BeginPlay()
@@ -36,6 +44,7 @@ void UWeaponLogicBaseComponent::BeginPlay()
 		}
 
 		AttachWeaponToSocket(Cast<ACharacterBase>(GetOwner()), WeaponAttachSocketName);
+		
 	}
 }
 
