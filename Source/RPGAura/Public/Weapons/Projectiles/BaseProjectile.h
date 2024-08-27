@@ -32,6 +32,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Projectile")
 	float ProjectileLifeSpawn = 5.0f;
 
+	// 飞弹是否忽略友军
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Sound")
+	bool bIgnoreFriend;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Collision")
 	TObjectPtr<USphereComponent> SphereComponent;

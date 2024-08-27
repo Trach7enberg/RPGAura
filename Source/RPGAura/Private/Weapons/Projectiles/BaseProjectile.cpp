@@ -3,14 +3,8 @@
 
 #include "Weapons/Projectiles/BaseProjectile.h"
 
-#include "AbilitySystemBlueprintLibrary.h"
-#include "AbilitySystemComponent.h"
-#include "NiagaraComponent.h"
-#include "NiagaraFunctionLibrary.h"
-#include "Components/AudioComponent.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
-#include "Kismet/GameplayStatics.h"
 #include "RPGAura/RPGAura.h"
 
 DEFINE_LOG_CATEGORY_STATIC(ABaseProjectileLog, All, All);
@@ -20,6 +14,7 @@ ABaseProjectile::ABaseProjectile()
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
 
+	bIgnoreFriend = true;
 	SphereComponent = CreateDefaultSubobject<USphereComponent>("SphereComponent");
 	SetRootComponent(SphereComponent);
 	
