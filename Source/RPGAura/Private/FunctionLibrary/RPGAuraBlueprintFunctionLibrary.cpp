@@ -50,3 +50,12 @@ void URPGAuraBlueprintFunctionLibrary::FindLivePlayersWithinRadius(const AActor*
 		if (!IsCharacterDie) { OutOverlappingActors.AddUnique(OverlapResult.GetActor()); }
 	}
 }
+
+bool URPGAuraBlueprintFunctionLibrary::IsFriendly(const AActor* Actor1, AActor* Actor2)
+{
+	if(!Actor1 || !Actor2){return false;}
+	const auto bBothPlayers = Actor1->ActorHasTag(FRPGAuraGameplayTags::Get().Player) &&  Actor2->ActorHasTag(FRPGAuraGameplayTags::Get().Player);
+	const auto bBothEnemies = Actor1->ActorHasTag(FRPGAuraGameplayTags::Get().Enemy) &&  Actor2->ActorHasTag(FRPGAuraGameplayTags::Get().Enemy);
+
+	return bBothPlayers || bBothEnemies;
+}

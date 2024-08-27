@@ -27,4 +27,11 @@ public:
 	                                 TArray<AActor*>& OutOverlappingActors,
 	                                 const TArray<AActor*>& IgnoreActors, float Radius,
 	                                 const FVector& SphereOrigin,bool IgnoreSelf);
+
+	/// 检查两个Actor是否是友军
+	/// @param Actor1 
+	/// @param Actor2 
+	/// @return 
+	UFUNCTION(BlueprintCallable)
+	static bool IsFriendly(const AActor* Actor1, AActor* Actor2); 
 };
