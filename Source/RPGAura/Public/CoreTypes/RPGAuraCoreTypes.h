@@ -180,5 +180,9 @@ struct FMontageWithTag
 	// 动画的标签
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	FGameplayTag MontageTag = FGameplayTag();
+
+	// 与当前结构体蒙太奇对应的声音
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TObjectPtr<USoundBase> ImpactSound= nullptr;
 };
 
