@@ -6,6 +6,7 @@
 #include "UObject/Interface.h"
 #include "CombatInterface.generated.h"
 
+class UNiagaraSystem;
 struct FGameplayTag;
 struct FMontageWithTag;
 class UAnimMontage;
@@ -75,4 +76,9 @@ public:
 	/// @param bCriticalHit 是否暴击
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void ShowDamageNumber(const float Damage, bool bBlockedHit = false, bool bCriticalHit = false) = 0;
+
+	/// 获取当前人物身上的血液效果
+	/// @return 
+	UFUNCTION(BlueprintCallable)
+	virtual UNiagaraSystem* GetBloodEffect() = 0;
 };
