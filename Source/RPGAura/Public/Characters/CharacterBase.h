@@ -14,6 +14,7 @@
 #include "CharacterBase.generated.h"
 
 
+class UNiagaraSystem;
 class UMotionWarpingComponent;
 class UDamageTextComponent;
 class UGameplayAbility;
@@ -73,7 +74,7 @@ public:
 	/// @param bCriticalHit
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void ShowDamageNumber(const float Damage, bool bBlockedHit = false, bool bCriticalHit = false) override;
-
+	virtual UNiagaraSystem* GetBloodEffect() override;
 	// ~ ICombatInterface
 
 protected:
@@ -102,7 +103,7 @@ protected:
 	FName AttackSocketName_RightHand = "RightHandAttackSocket";
 	
 	// 当前角色的职业类别
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Character Class Defaluts")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
 	ECharacterClass CharacterClass;
 
 	/// 动画蒙太奇中的运动扭曲的WarpTargetName
@@ -128,11 +129,11 @@ protected:
 	TObjectPtr<UAttributeSet> AttributeSet;
 
 	// 角色的受击动画
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GAS | CombatInterface")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Combat")
 	TObjectPtr<UAnimMontage> HitReactAnimMontage;
 
 	// 角色的死亡动画
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GAS | CombatInterface")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Combat")
 	TObjectPtr<UAnimMontage> DeathAnimMontage;
 
 	// 角色溶解材质
@@ -144,7 +145,7 @@ protected:
 	TObjectPtr<UMaterialInstance> DissolveMaterialInstanceWeapon;
 
 	// 时间线所需要的角色溶解曲线
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="FloatCurve")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="CurveFloat")
 	TObjectPtr<UCurveFloat> DissolveFloatCurve;
 
 	/// 显示伤害的UI组件
@@ -154,6 +155,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Animation")
 	UMotionWarpingComponent* MotionWarpingComponent;
 
+	/// 当前人物被东西击中时的血液效果
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Combat")
+	TObjectPtr<UNiagaraSystem> BloodEffect;
+	
 	/// 给角色授予能力
 	void AddCharacterAbilities();
 

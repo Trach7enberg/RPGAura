@@ -40,6 +40,11 @@ ACharacterBase::ACharacterBase()
 }
 
 
+UNiagaraSystem* ACharacterBase::GetBloodEffect()
+{
+	return BloodEffect;
+}
+
 void ACharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
