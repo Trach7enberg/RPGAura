@@ -6,7 +6,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "GameplayEffect.h"
-#include "CoreTypes/RPGAuraGameplayTags.h"
+#include "Components/AudioComponent.h"
 #include "FunctionLibrary/RPGAuraBlueprintFunctionLibrary.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
@@ -15,6 +15,7 @@ DEFINE_LOG_CATEGORY_STATIC(ASlingshotProjectileLog, All, All);
 ASlingshotProjectile::ASlingshotProjectile()
 {
 	bIgnoreFriend = true;
+	BIsHit = false;
 	ProjectileMovementComponent->InitialSpeed = 1500.f;
 	ProjectileMovementComponent->MaxSpeed = 1500.f;
 	ProjectileMovementComponent->ProjectileGravityScale = 1.f;
@@ -32,22 +33,41 @@ void ASlingshotProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedCompon
 {
 	// 检查Ge上下文是否有效
 	if (!DamageEffectSpecHandle.IsValid() || !DamageEffectSpecHandle.Data.IsValid()) { return; }
-
+	
 	const auto EffectCauser = DamageEffectSpecHandle.Data.Get()->GetContext().GetEffectCauser();
 
-	if (!EffectCauser || EffectCauser == OtherActor) { return; }
-
+	if(!EffectCauser || EffectCauser ==OtherActor){return;}
+	
 	if (bIgnoreFriend && URPGAuraBlueprintFunctionLibrary::IsFriendly(EffectCauser, OtherActor)) { return; }
+	if (!BIsHit) { SpawnVfxAndSound(); BIsHit = true;}
 
+	
 	if (HasAuthority())
 	{
 		UAbilitySystemComponent* ActorAsc = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
 
-		if (!DamageEffectSpecHandle.IsValid() || !ActorAsc)
+		if(ActorAsc)
 		{
-			// UE_LOG(ASlingshotProjectileLog, Warning, TEXT("[%s]无法应用GE!"), *GetName());
+			// 应用GE到自身,这里的自身是OtherActor
+			ActorAsc->ApplyGameplayEffectSpecToTarget(*DamageEffectSpecHandle.Data, ActorAsc);
 		}
-		else { ActorAsc->ApplyGameplayEffectSpecToTarget(*DamageEffectSpecHandle.Data, ActorAsc); }
+
 		Destroy();
 	}
+	else
+	{
+		// 投射物有可能在还没有生成特效和声音的时候就被销毁了(重叠在服务器上发生,销毁的行为会复制到客户端会导致客户端还没有重叠的时候就销毁了飞弹)
+		// 因此我们标记一下当前客户端的投射物已经击中了,然后重写Destroy函数,在被销毁前播放特效和声音
+		BIsHit = true;
+	}
+}
+
+void ASlingshotProjectile::Destroyed()
+{
+	
+	if (!BIsHit && !HasAuthority()) { SpawnVfxAndSound(); }
+
+	if (IsValid(LoopSoundAudioComponent.Get())) { LoopSoundAudioComponent->Stop(); }
+	BIsHit = true;
+	Super::Destroyed();
 }
