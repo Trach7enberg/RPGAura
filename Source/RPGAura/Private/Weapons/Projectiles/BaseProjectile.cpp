@@ -3,8 +3,10 @@
 
 #include "Weapons/Projectiles/BaseProjectile.h"
 
+#include "NiagaraFunctionLibrary.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "RPGAura/RPGAura.h"
 
 DEFINE_LOG_CATEGORY_STATIC(ABaseProjectileLog, All, All);
@@ -22,6 +24,7 @@ ABaseProjectile::ABaseProjectile()
 
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("StaticMeshComponent");
 	StaticMeshComponent->SetupAttachment(SphereComponent);
+	
 	
 	SphereComponent->SetCollisionEnabled(ECollisionEnabled::Type::QueryOnly);
 	SphereComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
@@ -45,6 +48,19 @@ void ABaseProjectile::BeginPlay()
 	Super::BeginPlay();
 	SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &ABaseProjectile::OnSphereOverlap);
 
+	SetLifeSpan(ProjectileLifeSpawn);
+	if (LoopingSound)
+	{
+		LoopSoundAudioComponent = UGameplayStatics::SpawnSoundAttached(LoopingSound, GetRootComponent());
+	}
+	
+}
+
+void ABaseProjectile::SpawnVfxAndSound() const
+{
+	if (!ImpactSound || !ImpactEffect) { return; }
+	UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ImpactEffect, GetActorLocation());
 	
 }
 

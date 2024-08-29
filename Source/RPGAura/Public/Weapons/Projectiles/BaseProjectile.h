@@ -32,8 +32,20 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Projectile")
 	float ProjectileLifeSpawn = 5.0f;
 
+	// 投射物冲击时的效果
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Projectile|Niagara")
+	TObjectPtr<UNiagaraSystem> ImpactEffect;
+
+	// 冲击声
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Projectile|Sound")
+	TObjectPtr<USoundBase> ImpactSound;
+
+	// 循环声
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Projectile|Sound")
+	TObjectPtr<USoundBase> LoopingSound;
+	
 	// 飞弹是否忽略友军
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Sound")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Projectile")
 	bool bIgnoreFriend;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Collision")
@@ -44,8 +56,15 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Mesh")
 	TObjectPtr<UStaticMeshComponent> StaticMeshComponent;
+
+	/// 投射物身上的循环声音
+	UPROPERTY()
+	TObjectPtr<UAudioComponent> LoopSoundAudioComponent;
 	
 	virtual void BeginPlay() override;
+
+	/// 生成特效和声音
+	virtual void SpawnVfxAndSound() const;
 
 private:
 	
