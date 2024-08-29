@@ -86,16 +86,7 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 			GameplayTags.InputTag_3 = UGameplayTagsManager::Get().AddNativeGameplayTag("InputTag.3", FString("主键盘3"));
 			GameplayTags.InputTag_4 = UGameplayTagsManager::Get().AddNativeGameplayTag("InputTag.4", FString("主键盘4"));
 		}
-
-		// 蒙太奇事件标签
-		{
-			GameplayTags.Event_Montage_FireBolt = UGameplayTagsManager::Get().AddNativeGameplayTag(
-				"Event.Montage.FireBolt", FString("识别GameplayEvent的标签,用于当播放火箭蒙太奇触发某个通知时发送gameplay事件"));
-			GameplayTags.Event_Montage_Attack_Melee = UGameplayTagsManager::Get().AddNativeGameplayTag(
-				"Event.Montage.Attack.Melee", FString("蒙太奇中的近战攻击动作时发送的事件标签"));
-			GameplayTags.Event_Montage_Attack_Ranged = UGameplayTagsManager::Get().AddNativeGameplayTag(
-				"Event.Montage.Attack.Ranged", FString("蒙太奇中的远程攻击动作时发送的事件标签"));
-		}
+		
 
 		// 伤害类型标签
 		{
@@ -114,13 +105,14 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 				"Abilities.Effects.HitReact", FString("被击中时给予的标签"));
 		}
 
+		// 蒙太奇事件标签
 		{
-			GameplayTags.Montage_Attack_Normal = UGameplayTagsManager::Get().AddNativeGameplayTag(
-				"Montage.Attack.Normal", FString(""));
-			GameplayTags.Montage_Attack_LeftHand = UGameplayTagsManager::Get().AddNativeGameplayTag(
-				"Montage.Attack.LeftHand", FString(""));
-			GameplayTags.Montage_Attack_RightHand = UGameplayTagsManager::Get().AddNativeGameplayTag(
-				"Montage.Attack.RightHand", FString(""));
+			GameplayTags.CombatSocket_Normal = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Montage.CombatSocket.Normal", FString(""));
+			GameplayTags.CombatSocket_LeftHand = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Montage.CombatSocket.LeftHand", FString(""));
+			GameplayTags.CombatSocket_RightHand = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Montage.CombatSocket.RightHand", FString(""));
 		}
 
 		{
@@ -213,14 +205,10 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Abilities_DamageType_Fire);
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Abilities_DamageType_Lightning);
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Abilities_DamageType_Arcane);
-
-		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Event_Montage_FireBolt);
-		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Event_Montage_Attack_Melee);
-		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Event_Montage_Attack_Ranged);
 		
-		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Montage_Attack_Normal);
-		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Montage_Attack_LeftHand);
-		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Montage_Attack_RightHand);
+		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.CombatSocket_Normal);
+		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.CombatSocket_LeftHand);
+		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.CombatSocket_RightHand);
 		
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Abilities_Attack_Melee);
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Abilities_Attack_Range);
@@ -267,11 +255,6 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 		GameplayTags.TagToNumMap.Add(GameplayTags.InputTag_3, EGameplayTagNum::Input3);
 		GameplayTags.TagToNumMap.Add(GameplayTags.InputTag_4, EGameplayTagNum::Input4);
 
-
-		GameplayTags.TagToNumMap.Add(GameplayTags.Event_Montage_FireBolt, EGameplayTagNum::Event_Montage_FireBolt);
-		GameplayTags.TagToNumMap.Add(GameplayTags.Event_Montage_Attack_Melee, EGameplayTagNum::Event_Montage_Attack_Melee);
-		GameplayTags.TagToNumMap.Add(GameplayTags.Event_Montage_Attack_Ranged, EGameplayTagNum::Event_Montage_Attack_Ranged);
-
 		GameplayTags.TagToNumMap.Add(GameplayTags.Abilities_DamageType_Physical,
 		                             EGameplayTagNum::Abilities_Damage_Spell_Physical);
 		GameplayTags.TagToNumMap.Add(GameplayTags.Abilities_DamageType_Fire,
@@ -283,11 +266,11 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 		GameplayTags.TagToNumMap.Add(GameplayTags.Abilities_Effects_HitReact,
 		                             EGameplayTagNum::Abilities_Effects_HitReact);
 		
-		GameplayTags.TagToNumMap.Add(GameplayTags.Montage_Attack_Normal,
+		GameplayTags.TagToNumMap.Add(GameplayTags.CombatSocket_Normal,
 		                             EGameplayTagNum::Montage_Attack_Normal);
-		GameplayTags.TagToNumMap.Add(GameplayTags.Montage_Attack_Normal,
+		GameplayTags.TagToNumMap.Add(GameplayTags.CombatSocket_Normal,
 		                             EGameplayTagNum::Montage_Attack_LeftHand);
-		GameplayTags.TagToNumMap.Add(GameplayTags.Montage_Attack_Normal,
+		GameplayTags.TagToNumMap.Add(GameplayTags.CombatSocket_Normal,
 		                             EGameplayTagNum::Montage_Attack_RightHand);
 	}
 
