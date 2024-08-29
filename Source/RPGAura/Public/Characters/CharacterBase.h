@@ -158,6 +158,10 @@ protected:
 	/// 当前人物被东西击中时的血液效果
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Combat")
 	TObjectPtr<UNiagaraSystem> BloodEffect;
+
+	/// 角色死亡时的声音
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Combat")
+	TObjectPtr<USoundBase> DeathSound;
 	
 	/// 给角色授予能力
 	void AddCharacterAbilities();

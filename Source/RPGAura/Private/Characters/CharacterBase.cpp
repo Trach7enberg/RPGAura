@@ -13,6 +13,7 @@
 #include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
 #include "GAS/Data/CharacterClassInfo.h"
 #include "Interfaces/HighLightInterface.h"
+#include "Kismet/GameplayStatics.h"
 #include "SubSystems/RPGAuraGameInstanceSubsystem.h"
 #include "Subsystems/SubsystemBlueprintLibrary.h"
 #include "UI/WidgetComponents/DamageTextComponent.h"
@@ -133,15 +134,15 @@ FVector ACharacterBase::GetCombatSocketLocation(const FGameplayTag& GameplayTag)
 {
 	if (!GetMesh()) { return FVector::Zero(); }
 
-	if (GameplayTag == FRPGAuraGameplayTags::Get().Montage_Attack_Normal)
+	if (GameplayTag == FRPGAuraGameplayTags::Get().CombatSocket_Normal)
 	{
 		return WeaponLogicBaseComponent->GetWeaponSocketLocByName(WeaponLogicBaseComponent->GetWeaponTipSocketName());
 	}
-	if (GameplayTag == FRPGAuraGameplayTags::Get().Montage_Attack_LeftHand)
+	if (GameplayTag == FRPGAuraGameplayTags::Get().CombatSocket_LeftHand)
 	{
 		return GetMesh()->GetSocketLocation(AttackSocketName_LeftHand);
 	}
-	if (GameplayTag == FRPGAuraGameplayTags::Get().Montage_Attack_RightHand)
+	if (GameplayTag == FRPGAuraGameplayTags::Get().CombatSocket_RightHand)
 	{
 		return GetMesh()->GetSocketLocation(AttackSocketName_RightHand);
 	}
@@ -266,7 +267,10 @@ void ACharacterBase::StartDissolveTimeline()
 	SetDissolveMaterial();
 
 	// 动态材质实例没有设置 不允许播放时间线
-	if (!MaterialInstanceDynamic_Character || !MaterialInstanceDynamic_Weapon) { return; }
+	if (!MaterialInstanceDynamic_Character || !MaterialInstanceDynamic_Weapon)
+	{
+		return;
+	}
 
 	DissolveTimelineComponent->PlayFromStart();
 }
@@ -325,6 +329,12 @@ void ACharacterBase::ShowDamageNumber_Implementation(const float Damage, bool bB
 void ACharacterBase::MulticastHandleDeath_Implementation()
 {
 	bIsDie = true;
+
+	if(DeathSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this,DeathSound, GetActorLocation());
+	}
+	
 	// 设置武器物理开启
 	WeaponLogicBaseComponent->SetWeaponPhysics(true);
 
