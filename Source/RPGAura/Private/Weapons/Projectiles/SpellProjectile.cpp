@@ -7,7 +7,6 @@
 #include "AbilitySystemComponent.h"
 #include "GameplayEffect.h"
 #include "NiagaraComponent.h"
-#include "NiagaraFunctionLibrary.h"
 #include "Components/AudioComponent.h"
 #include "FunctionLibrary/RPGAuraBlueprintFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
@@ -24,19 +23,13 @@ ASpellProjectile::ASpellProjectile()
 void ASpellProjectile::BeginPlay()
 {
 	Super::BeginPlay();
-	SetLifeSpan(ProjectileLifeSpawn);
-	if (LoopingSound)
-	{
-		LoopSoundAudioComponent = UGameplayStatics::SpawnSoundAttached(LoopingSound, GetRootComponent());
-	}
+	
 }
 
 
 void ASpellProjectile::SpawnVfxAndSound() const
 {
-	if (!ImpactSound || !ImpactEffect) { return; }
-	UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
-	UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ImpactEffect, GetActorLocation());
+	Super::SpawnVfxAndSound();
 }
 
 void ASpellProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -46,10 +39,11 @@ void ASpellProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent,
 	// 检查Ge上下文是否有效
 	if (!DamageEffectSpecHandle.IsValid() || !DamageEffectSpecHandle.Data.IsValid()) { return; }
 	
-	if (DamageEffectSpecHandle.Data.Get()->GetContext().GetEffectCauser() ==OtherActor) { return; }
+	const auto EffectCauser = DamageEffectSpecHandle.Data.Get()->GetContext().GetEffectCauser();
+
+	if(!EffectCauser || EffectCauser ==OtherActor){return;}
 	
-	if (bIgnoreFriend && URPGAuraBlueprintFunctionLibrary::IsFriendly(
-		DamageEffectSpecHandle.Data.Get()->GetContext().GetEffectCauser(), OtherActor)) { return; }
+	if (bIgnoreFriend && URPGAuraBlueprintFunctionLibrary::IsFriendly(EffectCauser, OtherActor)) { return; }
 	if (!BIsHit) { SpawnVfxAndSound(); }
 
 
@@ -58,8 +52,7 @@ void ASpellProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent,
 	{
 		UAbilitySystemComponent* ActorAsc = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
 
-		if (!DamageEffectSpecHandle.IsValid() || !ActorAsc) { UE_LOG(ASpellProjectileLog, Warning, TEXT("无法应用GE!")); }
-		else
+		if(ActorAsc)
 		{
 			// 应用GE到自身,这里的自身是OtherActor
 			ActorAsc->ApplyGameplayEffectSpecToTarget(*DamageEffectSpecHandle.Data, ActorAsc);
