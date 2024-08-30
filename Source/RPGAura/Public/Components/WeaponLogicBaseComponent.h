@@ -62,7 +62,9 @@ public:
 	/// @param NewType 
 	void SetWeaponCollisionEnabled(ECollisionEnabled::Type NewType) const;
 
-	bool IsBDoesNeedWeapon() const { return BDoesNeedWeapon; }
+	/// 当前人物是否需要武器
+	/// @return 
+	bool DoesNeedWeapon() const { return BDoesNeedWeapon; }
 	void SetBDoesNeedWeapon(const bool bBDoesNeedWeapon) { BDoesNeedWeapon = bBDoesNeedWeapon; }
 
 	/// 获取当前武器动画的Instance类
