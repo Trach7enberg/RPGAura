@@ -12,12 +12,13 @@ AEnemyDemon::AEnemyDemon()
 {
 	AttackSocketName_LeftHand = "LeftHandAttackSocket";
 	AttackSocketName_RightHand = "RightHandAttackSocket";
-	EnemyHealthBar->SetRelativeLocation(FVector(0.0f, 0.0f, -50.0f));
+	EnemyHealthBar->SetRelativeLocation(FVector(0.f, 0.0f, 50.0f));
 
-	GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -106.0f));
+	GetMesh()->SetRelativeLocation(FVector(-5.0f, 0.0f, -50.0f));
 	GetCapsuleComponent()->SetCapsuleHalfHeight(50.0f);
-	GetCapsuleComponent()->SetCapsuleRadius(30.0f);
-	GetCharacterMovement()->RotationRate = FRotator(0, 0, 150);
+	GetCapsuleComponent()->SetCapsuleRadius(20.0f);
+	GetCharacterMovement()->RotationRate = FRotator(0, 300, 0);
 
 	WeaponLogicBaseComponent->SetBDoesNeedWeapon(false) ;
+	EnemyHealthBar->SetDrawAtDesiredSize(true);
 }
