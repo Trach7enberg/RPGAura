@@ -18,7 +18,7 @@ AEnemyGhoul::AEnemyGhoul()
 	GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -106.0f));
 	GetCapsuleComponent()->SetCapsuleHalfHeight(105.0f);
 	GetCapsuleComponent()->SetCapsuleRadius(73.646233f);
-	GetCharacterMovement()->RotationRate = FRotator(0, 0, 150);
+	GetCharacterMovement()->RotationRate = FRotator(0, 150, 0);
 
 	WeaponLogicBaseComponent->SetBDoesNeedWeapon(false) ;
 }
