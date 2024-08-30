@@ -136,7 +136,11 @@ FVector ACharacterBase::GetCombatSocketLocation(const FGameplayTag& GameplayTag)
 
 	if (GameplayTag == FRPGAuraGameplayTags::Get().CombatSocket_Normal)
 	{
-		return WeaponLogicBaseComponent->GetWeaponSocketLocByName(WeaponLogicBaseComponent->GetWeaponTipSocketName());
+		if(WeaponLogicBaseComponent->DoesNeedWeapon())
+		{
+			return WeaponLogicBaseComponent->GetWeaponSocketLocByName(WeaponLogicBaseComponent->GetWeaponTipSocketName());
+		}
+		return GetMesh()->GetSocketLocation(AttackSocketName_BodyTip);
 	}
 	if (GameplayTag == FRPGAuraGameplayTags::Get().CombatSocket_LeftHand)
 	{

@@ -97,6 +97,9 @@ protected:
 	 float CharacterLevel;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
+	FName AttackSocketName_BodyTip = "TipSocket";
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
 	FName AttackSocketName_LeftHand = "LeftHandAttackSocket";
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
