@@ -5,7 +5,6 @@
 
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
-#include "BehaviorTree/BTFunctionLibrary.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WeaponLogicBaseComponent.h"
 #include "Components/WidgetComponent.h"
@@ -39,7 +38,7 @@ AEnemyCharacter::AEnemyCharacter()
 	MaxWalkingSpeed = 250.f;
 
 	AIControllerClass = ABaseAIController::StaticClass();
-	AutoPossessAI = EAutoPossessAI::PlacedInWorld;
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
@@ -159,7 +158,6 @@ void AEnemyCharacter::Die()
 	if(CurrentAiController)
 	{
 		CurrentAiController->GetBlackboardComponent()->SetValueAsBool("IsDead",true);
-		UE_LOG(AEnemyCharacterLog, Error, TEXT("key:%d"),CurrentAiController->GetBlackboardComponent()->GetValueAsBool("IsDead"));
 	}
 	Super::Die();
 }
@@ -183,7 +181,7 @@ void AEnemyCharacter::PossessedBy(AController* NewController)
 		CurrentAiController->RunBehaviorTree(BehaviorTree);
 		// 设置黑板键,当前角色是不是远程攻击角色
 		CurrentAiController->GetBlackboardComponent()->SetValueAsBool("IsRangCharacter",
-		                                                              CharacterClass == ECharacterClass::Warrior);
+		                                                              CharacterClass != ECharacterClass::Warrior);
 	}
 }
 
