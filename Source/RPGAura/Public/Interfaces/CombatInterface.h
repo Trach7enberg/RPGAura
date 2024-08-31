@@ -51,7 +51,24 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	virtual TArray<FMontageWithTag> GetAttackAnims() =0;
-	
+
+	/// 获取角色的召唤动画
+	/// @return 
+	UFUNCTION(BlueprintCallable)
+	virtual UAnimMontage* GetSummonAnim() =0;
+
+	/// 获取当前角色已经有的召唤召唤物的数量
+	UFUNCTION(BlueprintCallable)
+	virtual int32 GetCurrentSummonsCount() =0;
+
+	/// 自增角色当前的召唤物数
+	UFUNCTION(BlueprintCallable)
+	virtual void UpdateCurrentSummonsCount(int32 NewCount) =0;
+
+	/// 获取角色能可以召唤的最大的召唤物的数量
+	UFUNCTION(BlueprintCallable)
+	virtual int32 GetMaxSummonsCount() =0;
+
 	/// 只在服务器上调用角色死亡
 	UFUNCTION(BlueprintCallable)
 	virtual void Die() = 0;
@@ -62,13 +79,13 @@ public:
 	/// 获取和当前角色正在战斗的目标角色
 	/// @return 
 	UFUNCTION(BlueprintCallable)
-	virtual AActor* GetCombatTarget()=0;
+	virtual AActor* GetCombatTarget() =0;
 
 	/// 设置暂存当前角色正在战斗的目标角色
 	/// @param CombatTarget 
 	UFUNCTION(BlueprintCallable)
-	virtual void SetCombatTarget(AActor* CombatTarget)=0;
-	
+	virtual void SetCombatTarget(AActor* CombatTarget) =0;
+
 
 	/// 在角色头顶显示伤害  //TODO 只在本地客户端上显示伤害数值
 	/// @param Damage 伤害
