@@ -66,7 +66,6 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 
 		// 次要抵抗属性
 		{
-			
 			GameplayTags.Attributes_Secondary_Resistance_Fire = UGameplayTagsManager::Get().AddNativeGameplayTag(
 				"Attributes.Secondary.Resistance.Fire");
 			GameplayTags.Attributes_Secondary_Resistance_Physical = UGameplayTagsManager::Get().AddNativeGameplayTag(
@@ -86,7 +85,7 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 			GameplayTags.InputTag_3 = UGameplayTagsManager::Get().AddNativeGameplayTag("InputTag.3", FString("主键盘3"));
 			GameplayTags.InputTag_4 = UGameplayTagsManager::Get().AddNativeGameplayTag("InputTag.4", FString("主键盘4"));
 		}
-		
+
 
 		// 伤害类型标签
 		{
@@ -120,9 +119,10 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 				"Abilities.Attack.Melee", FString("启动近战攻击能力的标签"));
 			GameplayTags.Abilities_Attack_Range = UGameplayTagsManager::Get().AddNativeGameplayTag(
 				"Abilities.Attack.Range", FString("启动远程攻击能力的标签"));
-			GameplayTags.Abilities_Attack_ShamanSpell = UGameplayTagsManager::Get().AddNativeGameplayTag(
-				"Abilities.Attack.ShamanSpell", FString("启动萨满法术攻击能力的标签"));
-			
+			GameplayTags.Abilities_Attack_Spell = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Attack.Spell", FString("启动萨满法术攻击能力的标签"));
+			GameplayTags.Abilities_Attack_Summon = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Attack.Summon", FString("召唤法术能力"));
 		}
 	}
 
@@ -152,7 +152,7 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 		GameplayTags.SecondaryGameplayTagsContainer.AddTag(GameplayTags.Attribute_Secondary_ManaRegeneration);
 		GameplayTags.SecondaryGameplayTagsContainer.AddTag(GameplayTags.Attribute_Secondary_MaxHealth);
 		GameplayTags.SecondaryGameplayTagsContainer.AddTag(GameplayTags.Attribute_Secondary_MaxMana);
-		
+
 		GameplayTags.SecondaryGameplayTagsContainer.AddTag(GameplayTags.Attributes_Secondary_Resistance_Physical);
 		GameplayTags.SecondaryGameplayTagsContainer.AddTag(GameplayTags.Attributes_Secondary_Resistance_Fire);
 		GameplayTags.SecondaryGameplayTagsContainer.AddTag(GameplayTags.Attributes_Secondary_Resistance_Lightning);
@@ -205,14 +205,15 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Abilities_DamageType_Fire);
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Abilities_DamageType_Lightning);
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Abilities_DamageType_Arcane);
-		
+
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.CombatSocket_Normal);
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.CombatSocket_LeftHand);
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.CombatSocket_RightHand);
-		
+
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Abilities_Attack_Melee);
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Abilities_Attack_Range);
-		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Abilities_Attack_ShamanSpell);
+		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Abilities_Attack_Spell);
+		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Abilities_Attack_Summon);
 	}
 
 	// 标签到枚举的映射
@@ -241,12 +242,16 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 		                             EGameplayTagNum::ManaRegeneration);
 		GameplayTags.TagToNumMap.Add(GameplayTags.Attribute_Secondary_MaxHealth, EGameplayTagNum::MaxHealth);
 		GameplayTags.TagToNumMap.Add(GameplayTags.Attribute_Secondary_MaxMana, EGameplayTagNum::MaxMana);
-		
-		GameplayTags.TagToNumMap.Add(GameplayTags.Attributes_Secondary_Resistance_Physical, EGameplayTagNum::PhysicalResistance);
-		GameplayTags.TagToNumMap.Add(GameplayTags.Attributes_Secondary_Resistance_Fire, EGameplayTagNum::FireResistance);
-		GameplayTags.TagToNumMap.Add(GameplayTags.Attributes_Secondary_Resistance_Lightning, EGameplayTagNum::LightningResistance);
-		GameplayTags.TagToNumMap.Add(GameplayTags.Attributes_Secondary_Resistance_Arcane, EGameplayTagNum::ArcaneResistance);
-		
+
+		GameplayTags.TagToNumMap.Add(GameplayTags.Attributes_Secondary_Resistance_Physical,
+		                             EGameplayTagNum::PhysicalResistance);
+		GameplayTags.TagToNumMap.Add(GameplayTags.Attributes_Secondary_Resistance_Fire,
+		                             EGameplayTagNum::FireResistance);
+		GameplayTags.TagToNumMap.Add(GameplayTags.Attributes_Secondary_Resistance_Lightning,
+		                             EGameplayTagNum::LightningResistance);
+		GameplayTags.TagToNumMap.Add(GameplayTags.Attributes_Secondary_Resistance_Arcane,
+		                             EGameplayTagNum::ArcaneResistance);
+
 
 		GameplayTags.TagToNumMap.Add(GameplayTags.InputTag_LMB, EGameplayTagNum::InputLMB);
 		GameplayTags.TagToNumMap.Add(GameplayTags.InputTag_RMB, EGameplayTagNum::InputRMB);
@@ -265,7 +270,7 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 		                             EGameplayTagNum::Abilities_Damage_Spell_Arcane);
 		GameplayTags.TagToNumMap.Add(GameplayTags.Abilities_Effects_HitReact,
 		                             EGameplayTagNum::Abilities_Effects_HitReact);
-		
+
 		GameplayTags.TagToNumMap.Add(GameplayTags.CombatSocket_Normal,
 		                             EGameplayTagNum::Montage_Attack_Normal);
 		GameplayTags.TagToNumMap.Add(GameplayTags.CombatSocket_Normal,

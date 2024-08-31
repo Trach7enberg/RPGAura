@@ -115,7 +115,8 @@ struct FRPGAuraGameplayTags
 	// 启动攻击能力的标签
 	FGameplayTag Abilities_Attack_Melee;	// 近战标签
 	FGameplayTag Abilities_Attack_Range;	// 远程标签
-	FGameplayTag Abilities_Attack_ShamanSpell;	// 萨满法术攻击标签
+	FGameplayTag Abilities_Attack_Spell;	// 萨满法术攻击标签
+	FGameplayTag Abilities_Attack_Summon;	// 萨满法术攻击标签
 	
 	// 简单的Actor标签
 	FName Player = "Player";
