@@ -98,4 +98,8 @@ public:
 	/// @return 
 	UFUNCTION(BlueprintCallable)
 	virtual UNiagaraSystem* GetBloodEffect() = 0;
+
+	/// 播放角色被召唤的动画
+	UFUNCTION(BlueprintCallable)
+	virtual void StartSummonAnim() = 0;
 };
