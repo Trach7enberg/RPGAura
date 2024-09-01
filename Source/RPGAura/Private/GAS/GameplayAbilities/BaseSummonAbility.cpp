@@ -57,6 +57,7 @@ TArray<FVector> UBaseSummonAbility::GetSpawnLocation()
 		// DrawDebug(Location, TmpDeltaSpread, HitResult.ImpactPoint, 8, 10);
 		Result.Add(HitResult.ImpactPoint);
 	}
+	
 
 	return Result;
 }
@@ -83,6 +84,7 @@ const AActor* UBaseSummonAbility::SpawnSummon(const FVector& Location, const boo
 		                              0, 0, AvatarPawn->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 2.f),
 	                              GetAvatarActorFromActorInfo()->GetActorForwardVector().Rotation(),
 	                              SpawnParameters);
+	SpawnActor->OnDestroyed.AddDynamic(this,&UBaseSummonAbility::SpawnActorOnDestroy);
 	
 	return SpawnActor;
 }
