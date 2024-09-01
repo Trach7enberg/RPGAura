@@ -61,12 +61,15 @@ public:
 	virtual UAnimMontage* GetHitReactAnim() override;
 	virtual UAnimMontage* GetDeathAnim() override;
 	virtual TArray<FMontageWithTag> GetAttackAnims() override;
+	virtual UAnimMontage* GetSummonAnim() override;
+	virtual int32 GetMaxSummonsCount() override;
+	virtual int32 GetCurrentSummonsCount() override;
+	virtual void UpdateCurrentSummonsCount(int32 NewCount) override;
 	virtual AActor* GetCombatTarget() override;
 	virtual void SetCombatTarget(AActor* CombatTarget) override;
 	/// 角色死亡 , 只在服务器上调用
 	virtual void Die() override;
 	virtual bool IsCharacterDie() override;
-
 	/// 在角色头顶显示伤害
 	/// 对于在服务器控制的角色将会在服务器上执行,对于客户端控制的角色将在服务器上调用这个函数然后客户端执行,无论怎么样确保显示
 	/// @param Damage 需要显示的伤害
@@ -75,7 +78,10 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void ShowDamageNumber(const float Damage, bool bBlockedHit = false, bool bCriticalHit = false) override;
 	virtual UNiagaraSystem* GetBloodEffect() override;
+	virtual void StartSummonAnim() override;
 	// ~ ICombatInterface
+
+	
 
 protected:
 	virtual void BeginPlay() override;
@@ -96,6 +102,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
 	 float CharacterLevel;
 
+	// 当前角色能拥有召唤物的最大数量
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
+	int32 MaxSummonsCount;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
 	FName AttackSocketName_BodyTip = "TipSocket";
 	
@@ -139,6 +149,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Combat")
 	TObjectPtr<UAnimMontage> DeathAnimMontage;
 
+	// 角色的召唤技能动画
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Combat")
+	TObjectPtr<UAnimMontage> SummonAnimMontage;
+
 	// 角色溶解材质
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="MaterialInstance")
 	TObjectPtr<UMaterialInstance> DissolveMaterialInstanceCharacter;
@@ -147,9 +161,13 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="MaterialInstance")
 	TObjectPtr<UMaterialInstance> DissolveMaterialInstanceWeapon;
 
-	// 时间线所需要的角色溶解曲线
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="CurveFloat")
+	// 溶解时间线所需要的角色溶解曲线
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Animation")
 	TObjectPtr<UCurveFloat> DissolveFloatCurve;
+
+	// 角色被召唤时的抖动曲线
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Animation")
+	TObjectPtr<UCurveFloat> SummonFloatCurve;
 
 	/// 显示伤害的UI组件
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Widget")
@@ -165,6 +183,12 @@ protected:
 	/// 角色死亡时的声音
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Combat")
 	TObjectPtr<USoundBase> DeathSound;
+
+
+	// 用于角色被召唤时动画的时间线组件
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Combat")
+	TObjectPtr<UTimelineComponent>SummonTimelineComponent;
+
 	
 	/// 给角色授予能力
 	void AddCharacterAbilities();
@@ -191,15 +215,12 @@ protected:
 private:
 	/// 当前角色是否死亡
 	bool bIsDie ;
-	
-	/// 当ASC 被授予或者被完全移除HitReact标签时的回调函数
-	/// @param Tag 指定标签被移除或者被添加的标签
-	/// @param NewTagCount 当前标签被移除或者被添加 多个同样的签标的计数时 (可以同时有相同类型的标签)
-	UFUNCTION()
-	virtual void OnGrantedTag_HitReact(const FGameplayTag Tag, int32 NewTagCount);
 
-	// 初始化溶解时间线组件
-	void InitDissolveTimeLine();
+	// 溶解材质实例蓝图里的参数名字
+	FName ScalarParam = "Dissolve";
+	
+	// 当前角色能拥有召唤物的数量
+	int32 CurrentSummonsCount;
 
 	// 时间线组件
 	UPROPERTY()
@@ -213,9 +234,29 @@ private:
 	UPROPERTY()
 	TObjectPtr<UMaterialInstanceDynamic> MaterialInstanceDynamic_Weapon;
 
-	// 溶解材质实例蓝图里的参数名字
-	FName ScalarParam = "Dissolve";
+	/// 当ASC 被授予或者被完全移除HitReact标签时的回调函数
+	/// @param Tag 指定标签被移除或者被添加的标签
+	/// @param NewTagCount 当前标签被移除或者被添加 多个同样的签标的计数时 (可以同时有相同类型的标签)
+	UFUNCTION()
+	virtual void OnGrantedTag_HitReact(const FGameplayTag Tag, int32 NewTagCount);
 
+	/*----------------
+		溶解时间线
+	----------------*/
+
+	// 给指定mesh设置溶解材质
+	void SetDissolveMaterial();
+
+	/// 设置动态材质实例上的参数
+	/// @param MaterialInstance 材质实例
+	/// @param Value 值
+	/// @param ParameterName 参数名
+	void SetScalarParameterValue(
+		UMaterialInstanceDynamic* MaterialInstance, const float Value, const FName ParameterName);
+
+	// 初始化溶解时间线组件
+	void InitDissolveTimeLine();
+	
 	// 开始溶解时间线
 	void StartDissolveTimeline();
 
@@ -227,13 +268,22 @@ private:
 	UFUNCTION()
 	void DissolveTimelineFinishedFunc();
 
-	// 给指定mesh设置溶解材质
-	void SetDissolveMaterial();
+	/*----------------
+		召唤时间线
+	----------------*/
 
-	/// 设置动态材质实例上的参数
-	/// @param MaterialInstance 材质实例
-	/// @param Value 值
-	/// @param ParameterName 参数名
-	void SetScalarParameterValue(
-		UMaterialInstanceDynamic* MaterialInstance, const float Value, const FName ParameterName);
+	// 初始化召唤时间线组件
+	void InitSummonTimeLine();
+
+	// 开始召唤时间线动画
+	void StartSummonTimeline() const;
+	
+
+	// 召唤时间线update时调用的函数
+	UFUNCTION()
+	void SummonTimelineUpdateFunc(float Output);
+
+	// 召唤时间线完成时调用的函数
+	UFUNCTION()
+	void SummonTimelineFinishedFunc();
 };

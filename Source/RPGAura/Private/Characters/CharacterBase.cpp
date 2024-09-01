@@ -29,21 +29,18 @@ ACharacterBase::ACharacterBase()
 	BIsHitReacting = false;
 	MaxWalkingSpeed = 600.f;
 	bIsDie = false;
+	CurrentSummonsCount = 0;
+	MaxSummonsCount = 5;
 
 	// 角色能改变导航网格,不会让一堆角色撞在一起
 	SetCanAffectNavigationGeneration(true);
 
 	WeaponLogicBaseComponent = CreateDefaultSubobject<UWeaponLogicBaseComponent>("WeaponLogicComponent");
 	DissolveTimelineComponent = CreateDefaultSubobject<UTimelineComponent>("DissolveTimelineComponent");
+	SummonTimelineComponent = CreateDefaultSubobject<UTimelineComponent>("SummonTimelineComponent");
 	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>("MotionWarping");
 
 	if (GetMesh()) { GetMesh()->SetRelativeRotation(FRotator(0, -90, 0)); }
-}
-
-
-UNiagaraSystem* ACharacterBase::GetBloodEffect()
-{
-	return BloodEffect;
 }
 
 void ACharacterBase::BeginPlay()
@@ -54,8 +51,8 @@ void ACharacterBase::BeginPlay()
 	GetCharacterMovement()->MaxWalkSpeed = MaxWalkingSpeed;
 
 	InitDissolveTimeLine();
+	InitSummonTimeLine();
 }
-
 
 void ACharacterBase::AddCharacterAbilities()
 {
@@ -110,14 +107,6 @@ void ACharacterBase::InitAllAttributes(bool BIsPlayer)
 	                                         BIsPlayer);
 }
 
-
-bool ACharacterBase::CanHighLight()
-{
-	const auto Can = Cast<IHighLightInterface>(this);
-
-	return (Can) ? true : false;
-}
-
 void ACharacterBase::InitAbilityActorInfo() {}
 
 void ACharacterBase::RegisterGameplayTagEvent()
@@ -129,6 +118,16 @@ void ACharacterBase::RegisterGameplayTagEvent()
 		                             this, &ACharacterBase::OnGrantedTag_HitReact);
 }
 
+bool ACharacterBase::CanHighLight()
+{
+	const auto Can = Cast<IHighLightInterface>(this);
+
+	return (Can) ? true : false;
+}
+
+
+UNiagaraSystem* ACharacterBase::GetBloodEffect() { return BloodEffect; }
+void ACharacterBase::StartSummonAnim() { StartSummonTimeline(); }
 
 FVector ACharacterBase::GetCombatSocketLocation(const FGameplayTag& GameplayTag)
 {
@@ -136,9 +135,10 @@ FVector ACharacterBase::GetCombatSocketLocation(const FGameplayTag& GameplayTag)
 
 	if (GameplayTag == FRPGAuraGameplayTags::Get().CombatSocket_Normal)
 	{
-		if(WeaponLogicBaseComponent->DoesNeedWeapon())
+		if (WeaponLogicBaseComponent->DoesNeedWeapon())
 		{
-			return WeaponLogicBaseComponent->GetWeaponSocketLocByName(WeaponLogicBaseComponent->GetWeaponTipSocketName());
+			return WeaponLogicBaseComponent->GetWeaponSocketLocByName(
+				WeaponLogicBaseComponent->GetWeaponTipSocketName());
 		}
 		return GetMesh()->GetSocketLocation(AttackSocketName_BodyTip);
 	}
@@ -161,10 +161,19 @@ void ACharacterBase::UpdateCharacterFacingTarget(const FVector& TargetLoc)
 UAnimMontage* ACharacterBase::GetHitReactAnim() { return HitReactAnimMontage.Get(); }
 UAnimMontage* ACharacterBase::GetDeathAnim() { return DeathAnimMontage; }
 TArray<FMontageWithTag> ACharacterBase::GetAttackAnims() { return AttackMontageWithTagArray; }
-AActor* ACharacterBase::GetCombatTarget()
+UAnimMontage* ACharacterBase::GetSummonAnim() { return SummonAnimMontage; }
+
+int32 ACharacterBase::GetMaxSummonsCount() { return MaxSummonsCount; }
+
+int32 ACharacterBase::GetCurrentSummonsCount() { return CurrentSummonsCount; }
+
+void ACharacterBase::UpdateCurrentSummonsCount(const int32 NewCount)
 {
-	return nullptr;
+	CurrentSummonsCount = FMath::Clamp(CurrentSummonsCount + NewCount, 0, MaxSummonsCount);
+	UE_LOG(ACharacterBaseLog, Error, TEXT("CurrentCoumt:[%d],MaxCount[%d]"), CurrentSummonsCount, MaxSummonsCount);
 }
+
+AActor* ACharacterBase::GetCombatTarget() { return nullptr; }
 
 void ACharacterBase::SetCombatTarget(AActor* CombatTarget) {}
 
@@ -183,7 +192,7 @@ void ACharacterBase::UnHighLight()
 void ACharacterBase::LifeSpanExpired()
 {
 	// 销毁武器,再销毁角色
-	UE_LOG(ACharacterBaseLog, Warning, TEXT("销毁"));
+	// UE_LOG(ACharacterBaseLog, Warning, TEXT("销毁"));
 	WeaponLogicBaseComponent->DestroyComponent(true);
 	Super::LifeSpanExpired();
 }
@@ -204,38 +213,6 @@ void ACharacterBase::OnGrantedTag_HitReact(const FGameplayTag Tag, int32 NewTagC
 	GEngine->AddOnScreenDebugMessage(1, 2, FColor::Red,
 	                                 FString::Printf(
 		                                 TEXT("TagName: [%s] , NewTagCount: [%d]"), *Tag.ToString(), NewTagCount));
-}
-
-void ACharacterBase::InitDissolveTimeLine()
-{
-	if (!DissolveFloatCurve)
-	{
-		UE_LOG(ACharacterBaseLog, Error, TEXT("时间线的浮点曲线表为空!!"));
-		return;
-	}
-
-	FOnTimelineFloat OnUpdate;
-	FOnTimelineEvent OnFinished;
-	OnUpdate.BindDynamic(this, &ACharacterBase::DissolveTimelineUpdateFunc);
-	OnFinished.BindDynamic(this, &ACharacterBase::DissolveTimelineFinishedFunc);
-
-	DissolveTimelineComponent->AddInterpFloat(DissolveFloatCurve, OnUpdate, "Dissolve", "DissolveTrack");
-	DissolveTimelineComponent->SetTimelineFinishedFunc(OnFinished);
-	DissolveTimelineComponent->SetTimelineLengthMode(ETimelineLengthMode::TL_LastKeyFrame);
-}
-
-
-void ACharacterBase::DissolveTimelineUpdateFunc(float Output)
-{
-	SetScalarParameterValue(MaterialInstanceDynamic_Character, Output, ScalarParam);
-	SetScalarParameterValue(MaterialInstanceDynamic_Weapon, Output, ScalarParam);
-}
-
-void ACharacterBase::DissolveTimelineFinishedFunc()
-{
-	GEngine->AddOnScreenDebugMessage(1, 2, FColor::Red, FString::Printf(TEXT("TimelineFinished")));
-	// 溶解动画完成,角色销毁
-	SetLifeSpan(SelfLifeSpan);
 }
 
 void ACharacterBase::SetDissolveMaterial()
@@ -264,6 +241,24 @@ void ACharacterBase::SetScalarParameterValue(
 }
 
 
+void ACharacterBase::InitDissolveTimeLine()
+{
+	if (!DissolveFloatCurve)
+	{
+		UE_LOG(ACharacterBaseLog, Error, TEXT("溶解时间线的浮点曲线表为空!!"));
+		return;
+	}
+
+	FOnTimelineFloat OnUpdate;
+	FOnTimelineEvent OnFinished;
+	OnUpdate.BindDynamic(this, &ACharacterBase::DissolveTimelineUpdateFunc);
+	OnFinished.BindDynamic(this, &ACharacterBase::DissolveTimelineFinishedFunc);
+
+	DissolveTimelineComponent->AddInterpFloat(DissolveFloatCurve, OnUpdate, "Dissolve", "DissolveTrack");
+	DissolveTimelineComponent->SetTimelineFinishedFunc(OnFinished);
+	DissolveTimelineComponent->SetTimelineLengthMode(ETimelineLengthMode::TL_LastKeyFrame);
+}
+
 void ACharacterBase::StartDissolveTimeline()
 {
 	if (!DissolveTimelineComponent || !GetMesh()) { return; }
@@ -271,12 +266,56 @@ void ACharacterBase::StartDissolveTimeline()
 	SetDissolveMaterial();
 
 	// 动态材质实例没有设置 不允许播放时间线
-	if (!MaterialInstanceDynamic_Character || !MaterialInstanceDynamic_Weapon)
-	{
-		return;
-	}
+	if (!MaterialInstanceDynamic_Character || !MaterialInstanceDynamic_Weapon) { return; }
 
 	DissolveTimelineComponent->PlayFromStart();
+}
+
+void ACharacterBase::DissolveTimelineUpdateFunc(float Output)
+{
+	SetScalarParameterValue(MaterialInstanceDynamic_Character, Output, ScalarParam);
+	SetScalarParameterValue(MaterialInstanceDynamic_Weapon, Output, ScalarParam);
+}
+
+void ACharacterBase::DissolveTimelineFinishedFunc()
+{
+	GEngine->AddOnScreenDebugMessage(1, 2, FColor::Red, FString::Printf(TEXT("TimelineFinished")));
+	// 溶解动画完成,角色销毁
+	// SetLifeSpan(SelfLifeSpan);
+	Destroy();
+}
+
+void ACharacterBase::InitSummonTimeLine()
+{
+	if (!SummonTimelineComponent) { return; }
+
+	if (SummonFloatCurve)
+	{
+		FOnTimelineFloat OnUpdate;
+		FOnTimelineEvent OnFinished;
+		OnUpdate.BindDynamic(this, &ACharacterBase::SummonTimelineUpdateFunc);
+		OnFinished.BindDynamic(this, &ACharacterBase::SummonTimelineFinishedFunc);
+
+		SummonTimelineComponent->AddInterpFloat(SummonFloatCurve, OnUpdate, "Summon", "SummonTrack");
+		SummonTimelineComponent->SetTimelineFinishedFunc(OnFinished);
+		SummonTimelineComponent->SetTimelineLengthMode(ETimelineLengthMode::TL_LastKeyFrame);
+	}
+	else { UE_LOG(ACharacterBaseLog, Warning, TEXT("召唤时间线的浮点曲线表为空!!")); }
+}
+
+void ACharacterBase::StartSummonTimeline() const
+{
+	if (!SummonTimelineComponent || !GetMesh() || !SummonFloatCurve) { return; }
+
+	SummonTimelineComponent->PlayFromStart();
+}
+
+void ACharacterBase::SummonTimelineUpdateFunc(float Output)
+{
+	GetMesh()->SetRelativeScale3D(FVector(Output));
+}
+void ACharacterBase::SummonTimelineFinishedFunc()
+{
 }
 
 void ACharacterBase::Die()
@@ -334,11 +373,8 @@ void ACharacterBase::MulticastHandleDeath_Implementation()
 {
 	bIsDie = true;
 
-	if(DeathSound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this,DeathSound, GetActorLocation());
-	}
-	
+	if (DeathSound) { UGameplayStatics::PlaySoundAtLocation(this, DeathSound, GetActorLocation()); }
+
 	// 设置武器物理开启
 	WeaponLogicBaseComponent->SetWeaponPhysics(true);
 
