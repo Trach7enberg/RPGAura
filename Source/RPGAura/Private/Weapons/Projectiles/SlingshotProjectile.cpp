@@ -33,20 +33,20 @@ void ASlingshotProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedCompon
 {
 	// 检查Ge上下文是否有效
 	if (!DamageEffectSpecHandle.IsValid() || !DamageEffectSpecHandle.Data.IsValid()) { return; }
-	
+
 	const auto EffectCauser = DamageEffectSpecHandle.Data.Get()->GetContext().GetEffectCauser();
 
-	if(!EffectCauser || EffectCauser ==OtherActor){return;}
-	
-	if (bIgnoreFriend && URPGAuraBlueprintFunctionLibrary::IsFriendly(EffectCauser, OtherActor)) { return; }
-	if (!BIsHit) { SpawnVfxAndSound(); BIsHit = true;}
+	if (!EffectCauser || EffectCauser == OtherActor) { return; }
 
-	
+	if (bIgnoreFriend && URPGAuraBlueprintFunctionLibrary::IsFriendly(EffectCauser, OtherActor)) { return; }
+	if (!BIsHit){SpawnVfxAndSound();BIsHit = true;}
+
+
 	if (HasAuthority())
 	{
 		UAbilitySystemComponent* ActorAsc = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
 
-		if(ActorAsc)
+		if (ActorAsc)
 		{
 			// 应用GE到自身,这里的自身是OtherActor
 			ActorAsc->ApplyGameplayEffectSpecToTarget(*DamageEffectSpecHandle.Data, ActorAsc);
@@ -64,7 +64,6 @@ void ASlingshotProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedCompon
 
 void ASlingshotProjectile::Destroyed()
 {
-	
 	if (!BIsHit && !HasAuthority()) { SpawnVfxAndSound(); }
 
 	if (IsValid(LoopSoundAudioComponent.Get())) { LoopSoundAudioComponent->Stop(); }
