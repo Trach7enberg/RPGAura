@@ -92,6 +92,7 @@ struct FRPGAuraGameplayTags
 	FGameplayTag Attributes_Secondary_Resistance_Arcane;
 	FGameplayTag Attributes_Secondary_Resistance_Physical;
 
+	FGameplayTag InputTag;	// 父节点标签
 	FGameplayTag InputTag_LMB;
 	FGameplayTag InputTag_RMB;
 	FGameplayTag InputTag_1;
@@ -113,10 +114,17 @@ struct FRPGAuraGameplayTags
 	FGameplayTag CombatSocket_RightHand;	// 右手攻击动画标签
 
 	// 启动攻击能力的标签
+	FGameplayTag Abilities_Attack; // 父节点标签
 	FGameplayTag Abilities_Attack_Melee;	// 近战标签
 	FGameplayTag Abilities_Attack_Range;	// 远程标签
 	FGameplayTag Abilities_Attack_Spell;	// 萨满法术攻击标签
 	FGameplayTag Abilities_Attack_Summon;	// 萨满法术攻击标签
+
+	// 实际的技能标签
+	FGameplayTag Abilities_Attack_Spell_Fire_FireBolt; // 火球技能
+
+	// 能力冷却的标签
+	FGameplayTag Abilities_CoolDown_Fire_FireBolt; // 火球技能冷却时间标签
 	
 	// 简单的Actor标签
 	FName Player = "Player";

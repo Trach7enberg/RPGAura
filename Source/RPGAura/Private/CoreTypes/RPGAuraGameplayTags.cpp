@@ -78,6 +78,7 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 
 		// 输入动作标签
 		{
+			GameplayTags.InputTag = UGameplayTagsManager::Get().AddNativeGameplayTag("InputTag", FString(""));
 			GameplayTags.InputTag_LMB = UGameplayTagsManager::Get().AddNativeGameplayTag("InputTag.LMB", FString("左键"));
 			GameplayTags.InputTag_RMB = UGameplayTagsManager::Get().AddNativeGameplayTag("InputTag.RMB", FString("右键"));
 			GameplayTags.InputTag_1 = UGameplayTagsManager::Get().AddNativeGameplayTag("InputTag.1", FString("主键盘1"));
@@ -114,7 +115,10 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 				"Montage.CombatSocket.RightHand", FString(""));
 		}
 
+		// 启动攻击能力的标签
 		{
+			GameplayTags.Abilities_Attack = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Attack", FString());
 			GameplayTags.Abilities_Attack_Melee = UGameplayTagsManager::Get().AddNativeGameplayTag(
 				"Abilities.Attack.Melee", FString("启动近战攻击能力的标签"));
 			GameplayTags.Abilities_Attack_Range = UGameplayTagsManager::Get().AddNativeGameplayTag(
@@ -123,6 +127,15 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 				"Abilities.Attack.Spell", FString("启动萨满法术攻击能力的标签"));
 			GameplayTags.Abilities_Attack_Summon = UGameplayTagsManager::Get().AddNativeGameplayTag(
 				"Abilities.Attack.Summon", FString("召唤法术能力"));
+
+			GameplayTags.Abilities_Attack_Spell_Fire_FireBolt = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Attack.Spell.Fire.FireBolt", FString("火球法术技能"));
+		}
+
+		// 技能冷却标签
+		{
+			GameplayTags.Abilities_CoolDown_Fire_FireBolt = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.CoolDown.Fire.FireBolt", FString(""));
 		}
 	}
 
@@ -194,6 +207,7 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Attributes_Secondary_Resistance_Lightning);
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Attributes_Secondary_Resistance_Arcane);
 
+		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.InputTag);
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.InputTag_LMB);
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.InputTag_RMB);
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.InputTag_1);
@@ -210,10 +224,13 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.CombatSocket_LeftHand);
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.CombatSocket_RightHand);
 
+		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Abilities_Attack);
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Abilities_Attack_Melee);
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Abilities_Attack_Range);
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Abilities_Attack_Spell);
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Abilities_Attack_Summon);
+
+		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Abilities_Attack_Spell_Fire_FireBolt);
 	}
 
 	// 标签到枚举的映射
