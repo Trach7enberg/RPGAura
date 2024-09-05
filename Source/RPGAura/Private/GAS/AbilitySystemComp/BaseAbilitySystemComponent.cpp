@@ -5,7 +5,9 @@
 
 #include "CoreTypes/RPGAuraGameplayTags.h"
 #include "GAS/AttributeSet/BaseAttributeSet.h"
+#include "GAS/Data/TagToAbilityInfoAsset.h"
 #include "GAS/GameplayAbilities/BaseGameplayAbility.h"
+#include "SubSystems/RPGAuraGameInstanceSubsystem.h"
 
 DEFINE_LOG_CATEGORY_STATIC(UBaseAbilitySystemComponentLog, All, All);
 
@@ -15,22 +17,20 @@ void UBaseAbilitySystemComponent::BeginPlay() { Super::BeginPlay(); }
 
 void UBaseAbilitySystemComponent::InitSetting()
 {
-	
 	OnGameplayEffectAppliedDelegateToSelf.AddUObject(this, &UBaseAbilitySystemComponent::ClientOnGEAppliedToSelf);
 }
 
-void UBaseAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& Abilities, const float CharacterLevel)
+void UBaseAbilitySystemComponent::AddCharacterDefaultAbilities(const TArray<TSubclassOf<UGameplayAbility>>& Abilities,
+                                                               const float CharacterLevel)
 {
 	if (!Abilities.Num()) { return; }
-	for (const auto& AbilityClass : Abilities)
-	{
-		AddCharacterAbility(AbilityClass, CharacterLevel);
-	}
+	for (const auto& AbilityClass : Abilities) { AddCharacterDefaultAbility(AbilityClass, CharacterLevel); }
 }
 
-void UBaseAbilitySystemComponent::AddCharacterAbility(const TSubclassOf<UGameplayAbility>& AbilityClass, const float CharacterLevel)
+void UBaseAbilitySystemComponent::AddCharacterDefaultAbility(const TSubclassOf<UGameplayAbility>& AbilityClass,
+                                                             const float CharacterLevel)
 {
-	FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass,CharacterLevel);
+	FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass, CharacterLevel);
 	const auto MyAbility = Cast<UBaseGameplayAbility>(AbilitySpec.Ability);
 
 	if (!MyAbility)
@@ -40,7 +40,7 @@ void UBaseAbilitySystemComponent::AddCharacterAbility(const TSubclassOf<UGamepla
 	}
 
 	// 给能力添加标签
-	AbilitySpec.DynamicAbilityTags.AddTag(MyAbility->StartUpTag);
+	AbilitySpec.DynamicAbilityTags.AddTag(MyAbility->DefaultInputTag);
 	// GiveAbilityAndActivateOnce(AbilitySpec);
 	GiveAbility(AbilitySpec);
 }
@@ -118,24 +118,65 @@ void UBaseAbilitySystemComponent::TryActivateAbilityByTag(const FGameplayTag& Ta
 	}
 }
 
+FGameplayTag UBaseAbilitySystemComponent::GetTagFromAbilitySpec(const FGameplayAbilitySpec& AbilitySpec,
+                                                                const FGameplayTag& TargetTag)
+{
+	if (!AbilitySpec.Ability) { return FGameplayTag(); }
+
+	for (auto& Tag : AbilitySpec.Ability.Get()->AbilityTags) { if (Tag.MatchesTag(TargetTag)) { return Tag; } }
+
+	return FGameplayTag();
+}
+
+FGameplayTag UBaseAbilitySystemComponent::GetTagFromAbilitySpecDynamicTags(const FGameplayAbilitySpec& AbilitySpec,
+                                                                           const FGameplayTag& TargetTag)
+{
+	if (!AbilitySpec.Ability) { return FGameplayTag(); }
+
+
+	for (auto& Tag : AbilitySpec.DynamicAbilityTags) { if (Tag.MatchesTag(TargetTag)) { return Tag; } }
+
+	return FGameplayTag();
+}
+
+void UBaseAbilitySystemComponent::BroadCastDefaultActivatableAbilitiesInfo()
+{
+	const auto Gi = GetOwner()->GetGameInstance()->GetSubsystem<URPGAuraGameInstanceSubsystem>();
+	if (!Gi) { return; }
+
+	// 安全地遍历所有可激活的能力，当前范围将被锁定,如果有新增加或者被移除的能力不会改变GetActivatableAbilities的结果,完成当前范围之后才会改变
+	FScopedAbilityListLock AbilityListLock(*this);
+
+	for (const auto& AbilitySpec : GetActivatableAbilities())
+	{
+		FTagToAbilityInfo AbilityInfo = Gi->AbilityInfoAsset->FindAbilityInfoByAbilityTag(
+			GetTagFromAbilitySpec(AbilitySpec, FRPGAuraGameplayTags::Get().Abilities_Attack));
+
+		// 从能力里获得触发该能力对应的输入键(标签)
+		AbilityInfo.InputTag = GetTagFromAbilitySpecDynamicTags(AbilitySpec, FRPGAuraGameplayTags::Get().InputTag);
+		if (AbilityInfo.InfoDataIsValid()) { Gi->AbilityInfoDelegate.Broadcast(AbilityInfo); }
+	}
+}
+
+void UBaseAbilitySystemComponent::OnRep_ActivateAbilities()
+{
+	Super::OnRep_ActivateAbilities();
+	// TODO 只广播一次,而不是每次OnRep都广播
+	BroadCastDefaultActivatableAbilitiesInfo();
+}
+
 void UBaseAbilitySystemComponent::ClientOnGEAppliedToSelf_Implementation(
 	UAbilitySystemComponent* AbilitySystemComponent,
 	const FGameplayEffectSpec& GameplayEffectSpec,
 	FActiveGameplayEffectHandle ActiveEffectHandle)
 {
-	
 	// UE_LOG(UBaseAbilitySystemComponentLog, Warning, TEXT("[%s]In , GeSpec[%s]"),*GetOwner()->GetName(),*GameplayEffectSpec.Def.GetName());
-	
-	
+
+
 	FGameplayTagContainer Tags;
 
-	
+
 	GameplayEffectSpec.GetAllAssetTags(Tags);
 
-	if (Tags.Num())
-	{
-		
-		OnGetAssetTagsDelegate.Broadcast(Tags);
-	}
+	if (Tags.Num()) { OnGetAssetTagsDelegate.Broadcast(Tags); }
 }
-
