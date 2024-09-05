@@ -8,6 +8,7 @@
 #include "RPGAuraGameInstanceSubsystem.generated.h"
 
 
+class UTagToAbilityInfoAsset;
 class UPickupMessageAsset;
 class UCharacterClassInfo;
 /**
@@ -25,9 +26,17 @@ public:
 	UPROPERTY(BlueprintAssignable, Category="GAS | Attributes")
 	FOnAttributeChangedSignature OnAttributeChanged;
 
+	// 输入键与对应绑定的能力变化或初始化时的委托
+	UPROPERTY(BlueprintAssignable, Category="GAS | Abilities")
+	FAbilityInfoSignature AbilityInfoDelegate;
+
 	// 游戏角色职业信息资产
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="DataAssets|CharacterClassDefaults")
 	TObjectPtr<UCharacterClassInfo> CharacterClassInfo;
+
+	// 技能信息资产
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="DataAssets|AbilityInfos")
+	TObjectPtr<UTagToAbilityInfoAsset> AbilityInfoAsset;
 	
 	/// 根据角色职业和当前角色是玩家还是NPC来初始化角色身上的属性值
 	/// @param Asc 角色身上的AbilitySystemComponent

@@ -4,10 +4,11 @@
 #include "SubSystems/RPGAuraGameInstanceSubsystem.h"
 
 #include "AbilitySystemComponent.h"
-#include "CoreTypes/RPGAuraCoreTypes.h"
+
 #include "CoreTypes/RPGAuraGasCoreTypes.h"
 #include "GAS/Data/CharacterClassInfo.h"
 #include "GAS/Data/PickupMessageAsset.h"
+#include "GAS/Data/TagToAbilityInfoAsset.h"
 
 DEFINE_LOG_CATEGORY_STATIC(URPGAuraGameInstanceSubsystemLog, All, All);
 
@@ -21,11 +22,25 @@ void URPGAuraGameInstanceSubsystem::Initialize(FSubsystemCollectionBase& Collect
 
 
 	MessageWidgetDataAsset = LoadObject<UPickupMessageAsset>(
-		this,TEXT("/Script/RPGAura.PickupMessageAsset'/Game/Blueprints/GAS/Data/DataAssets/DA_PickupMessage.DA_PickupMessage'"));
-	
-	
-	if (!CharacterClassInfo) { UE_LOG(URPGAuraGameInstanceSubsystemLog, Error, TEXT("加载角色职业信息资产失败!!")); }
-	if (!MessageWidgetDataAsset) { UE_LOG(URPGAuraGameInstanceSubsystemLog, Error, TEXT("加载弹出消息数据资产表失败")); }
+		this,TEXT(
+			"/Script/RPGAura.PickupMessageAsset'/Game/Blueprints/GAS/Data/DataAssets/DA_PickupMessage.DA_PickupMessage'"));
+
+	AbilityInfoAsset = LoadObject<UTagToAbilityInfoAsset>(
+		this,TEXT(
+			"/Script/RPGAura.TagToAbilityInfoAsset'/Game/Blueprints/GAS/Data/DataAssets/DA_TagToAbilityInfo.DA_TagToAbilityInfo'"));
+
+	if (!CharacterClassInfo)
+	{
+		UE_LOG(URPGAuraGameInstanceSubsystemLog, Error, TEXT("[%s]加载角色职业信息资产失败!!"), *GetNameSafe(this));
+	}
+	if (!MessageWidgetDataAsset)
+	{
+		UE_LOG(URPGAuraGameInstanceSubsystemLog, Error, TEXT("[%s]加载弹出消息数据资产表失败"), *GetNameSafe(this));
+	}
+	if (!AbilityInfoAsset)
+	{
+		UE_LOG(URPGAuraGameInstanceSubsystemLog, Error, TEXT("[%s]加载技能信息消息数据资产表失败"), *GetNameSafe(this));
+	}
 }
 
 void URPGAuraGameInstanceSubsystem::InitializeDefaultAttributes(UAbilitySystemComponent* Asc,
@@ -47,12 +62,10 @@ void URPGAuraGameInstanceSubsystem::InitializeDefaultAttributes(UAbilitySystemCo
 		return;
 	}
 
-	
 
 	FGameplayEffectContextHandle GameplayEffectContextHandle = Asc->MakeEffectContext();
 	GameplayEffectContextHandle.AddSourceObject(Asc->GetAvatarActor());
 
-	
 
 	// 创建主、次、vital的GE Spec Handle
 	const auto PrimaryGeSpecHandle = Asc->MakeOutgoingSpec(
@@ -72,14 +85,11 @@ void URPGAuraGameInstanceSubsystem::InitializeDefaultAttributes(UAbilitySystemCo
 		CharacterClassInfo->VitalAttributes, Level, GameplayEffectContextHandle);
 
 
-	Asc->ApplyGameplayEffectSpecToTarget(*PrimaryGeSpecHandle.Data.Get(),Asc);
-	Asc->ApplyGameplayEffectSpecToTarget(*SecondaryGeSpecHandle.Data.Get(),Asc);
-	Asc->ApplyGameplayEffectSpecToTarget(*VitalGeSpecHandle.Data.Get(),Asc);
-	Asc->ApplyGameplayEffectSpecToTarget(*SecondaryResistanceGeSpecHandle.Data.Get(),Asc);
+	Asc->ApplyGameplayEffectSpecToTarget(*PrimaryGeSpecHandle.Data.Get(), Asc);
+	Asc->ApplyGameplayEffectSpecToTarget(*SecondaryGeSpecHandle.Data.Get(), Asc);
+	Asc->ApplyGameplayEffectSpecToTarget(*VitalGeSpecHandle.Data.Get(), Asc);
+	Asc->ApplyGameplayEffectSpecToTarget(*SecondaryResistanceGeSpecHandle.Data.Get(), Asc);
 
 	// TODO 未知BUG,单人模式时,敌人的次要属性部分无法初始化(比如格挡几率),服务器则正常初始化,但数值也有问题,因此只能多加一次调用,暂时查明为敌人GE蓝图类中的持续政策不是无限的原因 所以只能将政策改为infinite了
 	// Asc->ApplyGameplayEffectSpecToSelf(*SecondaryGeSpecHandle.Data.Get());
-	
 }
-
-
