@@ -12,10 +12,10 @@ class UBaseUserWidget;
 class UAttributeSet;
 class UAbilitySystemComponent;
 
-	/*-------------------------------
-		BaseWidgetController类使用
-		Widget控制器需要的基本参数的结构体
-	-------------------------------*/
+/*-------------------------------
+	BaseWidgetController类使用
+	Widget控制器需要的基本参数的结构体
+-------------------------------*/
 USTRUCT(BlueprintType)
 struct FWidgetControllerParams
 {
@@ -44,10 +44,10 @@ struct FWidgetControllerParams
 };
 
 
-	/*-----------------------------
-		UAttributeInfo类使用
-		用于广播GAS属性的结构体
-	-----------------------------*/
+/*-----------------------------
+	UAttributeInfo类使用
+	用于广播GAS属性的结构体
+-----------------------------*/
 USTRUCT(BlueprintType)
 struct FRPGAuraAttributeInfo
 {
@@ -67,10 +67,10 @@ struct FRPGAuraAttributeInfo
 };
 
 
-	/*-------------------------------------------------------
-		URPGAuraGameInstanceSubsystem使用
-		用于显示Message Widget的结构体,当角色拾取到什么东西时就会弹出
-	-------------------------------------------------------*/
+/*-------------------------------------------------------
+	URPGAuraGameInstanceSubsystem使用
+	用于显示Message Widget的结构体,当角色拾取到什么东西时就会弹出
+-------------------------------------------------------*/
 USTRUCT(BlueprintType)
 struct FUIWidgetRow : public FTableRowBase
 {
@@ -99,10 +99,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMessageWidgetRowSignature, const 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributeChangedSignature, const FRPGAuraAttributeInfo&, Info);
 
 
-	/*-----------------------------------------------------------------
-		UGlobeBarWidgetController使用
-		给生命值、魔力值属性变化时的委托,BIsIncreased 增加还是减少,增加则为true
-	-----------------------------------------------------------------*/
+/*-----------------------------------------------------------------
+	UGlobeBarWidgetController使用
+	给生命值、魔力值属性变化时的委托,BIsIncreased 增加还是减少,增加则为true
+-----------------------------------------------------------------*/
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnVitalAttributeChangedSignature,
                                              float,
                                              NewValue,
@@ -110,9 +110,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnVitalAttributeChangedSignature,
                                              /* BIsIncreased增加还是减少,增加则为true */
                                              BIsIncreased);
 
-	/*-------------------------------
-		FRPGAuraGameplayTags结构类使用
-	-------------------------------*/
+/*-------------------------------
+	FRPGAuraGameplayTags结构类使用
+-------------------------------*/
 UENUM(BlueprintType)
 enum class EGameplayTagType:uint8
 {
@@ -123,10 +123,10 @@ enum class EGameplayTagType:uint8
 };
 
 
-	/*------------------------------------
-		UCharacterClassInfo 数据资产使用
-		角色职业枚举类
-	------------------------------------*/
+/*------------------------------------
+	UCharacterClassInfo 数据资产使用
+	角色职业枚举类
+------------------------------------*/
 UENUM(BlueprintType)
 enum class ECharacterClass :uint8
 {
@@ -164,9 +164,9 @@ struct FCharacterClassDefaultInfo
 };
 
 
-	/*-----------------------
-		CombatInterface使用
-	-----------------------*/
+/*------------------------
+	CombatInterface使用
+------------------------*/
 /// 标签对应的角色攻击蒙太奇动画
 USTRUCT(BlueprintType)
 struct FMontageWithTag
@@ -176,13 +176,50 @@ struct FMontageWithTag
 	// 动画蒙太奇
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TObjectPtr<UAnimMontage> AnimMontage = nullptr;
-	
+
 	// 动画的标签
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	FGameplayTag MontageTag = FGameplayTag();
 
 	// 与当前结构体蒙太奇对应的声音
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	TObjectPtr<USoundBase> ImpactSound= nullptr;
+	TObjectPtr<USoundBase> ImpactSound = nullptr;
 };
 
+/*--------------------------------
+	UTagToAbilityInfoAsset使用
+--------------------------------*/
+
+/// 技能信息结构体 (能力标签)映射到对应(能力)的结构体
+USTRUCT(BlueprintType)
+struct FTagToAbilityInfo
+{
+	GENERATED_BODY()
+
+	// 与当前技能对应的标签
+	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
+	FGameplayTag AbilityTag = FGameplayTag();
+
+	// 与当前技能相对于的输入标签
+	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
+	FGameplayTag InputTag = FGameplayTag();
+
+	// 与当前技能对应的图标
+	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
+	TObjectPtr<const UTexture2D> AbilityIcon = nullptr;
+
+	// 与当前技能对应的材质
+	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
+	TObjectPtr<const UMaterialInterface> AbilityBackGroundMaterial = nullptr;
+
+	/// 成员数据是否有效
+	/// @return 
+	bool InfoDataIsValid() const
+	{
+		return AbilityTag.IsValid() && InputTag.IsValid() && AbilityIcon && AbilityBackGroundMaterial;
+	}
+};
+
+// 输入键与对应绑定的能力变化或初始化时的委托
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAbilityInfoSignature,
+                                            const FTagToAbilityInfo&, Info);
