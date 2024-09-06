@@ -200,6 +200,10 @@ struct FTagToAbilityInfo
 	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
 	FGameplayTag AbilityTag = FGameplayTag();
 
+	// 能力对应的冷却标签(如果能力使用了冷却的话)
+	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
+	FGameplayTag AbilityCoolDownTag = FGameplayTag();
+
 	// 与当前技能相对于的输入标签
 	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
 	FGameplayTag InputTag = FGameplayTag();
