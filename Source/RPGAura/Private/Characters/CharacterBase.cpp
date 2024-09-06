@@ -70,10 +70,10 @@ void ACharacterBase::AddCharacterAbilities()
 	if (!Asc) { return; }
 
 	// 赋予角色的通用能力
-	Asc->AddCharacterAbilities(GiSubSystem->CharacterClassInfo->CommonAbilities, GetCharacterLevel());
+	Asc->AddCharacterDefaultAbilities(GiSubSystem->CharacterClassInfo->CommonAbilities, GetCharacterLevel());
 
 	// 赋予相应角色的初始能力
-	Asc->AddCharacterAbilities(
+	Asc->AddCharacterDefaultAbilities(
 		GiSubSystem->CharacterClassInfo->FindClassDefaultInfo(CharacterClass).PrimaryStartUpAbilities,
 		GetCharacterLevel());
 }

@@ -57,7 +57,7 @@ void ABasePlayerController::BeginPlay()
 		// TODO 在监听模式下 无法直接获得GetLocalPlayer(),因此这里暂时简单的获取一个控制器并设置子系统
 		SubSystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(
 			UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetLocalPlayer());
-		if(!SubSystem)
+		if (!SubSystem)
 		{
 			UE_LOG(ABasePlayerControllerLog, Error, TEXT("[%s]的本地玩家子系统为null!"), *GetName());
 			return;
@@ -164,7 +164,7 @@ void ABasePlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 		}
 
 		break;
-	default:
+	default: GetAbilitySystemComponent()->AbilityInputTagPressed(InputTag);
 
 		break;
 	}
@@ -218,7 +218,7 @@ void ABasePlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 		}
 
 		break;
-	default:
+	default:GetAbilitySystemComponent()->AbilityInputTagHeld(InputTag);
 		break;
 	}
 }
