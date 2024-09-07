@@ -8,6 +8,7 @@
 #include "RPGAuraGameInstanceSubsystem.generated.h"
 
 
+class ULevelUpInfoAsset;
 class UTagToAbilityInfoAsset;
 class UPickupMessageAsset;
 class UCharacterClassInfo;
@@ -37,7 +38,17 @@ public:
 	// 技能信息资产
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="DataAssets|AbilityInfos")
 	TObjectPtr<UTagToAbilityInfoAsset> AbilityInfoAsset;
-	
+
+	// 玩家等级信息资产
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="DataAssets|Player")
+	TObjectPtr<ULevelUpInfoAsset> LevelUpInfoAsset;
+
+	// 消息数据资产,不同的Tag对应不同的消息
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="DataAsset")
+	TObjectPtr<UPickupMessageAsset> MessageWidgetDataAsset ;
+
+
+		
 	/// 根据角色职业和当前角色是玩家还是NPC来初始化角色身上的属性值
 	/// @param Asc 角色身上的AbilitySystemComponent
 	/// @param CharacterClass 角色职业类别
@@ -45,9 +56,11 @@ public:
 	/// @param BIsPlayer 是否是玩家
 	UFUNCTION(BlueprintCallable, Category="GAS")
 	void InitializeDefaultAttributes( UAbilitySystemComponent* Asc, ECharacterClass CharacterClass, float Level , bool BIsPlayer = false);
-	
 
-	// 消息数据资产,不同的Tag对应不同的消息
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="DataAsset")
-	TObjectPtr<UPickupMessageAsset> MessageWidgetDataAsset ;
+	/// 从CharacterClassInfo资产中根据角色职业和等级获取相应等级的Xp奖励
+	/// @param CharacterClass 
+	/// @param CharacterLevel 
+	/// @return 
+	UFUNCTION(BlueprintCallable,Category="Level")
+	int32 GetXpRewardFromClassAndLevel(ECharacterClass CharacterClass,int32 CharacterLevel) const;
 };
