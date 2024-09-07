@@ -5,7 +5,9 @@
 
 #include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
 #include "GAS/AttributeSet/BaseAttributeSet.h"
+#include "GAS/Data/LevelUpInfoAsset.h"
 #include "Net/UnrealNetwork.h"
+#include "SubSystems/RPGAuraGameInstanceSubsystem.h"
 
 ABasePlayerState::ABasePlayerState()
 {
@@ -20,14 +22,42 @@ ABasePlayerState::ABasePlayerState()
 	AttributeSet = CreateDefaultSubobject<UBaseAttributeSet>("AttributeSet");
 }
 
-UAbilitySystemComponent *ABasePlayerState::GetAbilitySystemComponent() const { return AbilitySystemComponent; }
+UAbilitySystemComponent* ABasePlayerState::GetAbilitySystemComponent() const { return AbilitySystemComponent; }
 
-void ABasePlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
+void ABasePlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ABasePlayerState, PlayerLevel);
+	DOREPLIFETIME(ABasePlayerState, PlayerXP);
 }
 
-void ABasePlayerState::OnRep_PlayerLevel(int32 OldValue)
+int32 ABasePlayerState::GetMaximumXPofLevel(const int32 TLevel)
 {
+	if(!GetGiSubSystem() ){return 0;}
+	return GetGiSubSystem()->LevelUpInfoAsset->GetMaximumXPofLevel(TLevel);
+}
+
+int32 ABasePlayerState::GetMinimumXpRequiredForLevel(const int32 TLevel) 
+{
+	if(!GetGiSubSystem() ){return 0;}
+	
+	return GetGiSubSystem()->LevelUpInfoAsset->GetMinimumXpRequiredForLevel(TLevel);
+}
+void ABasePlayerState::OnRep_PlayerLevel(int32 OldValue) { PlayerLevelChangeDelegate.Broadcast(PlayerLevel); }
+
+void ABasePlayerState::OnRep_PlayerXP(int32 OldValue)
+{
+	// 当PlayerXP被复制到客户端时,应该广播该值,以便HUD响应
+	PlayerXpChangeDelegate.Broadcast(PlayerXP);
+}
+
+URPGAuraGameInstanceSubsystem* ABasePlayerState::GetGiSubSystem()
+{
+	if (!MyGiSubSystem)
+	{
+		if (!GetGameInstance()) { return nullptr; }
+		MyGiSubSystem = Cast<URPGAuraGameInstanceSubsystem>(
+			GetGameInstance()->GetSubsystem<URPGAuraGameInstanceSubsystem>());
+	}
+	return MyGiSubSystem;
 }
