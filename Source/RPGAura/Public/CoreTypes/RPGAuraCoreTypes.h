@@ -4,8 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
+#include "ScalableFloat.h"
 #include "RPGAuraCoreTypes.generated.h"
 
+struct FScalableFloat;
 class UGameplayAbility;
 class UGameplayEffect;
 class UBaseUserWidget;
@@ -161,6 +163,10 @@ struct FCharacterClassDefaultInfo
 	// 角色的初始伤害抗性
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="DefaultAttributes|Secondary")
 	TSubclassOf<UGameplayEffect> SecondaryResistanceAttributes;
+
+	// 角色被击杀时奖励的经验
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="DefaultAttributes|Secondary")
+	FScalableFloat XPReward = FScalableFloat();
 };
 
 
@@ -227,3 +233,35 @@ struct FTagToAbilityInfo
 // 输入键与对应绑定的能力变化或初始化时的委托
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAbilityInfoSignature,
                                             const FTagToAbilityInfo&, Info);
+
+	/*-------------------------
+		ULevelUpInfoAsset使用
+	-------------------------*/
+/// 相应等级所对应的升级奖励结构体信息
+USTRUCT(BlueprintType)
+struct FLevelUpInfoStruct
+{
+	GENERATED_BODY()
+	
+	FLevelUpInfoStruct(){}
+	FLevelUpInfoStruct(const int32 NewLeveRequirement): LeveRequirement(NewLeveRequirement) {}
+
+	/// 当前等级所需要的经验值
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	int32 LeveRequirement = 0;
+
+	/// 升级到当前等级所奖励的可分配属性点数
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	int32 AttributedPointAward = 1;
+
+	/// 升级到当前等级所奖励的可分配的法术点数
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	int32 SpellPointAward = 1;
+};
+
+	/*-------------------------
+		ABasePlayerState使用
+	-------------------------*/
+
+/// 用于广播当人物的经验值改变时的委托
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnPlayerInfoChangeSignature, int32);
