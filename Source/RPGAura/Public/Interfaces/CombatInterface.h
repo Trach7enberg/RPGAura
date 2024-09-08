@@ -6,6 +6,7 @@
 #include "UObject/Interface.h"
 #include "CombatInterface.generated.h"
 
+enum class ECharacterClass : uint8;
 class UNiagaraSystem;
 struct FGameplayTag;
 struct FMontageWithTag;
@@ -28,6 +29,8 @@ public:
 	/// 获取当前角色的等级
 	/// @return 等级
 	virtual int32 GetCharacterLevel() = 0;
+
+	virtual ECharacterClass GetCharacterClass() = 0;
 
 	/// 获取武器攻击的socket位置(比如子弹、火球发射的位置)
 	/// @return
