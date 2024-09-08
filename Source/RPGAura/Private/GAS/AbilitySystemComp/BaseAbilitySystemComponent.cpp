@@ -21,29 +21,34 @@ void UBaseAbilitySystemComponent::InitSetting()
 }
 
 void UBaseAbilitySystemComponent::AddCharacterDefaultAbilities(const TArray<TSubclassOf<UGameplayAbility>>& Abilities,
-                                                               const float CharacterLevel)
+                                                               const float CharacterLevel,const bool ActiveWhenGive)
 {
 	if (!Abilities.Num()) { return; }
-	for (const auto& AbilityClass : Abilities) { AddCharacterDefaultAbility(AbilityClass, CharacterLevel); }
+	for (const auto& AbilityClass : Abilities) { AddCharacterDefaultAbility(AbilityClass, CharacterLevel,ActiveWhenGive); }
 }
 
 void UBaseAbilitySystemComponent::AddCharacterDefaultAbility(const TSubclassOf<UGameplayAbility>& AbilityClass,
-                                                             const float CharacterLevel)
+                                                             const float CharacterLevel, bool ActiveWhenGive) 
 {
 	FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass, CharacterLevel);
-	const auto MyAbility = Cast<UBaseGameplayAbility>(AbilitySpec.Ability);
 
-	if (!MyAbility)
+	if(ActiveWhenGive)
 	{
-		UE_LOG(UBaseAbilitySystemComponentLog, Warning, TEXT("%s 转换 失败"), *AbilitySpec.Ability.GetName())
-		return;
+		GiveAbilityAndActivateOnce(AbilitySpec);
+	}else
+	{
+		const auto MyAbility = Cast<UBaseGameplayAbility>(AbilitySpec.Ability);
+		if (!MyAbility)
+		{
+			UE_LOG(UBaseAbilitySystemComponentLog, Warning, TEXT("%s 转换 失败"), *AbilitySpec.Ability.GetName())
+			return;
+		}
+		// 给能力添加标签
+		AbilitySpec.DynamicAbilityTags.AddTag(MyAbility->DefaultInputTag);
+		GiveAbility(AbilitySpec);
 	}
-
-	// 给能力添加标签
-	AbilitySpec.DynamicAbilityTags.AddTag(MyAbility->DefaultInputTag);
-	// GiveAbilityAndActivateOnce(AbilitySpec);
-	GiveAbility(AbilitySpec);
 }
+
 
 void UBaseAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& InputTag)
 {
@@ -107,7 +112,7 @@ void UBaseAbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& In
 	}
 }
 
-void UBaseAbilitySystemComponent::TryActivateAbilityByTag(const FGameplayTag& Tag)
+void UBaseAbilitySystemComponent::TryActivateAbilityByDefaultInputTag(const FGameplayTag& Tag)
 {
 	if (!Tag.IsValid()) { return; }
 

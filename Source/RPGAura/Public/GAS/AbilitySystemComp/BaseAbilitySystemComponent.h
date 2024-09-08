@@ -33,12 +33,14 @@ public:
 	/// 给玩家添加默认能力,可能有多个
 	/// @param Abilities 能力列表
 	/// @param CharacterLevel
-	void AddCharacterDefaultAbilities(const TArray<TSubclassOf<UGameplayAbility>>& Abilities, float CharacterLevel = 1);
-
+	/// @param ActiveWhenGive
+	void AddCharacterDefaultAbilities(const TArray<TSubclassOf<UGameplayAbility>>& Abilities, float CharacterLevel = 1, const bool ActiveWhenGive = false);
+	
 	/// 给玩家添加一个默认能力(通过能力类上的StarUp标签来给予)
 	/// @param AbilityClass 能力类
 	/// @param CharacterLevel
-	void AddCharacterDefaultAbility(const TSubclassOf<UGameplayAbility>& AbilityClass, float CharacterLevel = 1);
+	/// @param ActiveWhenGive 给予能力时是否激活能力
+	void AddCharacterDefaultAbility(const TSubclassOf<UGameplayAbility>& AbilityClass, float CharacterLevel = 1, bool ActiveWhenGive = false) ;
 
 	/// 处理InputAction按下时的能力触发问题
 	/// @param InputTag 输入的游戏标签
@@ -52,9 +54,9 @@ public:
 	/// @param InputTag 输入的游戏标签
 	void AbilityInputTagReleased(const FGameplayTag& InputTag);
 
-	/// 根据游戏标签激活能力 (能力的StarUpTag要有和参数Tag一样的标签才会激活)
+	/// 根据游戏标签激活能力 (能力的DefaultInputTag要有和参数Tag一样的标签才会激活)
 	/// @param Tag 标签
-	void TryActivateAbilityByTag(const FGameplayTag& Tag);
+	void TryActivateAbilityByDefaultInputTag(const FGameplayTag& Tag);
 
 	/// 从AbilitySpec中获取包含有TargetTag标签的标签
 	/// 获取到的结果是能力类中AbilityTags容器里的标签
