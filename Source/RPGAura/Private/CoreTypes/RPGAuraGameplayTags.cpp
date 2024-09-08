@@ -76,6 +76,15 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 				"Attributes.Secondary.Resistance.Arcane");
 		}
 
+		// 元属性
+		{
+			GameplayTags.Attributes_Meta_InComingDamage = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Attributes.Meta.InComingDamage");
+
+			GameplayTags.Attributes_Meta_InComingXP = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Attributes.Meta.InComingXP");
+		}
+
 		// 输入动作标签
 		{
 			GameplayTags.InputTag = UGameplayTagsManager::Get().AddNativeGameplayTag("InputTag", FString(""));

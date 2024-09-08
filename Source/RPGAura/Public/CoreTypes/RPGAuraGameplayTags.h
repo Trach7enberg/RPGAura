@@ -92,6 +92,10 @@ struct FRPGAuraGameplayTags
 	FGameplayTag Attributes_Secondary_Resistance_Arcane;
 	FGameplayTag Attributes_Secondary_Resistance_Physical;
 
+	// 元属性
+	FGameplayTag Attributes_Meta_InComingDamage;
+	FGameplayTag Attributes_Meta_InComingXP;
+
 	FGameplayTag InputTag;	// 父节点标签
 	FGameplayTag InputTag_LMB;
 	FGameplayTag InputTag_RMB;
