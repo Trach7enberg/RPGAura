@@ -167,6 +167,10 @@ struct FCharacterClassDefaultInfo
 	// 角色被击杀时奖励的经验
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="DefaultAttributes|Secondary")
 	FScalableFloat XPReward = FScalableFloat();
+
+	// 角色的初始被动能力
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="DefaultAttributes|StartUpPassive")
+	TArray<TSubclassOf<UGameplayAbility>> StartUpPassiveAbilities;
 };
 
 
