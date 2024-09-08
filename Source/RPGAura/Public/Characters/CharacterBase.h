@@ -54,7 +54,7 @@ public:
 
 	// ~ ICombatInterface
 	virtual int32 GetCharacterLevel() override { return 0; };
-
+	virtual ECharacterClass GetCharacterClass() override;
 	
 	virtual FVector GetCombatSocketLocation(const FGameplayTag& GameplayTag) override;
 	virtual void UpdateCharacterFacingTarget(const FVector& TargetLoc) override;

@@ -72,10 +72,16 @@ void ACharacterBase::AddCharacterAbilities()
 	// 赋予角色的通用能力
 	Asc->AddCharacterDefaultAbilities(GiSubSystem->CharacterClassInfo->CommonAbilities, GetCharacterLevel());
 
+	const FCharacterClassDefaultInfo CcdI = GiSubSystem->CharacterClassInfo->FindClassDefaultInfo(CharacterClass);
 	// 赋予相应角色的初始能力
 	Asc->AddCharacterDefaultAbilities(
-		GiSubSystem->CharacterClassInfo->FindClassDefaultInfo(CharacterClass).PrimaryStartUpAbilities,
+		CcdI.PrimaryStartUpAbilities,
 		GetCharacterLevel());
+
+	// 赋予并激活角色相应的初始被动能力
+	Asc->AddCharacterDefaultAbilities(
+		CcdI.StartUpPassiveAbilities,
+		GetCharacterLevel(), true);
 }
 
 void ACharacterBase::InitAttributes(const TSubclassOf<UGameplayEffect> AttributesGameplayEffect,
@@ -128,6 +134,11 @@ bool ACharacterBase::CanHighLight()
 
 UNiagaraSystem* ACharacterBase::GetBloodEffect() { return BloodEffect; }
 void ACharacterBase::StartSummonAnim() { StartSummonTimeline(); }
+
+ECharacterClass ACharacterBase::GetCharacterClass()
+{
+	return CharacterClass;
+}
 
 FVector ACharacterBase::GetCombatSocketLocation(const FGameplayTag& GameplayTag)
 {
@@ -310,13 +321,8 @@ void ACharacterBase::StartSummonTimeline() const
 	SummonTimelineComponent->PlayFromStart();
 }
 
-void ACharacterBase::SummonTimelineUpdateFunc(float Output)
-{
-	GetMesh()->SetRelativeScale3D(FVector(Output));
-}
-void ACharacterBase::SummonTimelineFinishedFunc()
-{
-}
+void ACharacterBase::SummonTimelineUpdateFunc(float Output) { GetMesh()->SetRelativeScale3D(FVector(Output)); }
+void ACharacterBase::SummonTimelineFinishedFunc() {}
 
 void ACharacterBase::Die()
 {
