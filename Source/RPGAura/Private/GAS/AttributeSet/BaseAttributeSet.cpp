@@ -3,6 +3,7 @@
 
 #include "GAS/AttributeSet/BaseAttributeSet.h"
 
+#include "SubSystems/RPGAuraGameInstanceSubsystem.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "GameplayEffectExtension.h"
 #include "CoreTypes/RPGAuraGameplayTags.h"
@@ -263,6 +264,31 @@ void UBaseAttributeSet::UpdateCurrentGeProp(const FGameplayEffectModCallbackData
 	else { EffectProp.SourceAvatar = Cast<AActor>(Context->GetSourceObject()); }
 }
 
+bool UBaseAttributeSet::SendXpGamePlayEvent( AActor* Sufferer, AActor* Instigator)
+{
+	const auto SufferCombatInt = Cast<ICombatInterface>(Sufferer);
+	if (!SufferCombatInt) { return false; }
+
+	const auto SufferLevel = SufferCombatInt->GetCharacterLevel();
+	const auto SufferCharacterClass = SufferCombatInt->GetCharacterClass();
+
+	if (!GetGiSubSystem())
+	{
+		UE_LOG(UBaseAttributeSetLog, Error, TEXT("[%s]致命错误!"), *GetNameSafe(this));
+		return false;
+	}
+	const auto XpReward = GetGiSubSystem()->GetXpRewardFromClassAndLevel(SufferCharacterClass, SufferLevel);
+
+	FGameplayEventData PayLoad;
+	PayLoad.EventTag = FRPGAuraGameplayTags::Get().Attributes_Meta_InComingXP;
+	PayLoad.EventMagnitude = XpReward;
+
+	// 发送GameplayEvent给造成伤害的Actor,这样玩家就能接受到Xp(玩家身上有一个被动能力一直运行着监听事件)
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(
+		Instigator, FRPGAuraGameplayTags::Get().Attributes_Meta_InComingXP, PayLoad);
+	return true;
+}
+
 void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
 	Super::PostGameplayEffectExecute(Data);
@@ -293,7 +319,7 @@ void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 		const auto IsBlockHit = UGameAbilitySystemGlobals::IsBlockedHit(Data.EffectSpec.GetContext());
 		const auto IsCriticalHit = UGameAbilitySystemGlobals::IsCriticalHit(Data.EffectSpec.GetContext());
 
-		CbInterface->ShowDamageNumber(TempValue,IsBlockHit,IsCriticalHit);
+		CbInterface->ShowDamageNumber(TempValue, IsBlockHit, IsCriticalHit);
 
 		// 是否是致命伤
 		const bool BIsFatal = TempHealth <= 0.f;
@@ -306,12 +332,25 @@ void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 				FGameplayTagContainer(FRPGAuraGameplayTags::Get().Abilities_Effects_HitReact));
 			// UE_LOG(UBaseAttributeSetLog, Error, TEXT("是否暴击[%d] 是否格挡[%d]"), IsCriticalHit, IsBlockHit);
 		}
-		else { if (CbInterface) { CbInterface->Die(); } }
+		else
+		{
+			if (CbInterface)
+			{
+				CbInterface->Die();
+				SendXpGamePlayEvent(Sufferer,Instigator);
+			}
+		}
 	}
 	if (Data.EvaluatedData.Attribute == GetBlockChanceAttribute())
 	{
 		// UE_LOG(UBaseAttributeSetLog, Error, TEXT("[%s , %s] Current:%.1f , Final:%.1f"), *GetOwningActor()->GetName(),
 		//        *Data.EvaluatedData.Attribute.GetName(), GetBlockChance(), Data.EvaluatedData.Attribute.GetNumericValue(this));
+	}
+
+	if (Data.EvaluatedData.Attribute == GetIncomingXPAttribute())
+	{
+		UE_LOG(UBaseAttributeSetLog, Error, TEXT("[%s]IncomigXP , %.1f"), *GetOwningActor()->GetName(),
+		       Data.EvaluatedData.Attribute.GetNumericValue(this));
 	}
 }
 
@@ -324,4 +363,17 @@ UBaseAbilitySystemComponent* UBaseAttributeSet::GetMyCurrentAbilitySystem()
 			GetOwningAbilitySystemComponent());
 	}
 	return CurrentMyAbilitySystemComponent;
+}
+
+URPGAuraGameInstanceSubsystem* UBaseAttributeSet::GetGiSubSystem()
+{
+	if (!GiSubSystem)
+	{
+		if (!GetOwningActor()->GetGameInstance()) { return nullptr; }
+
+		GiSubSystem = Cast<URPGAuraGameInstanceSubsystem>(
+			GetOwningActor()->GetGameInstance()->GetSubsystem<URPGAuraGameInstanceSubsystem>());
+		if (!GiSubSystem) { return nullptr; }
+	}
+	return GiSubSystem;
 }

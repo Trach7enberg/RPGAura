@@ -14,6 +14,7 @@
  		GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName) \
  		GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
 
+class URPGAuraGameInstanceSubsystem;
 class UBaseAbilitySystemComponent;
 // 不再使用下面这个委托,已经创建一个函数指针来代替了
 DECLARE_DELEGATE_RetVal(FGameplayAttribute, FAttributeSignature);
@@ -182,6 +183,10 @@ public:
 	FGameplayAttributeData InComingDamage;
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, InComingDamage);
 
+	UPROPERTY(BlueprintReadOnly, Category="Meta Attributes")
+	FGameplayAttributeData IncomingXP;
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, IncomingXP);
+
 	// Primary OnRep
 	UFUNCTION()
 	void OnRep_Strength(const FGameplayAttributeData& OldValue) const;
@@ -258,6 +263,7 @@ public:
 	/// @param Data
 	/// @param EffectProp 要设置的FEffectProp结构
 	void UpdateCurrentGeProp(const FGameplayEffectModCallbackData& Data, FEffectProp& EffectProp);
+	
 
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual void PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const override;
@@ -275,4 +281,11 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UBaseAbilitySystemComponent> CurrentMyAbilitySystemComponent;
+
+	UPROPERTY()
+	TObjectPtr<URPGAuraGameInstanceSubsystem> GiSubSystem;
+
+	URPGAuraGameInstanceSubsystem* GetGiSubSystem();
+
+	bool SendXpGamePlayEvent( AActor* Sufferer, AActor* Instigator);
 };
