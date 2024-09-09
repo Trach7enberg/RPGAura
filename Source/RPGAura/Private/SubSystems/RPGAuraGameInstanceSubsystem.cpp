@@ -106,14 +106,46 @@ void URPGAuraGameInstanceSubsystem::InitializeDefaultAttributes(UAbilitySystemCo
 int32 URPGAuraGameInstanceSubsystem::
 GetXpRewardFromClassAndLevel(const ECharacterClass CharacterClass, const int32 CharacterLevel) const
 {
-	if (!CharacterClassInfo->CharacterClassInformation.Num())
+	if (!CharacterClassInfo->CharacterClassInformation.Num() )
 	{
 		UE_LOG(URPGAuraGameInstanceSubsystemLog, Error, TEXT("数据资产为null!!"));
 		return 0;
 	}
-
+	
 	const auto ScalableFloat = CharacterClassInfo->FindClassDefaultInfo(CharacterClass).XPReward;
 
 	// 截取浮点数为int32
 	return StaticCast<int32>(ScalableFloat.GetValueAtLevel(CharacterLevel));
+}
+
+int32 URPGAuraGameInstanceSubsystem::GetLevelCorrespondingToXP(const ECharacterClass CharacterClass, const int32 CharacterXP,
+                                                               const int32 CharacterLevel) const
+{
+	if (!LevelUpInfoAsset ||!LevelUpInfoAsset->LevelUpInfos.Num())
+	{
+		UE_LOG(URPGAuraGameInstanceSubsystemLog, Error, TEXT("数据资产为null!!"));
+		return CharacterLevel;
+	}
+
+	return LevelUpInfoAsset->GetLevelCorrespondingToXP(CharacterClass,CharacterXP,CharacterLevel);
+}
+
+int32 URPGAuraGameInstanceSubsystem::GetCharacterDefaultMaxLevel()
+{
+	if (!LevelUpInfoAsset || !LevelUpInfoAsset->LevelUpInfos.Num())
+	{
+		UE_LOG(URPGAuraGameInstanceSubsystemLog, Error, TEXT("数据资产为null!!"));
+		return 0;
+	}
+	return LevelUpInfoAsset->LevelUpInfos.Num() - 1;
+
+}
+int32 URPGAuraGameInstanceSubsystem::GetCharacterDefaultMaxXP()
+{
+	if (!LevelUpInfoAsset || !LevelUpInfoAsset->LevelUpInfos.Num())
+	{
+		UE_LOG(URPGAuraGameInstanceSubsystemLog, Error, TEXT("数据资产为null!!"));
+		return 0;
+	}
+	return LevelUpInfoAsset->LevelUpInfos[LevelUpInfoAsset->LevelUpInfos.Num() - 1].LeveRequirement;
 }

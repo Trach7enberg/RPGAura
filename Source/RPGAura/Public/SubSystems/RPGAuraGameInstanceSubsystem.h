@@ -63,4 +63,22 @@ public:
 	/// @return 
 	UFUNCTION(BlueprintCallable,Category="Level")
 	int32 GetXpRewardFromClassAndLevel(ECharacterClass CharacterClass,int32 CharacterLevel) const;
+
+	/// 根据给定的XP值返回从数据资产中找到所对应的等级
+	/// @param CharacterClass 
+	/// @param CharacterXP
+	/// @param CharacterLevel
+	/// @return 
+	UFUNCTION(BlueprintCallable,Category="Level")
+	int32 GetLevelCorrespondingToXP(ECharacterClass CharacterClass,int32 CharacterXP,int32 CharacterLevel) const;
+
+	/// 获取给定职业能达到的最大角色等级
+	/// @return 
+	UFUNCTION(BlueprintCallable,Category="Level")
+	int32 GetCharacterDefaultMaxLevel();
+
+	/// 获取给定职业能达到的最大角色经验
+	/// @return 
+	UFUNCTION(BlueprintCallable,Category="Level")
+	int32 GetCharacterDefaultMaxXP();
 };
