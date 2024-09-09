@@ -287,5 +287,10 @@ private:
 
 	URPGAuraGameInstanceSubsystem* GetGiSubSystem();
 
+	/// 发送经验事件给Instigator能力类中的的WaitForGameplayEvent
+	/// (玩家拥有被动能力,该能力一直在监听等待一个游戏事件,响应之后会对自身应用一个修改IncomingXP的GE)
+	/// @param Sufferer 
+	/// @param Instigator 玩家
+	/// @return 
 	bool SendXpGamePlayEvent( AActor* Sufferer, AActor* Instigator);
 };

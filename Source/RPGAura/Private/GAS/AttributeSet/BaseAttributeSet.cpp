@@ -11,6 +11,7 @@
 #include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
 #include "GAS/Globals/GameAbilitySystemGlobals.h"
 #include "Interfaces/CombatInterface.h"
+#include "Interfaces/PlayerInterface.h"
 #include "Net/UnrealNetwork.h"
 
 DEFINE_LOG_CATEGORY_STATIC(UBaseAttributeSetLog, All, All);
@@ -264,31 +265,6 @@ void UBaseAttributeSet::UpdateCurrentGeProp(const FGameplayEffectModCallbackData
 	else { EffectProp.SourceAvatar = Cast<AActor>(Context->GetSourceObject()); }
 }
 
-bool UBaseAttributeSet::SendXpGamePlayEvent( AActor* Sufferer, AActor* Instigator)
-{
-	const auto SufferCombatInt = Cast<ICombatInterface>(Sufferer);
-	if (!SufferCombatInt) { return false; }
-
-	const auto SufferLevel = SufferCombatInt->GetCharacterLevel();
-	const auto SufferCharacterClass = SufferCombatInt->GetCharacterClass();
-
-	if (!GetGiSubSystem())
-	{
-		UE_LOG(UBaseAttributeSetLog, Error, TEXT("[%s]致命错误!"), *GetNameSafe(this));
-		return false;
-	}
-	const auto XpReward = GetGiSubSystem()->GetXpRewardFromClassAndLevel(SufferCharacterClass, SufferLevel);
-
-	FGameplayEventData PayLoad;
-	PayLoad.EventTag = FRPGAuraGameplayTags::Get().Attributes_Meta_InComingXP;
-	PayLoad.EventMagnitude = XpReward;
-
-	// 发送GameplayEvent给造成伤害的Actor,这样玩家就能接受到Xp(玩家身上有一个被动能力一直运行着监听事件)
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(
-		Instigator, FRPGAuraGameplayTags::Get().Attributes_Meta_InComingXP, PayLoad);
-	return true;
-}
-
 void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
 	Super::PostGameplayEffectExecute(Data);
@@ -337,7 +313,8 @@ void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 			if (CbInterface)
 			{
 				CbInterface->Die();
-				SendXpGamePlayEvent(Sufferer,Instigator);
+				// 发送经验游戏事件
+				SendXpGamePlayEvent(Sufferer, Instigator);
 			}
 		}
 	}
@@ -351,6 +328,26 @@ void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 	{
 		UE_LOG(UBaseAttributeSetLog, Error, TEXT("[%s]IncomigXP , %.1f"), *GetOwningActor()->GetName(),
 		       Data.EvaluatedData.Attribute.GetNumericValue(this));
+		
+		if (!GetGiSubSystem()) { return; }
+		const auto PlayerInterface = Cast<IPlayerInterface>(Instigator);
+		const auto PlayerCombInterface = Cast<ICombatInterface>(Instigator);
+		if (!PlayerInterface || !PlayerCombInterface) { return; }
+		
+		const auto OldLevel = PlayerCombInterface->GetCharacterLevel();
+		const auto TempXP = GetIncomingXP();
+		SetIncomingXP(0);
+
+		// 给玩家添加经验,会触发相应的回调函数
+		PlayerInterface->AddToPlayerXP(TempXP);
+		if(PlayerInterface->CanBeLevelUp())
+		{
+			//TODO 待添加属性、技能点数奖励
+			PlayerInterface->LevelUp();
+			SetCurrentHealth(GetMaxHealth());
+			SetCurrentMana(GetMaxMana());
+			UE_LOG(UBaseAttributeSetLog,Error,TEXT("LevelUp! [%d] >> [%d]"),OldLevel,PlayerCombInterface->GetCharacterLevel());
+		}
 	}
 }
 
@@ -376,4 +373,29 @@ URPGAuraGameInstanceSubsystem* UBaseAttributeSet::GetGiSubSystem()
 		if (!GiSubSystem) { return nullptr; }
 	}
 	return GiSubSystem;
+}
+
+bool UBaseAttributeSet::SendXpGamePlayEvent(AActor* Sufferer, AActor* Instigator)
+{
+	const auto SufferCombatInt = Cast<ICombatInterface>(Sufferer);
+	if (!SufferCombatInt) { return false; }
+
+	const auto SufferLevel = SufferCombatInt->GetCharacterLevel();
+	const auto SufferCharacterClass = SufferCombatInt->GetCharacterClass();
+
+	if (!GetGiSubSystem())
+	{
+		UE_LOG(UBaseAttributeSetLog, Error, TEXT("[%s]致命错误!"), *GetNameSafe(this));
+		return false;
+	}
+	const auto XpReward = GetGiSubSystem()->GetXpRewardFromClassAndLevel(SufferCharacterClass, SufferLevel);
+
+	FGameplayEventData PayLoad;
+	PayLoad.EventTag = FRPGAuraGameplayTags::Get().Attributes_Meta_InComingXP;
+	PayLoad.EventMagnitude = XpReward;
+
+	// 发送GameplayEvent给造成伤害的Actor,这样玩家就能接受到Xp(玩家身上有一个被动能力一直运行着监听事件)
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(
+		Instigator, FRPGAuraGameplayTags::Get().Attributes_Meta_InComingXP, PayLoad);
+	return true;
 }
