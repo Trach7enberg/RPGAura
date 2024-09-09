@@ -6,6 +6,7 @@
 #include "AbilitySystemInterface.h"
 #include "CoreTypes/RPGAuraCoreTypes.h"
 #include "GameFramework/PlayerState.h"
+#include "SubSystems/RPGAuraGameInstanceSubsystem.h"
 #include "BasePlayerState.generated.h"
 
 class URPGAuraGameInstanceSubsystem;
@@ -59,7 +60,10 @@ public:
 
 	FORCEINLINE void AddToPlayerXP(const int32 AddedXp)
 	{
-		PlayerXP += AddedXp;
+		if (!GetGiSubSystem()) { return; }
+		const auto MaxXp = GetGiSubSystem()->GetCharacterDefaultMaxXP();
+		if (GetPlayerCurrentXP() == MaxXp) { return; }
+		PlayerXP = FMath::Clamp(PlayerXP + AddedXp, 0, MaxXp);
 		PlayerXpChangeDelegate.Broadcast(PlayerXP);
 	}
 
@@ -69,16 +73,26 @@ public:
 		PlayerLevelChangeDelegate.Broadcast(PlayerLevel);
 	}
 
+
 	/// 获取给定等级能到达的最大经验值数
 	/// @param TLevel
 	/// @return 
 	int32 GetMaximumXPofLevel(int32 TLevel);
-	
+
 	/// 获取升级到给定的等级所需要的最小经验数
 	/// @param TLevel 
 	/// @return 
-	int32 GetMinimumXpRequiredForLevel(int32 TLevel) ;
-	
+	int32 GetMinimumXpRequiredForLevel(int32 TLevel);
+
+	/// 获取角色升级到对应等级的的属性点数
+	/// @param CharacterLevel 
+	/// @return 
+	int32 GetAttributePointsReward(int32 CharacterLevel);
+
+	/// 获取角色升级到对应等级的的技能点数奖励
+	/// @param CharacterLevel 
+	/// @return 
+	int32 GetSpellPointsReward(int32 CharacterLevel);
 
 protected:
 	/// GAS的能力组件
@@ -100,7 +114,7 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<URPGAuraGameInstanceSubsystem> MyGiSubSystem = nullptr;
-	
+
 	UFUNCTION()
 	void OnRep_PlayerLevel(int32 OldValue);
 

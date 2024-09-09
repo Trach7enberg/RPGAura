@@ -33,16 +33,33 @@ void ABasePlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 int32 ABasePlayerState::GetMaximumXPofLevel(const int32 TLevel)
 {
-	if(!GetGiSubSystem() ){return 0;}
+	if (!GetGiSubSystem() || !GetGiSubSystem()->LevelUpInfoAsset) { return 0; }
 	return GetGiSubSystem()->LevelUpInfoAsset->GetMaximumXPofLevel(TLevel);
 }
 
-int32 ABasePlayerState::GetMinimumXpRequiredForLevel(const int32 TLevel) 
+int32 ABasePlayerState::GetMinimumXpRequiredForLevel(const int32 TLevel)
 {
-	if(!GetGiSubSystem() ){return 0;}
-	
+	if (!GetGiSubSystem() || !GetGiSubSystem()->LevelUpInfoAsset) { return 0; }
+
 	return GetGiSubSystem()->LevelUpInfoAsset->GetMinimumXpRequiredForLevel(TLevel);
 }
+
+int32 ABasePlayerState::GetAttributePointsReward(const int32 CharacterLevel)
+{
+	if (!GetGiSubSystem() || !GetGiSubSystem()->LevelUpInfoAsset || CharacterLevel >= GetGiSubSystem()->LevelUpInfoAsset
+		->LevelUpInfos.Num()) { return 0; }
+
+	return GetGiSubSystem()->LevelUpInfoAsset->LevelUpInfos[CharacterLevel - 1].AttributedPointAward;
+}
+
+int32 ABasePlayerState::GetSpellPointsReward(const int32 CharacterLevel)
+{
+	if (!GetGiSubSystem() || !GetGiSubSystem()->LevelUpInfoAsset || CharacterLevel >= GetGiSubSystem()->LevelUpInfoAsset
+		->LevelUpInfos.Num()) { return 0; }
+
+	return GetGiSubSystem()->LevelUpInfoAsset->LevelUpInfos[CharacterLevel - 1].SpellPointAward;
+}
+
 void ABasePlayerState::OnRep_PlayerLevel(int32 OldValue) { PlayerLevelChangeDelegate.Broadcast(PlayerLevel); }
 
 void ABasePlayerState::OnRep_PlayerXP(int32 OldValue)
