@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Characters/CharacterBase.h"
+#include "Interfaces/PlayerInterface.h"
 #include "AuraCharacter.generated.h"
 
 class UMotionWarpingComponent;
@@ -15,7 +16,7 @@ class UCameraComponent;
  * Aura人物类
  */
 UCLASS()
-class RPGAURA_API AAuraCharacter : public ACharacterBase
+class RPGAURA_API AAuraCharacter : public ACharacterBase ,public IPlayerInterface
 {
 	GENERATED_BODY()
 
@@ -38,6 +39,18 @@ public:
 	virtual int32 GetCharacterLevel() override;
 	
 	// ~ ICombatInterface
+
+	// ~ IPlayerInterface
+	virtual void AddToPlayerXP(const int32 AddedXp) override;
+	virtual int32 GetPlayerCurrentXP() override;
+	virtual bool CanBeLevelUp() override;
+	virtual void LevelUp() override;
+	virtual int32 GetAttributePointsReward(int32 InCharacterLevel);
+	virtual int32 GetSpellPointsReward(int32 InCharacterLevel) ;
+	virtual void AddToSpellPoints(int32 Points) ;
+	virtual void AddToAttributesPoints(int32 Points);
+	// ~ IPlayerInterface
+	
 
 protected:
 	virtual void BeginPlay() override;

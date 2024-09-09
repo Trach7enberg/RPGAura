@@ -10,18 +10,18 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "PlayerStates/BasePlayerState.h"
+#include "SubSystems/RPGAuraGameInstanceSubsystem.h"
 #include "UI/HUD/BaseHUD.h"
 
 DEFINE_LOG_CATEGORY_STATIC(AAuraCharacterLog, All, All);
 
 AAuraCharacter::AAuraCharacter()
 {
-
 	Tags.Add(FRPGAuraGameplayTags::Get().Player);
-	
+
 	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>("SpringArm");
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>("Camera");
-	
+
 
 	SpringArmComponent->SetupAttachment(GetRootComponent());
 	CameraComponent->SetupAttachment(SpringArmComponent);
@@ -77,7 +77,7 @@ void AAuraCharacter::InitAbilityActorInfo()
 	MyAsc->InitAbilityActorInfo(MyPlayerState, this);
 	MyAsc->InitSetting();
 	InitAllAttributes(true);
-	
+
 	RegisterGameplayTagEvent();
 
 	AddCharacterAbilities();
@@ -110,6 +110,52 @@ int32 AAuraCharacter::GetCharacterLevel()
 	return CharacterLevel;
 }
 
+void AAuraCharacter::AddToPlayerXP(const int32 AddedXp)
+{
+	if (!GetPlayerState()) { return; }
+	const auto Ps = Cast<ABasePlayerState>(GetPlayerState());
+	if (!Ps) { return; }
+
+	Ps->AddToPlayerXP(AddedXp);
+}
+
+int32 AAuraCharacter::GetPlayerCurrentXP()
+{
+	if (!GetMyPlayerState()) { return 0; }
+	return GetMyPlayerState()->GetPlayerCurrentXP();
+}
+
+bool AAuraCharacter::CanBeLevelUp()
+{
+	if (!GetMyPlayerState() || !GetMyGiSubSystem()) { return false; }
+
+	const auto NextLevelMinimumXpRequired = GetMyPlayerState()->GetMinimumXpRequiredForLevel(GetCharacterLevel() + 1);
+
+	return (NextLevelMinimumXpRequired != 0 && GetPlayerCurrentXP() >= NextLevelMinimumXpRequired);
+}
+
+void AAuraCharacter::LevelUp()
+{
+	if (!GetMyPlayerState() || !GetMyGiSubSystem()) { return; }
+	const auto NextLevel = GetMyGiSubSystem()->GetLevelCorrespondingToXP(
+		GetCharacterClass(), GetPlayerCurrentXP(), GetCharacterLevel());
+
+	if (NextLevel != GetCharacterLevel()) { GetMyPlayerState()->SetPlayerLevel(NextLevel); }
+}
+
+int32 AAuraCharacter::GetAttributePointsReward(const int32 InCharacterLevel)
+{
+	if (!GetMyPlayerState()) { return 0; }
+	return GetMyPlayerState()->GetAttributePointsReward(InCharacterLevel);
+}
+
+int32 AAuraCharacter::GetSpellPointsReward(const int32 InCharacterLevel)
+{
+	if (!GetMyPlayerState()) { return 0; }
+	return GetMyPlayerState()->GetSpellPointsReward(InCharacterLevel);
+}
+void AAuraCharacter::AddToSpellPoints(int32 Points) {}
+void AAuraCharacter::AddToAttributesPoints(int32 Points) {}
 
 
 void AAuraCharacter::PossessedBy(AController* NewController)
@@ -119,8 +165,6 @@ void AAuraCharacter::PossessedBy(AController* NewController)
 	InitAbilityActorInfo();
 
 	InitHUD();
-
-	
 }
 
 void AAuraCharacter::OnRep_PlayerState()
