@@ -14,6 +14,7 @@
 #include "GAS/Data/CharacterClassInfo.h"
 #include "Interfaces/HighLightInterface.h"
 #include "Kismet/GameplayStatics.h"
+#include "PlayerStates/BasePlayerState.h"
 #include "SubSystems/RPGAuraGameInstanceSubsystem.h"
 #include "Subsystems/SubsystemBlueprintLibrary.h"
 #include "UI/WidgetComponents/DamageTextComponent.h"
@@ -122,6 +123,28 @@ void ACharacterBase::RegisterGameplayTagEvent()
 	GetAbilitySystemComponent()->RegisterGameplayTagEvent(FRPGAuraGameplayTags::Get().Abilities_Effects_HitReact).
 	                             AddUObject(
 		                             this, &ACharacterBase::OnGrantedTag_HitReact);
+}
+
+ABasePlayerState* ACharacterBase::GetMyPlayerState()
+{
+	if(!BasePlayerState)
+	{
+		if(!GetPlayerState()){return nullptr;}
+
+		BasePlayerState = Cast<ABasePlayerState>(GetPlayerState());
+	}
+	return BasePlayerState;
+}
+
+URPGAuraGameInstanceSubsystem* ACharacterBase::GetMyGiSubSystem()
+{
+	if(!RPGAuraGameInstanceSubsystem)
+	{
+		if(!GetGameInstance()){return nullptr;}
+
+		RPGAuraGameInstanceSubsystem = GetGameInstance()->GetSubsystem<URPGAuraGameInstanceSubsystem>();
+	}
+	return RPGAuraGameInstanceSubsystem;
 }
 
 bool ACharacterBase::CanHighLight()

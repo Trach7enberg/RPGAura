@@ -14,6 +14,8 @@
 #include "CharacterBase.generated.h"
 
 
+class URPGAuraGameInstanceSubsystem;
+class ABasePlayerState;
 class UNiagaraSystem;
 class UMotionWarpingComponent;
 class UDamageTextComponent;
@@ -212,6 +214,14 @@ protected:
 	/// 向能力组件中注册当某个标签被移除或者添加时候的回调,需要在InitAbilityActorInfo之后执行
 	virtual void RegisterGameplayTagEvent();
 
+	/// 获取PlayerState(类型为项目自定义的)
+	/// @return 
+	virtual ABasePlayerState* GetMyPlayerState();
+
+	/// 获取GameInstance的子系统
+	/// @return 
+	virtual URPGAuraGameInstanceSubsystem* GetMyGiSubSystem();
+
 private:
 	/// 当前角色是否死亡
 	bool bIsDie ;
@@ -221,6 +231,12 @@ private:
 	
 	// 当前角色能拥有召唤物的数量
 	int32 CurrentSummonsCount;
+
+	UPROPERTY()
+	TObjectPtr<ABasePlayerState> BasePlayerState;
+
+	UPROPERTY()
+	TObjectPtr<URPGAuraGameInstanceSubsystem> RPGAuraGameInstanceSubsystem;
 
 	// 时间线组件
 	UPROPERTY()
