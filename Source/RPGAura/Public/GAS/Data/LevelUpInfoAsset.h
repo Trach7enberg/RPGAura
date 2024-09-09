@@ -6,6 +6,7 @@
 #include "Engine/DataAsset.h"
 #include "LevelUpInfoAsset.generated.h"
 
+enum class ECharacterClass : uint8;
 struct FLevelUpInfoStruct;
 /**
  *  用于角色升级信息的数据资产
@@ -38,4 +39,11 @@ public:
 	/// @param Level 
 	/// @return 
 	int32 GetMaximumXPofLevel(int Level);
+
+	/// 获取给定经验值所对应的等级
+	/// @param CharacterClass 
+	/// @param CharacterCurrentXP 
+	/// @param CharacterCurrentLevel 
+	/// @return 
+	int32 GetLevelCorrespondingToXP(ECharacterClass CharacterClass,int32 CharacterCurrentXP,int32 CharacterCurrentLevel);
 };
