@@ -6,8 +6,6 @@
 #include "UI/WidgetControllers/BaseWidgetController.h"
 #include "XpBarWidgetController.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGetXpSignature,float, XpPercent);
-
 /**
  *  经验条Widget的控制器
  */
@@ -21,8 +19,10 @@ public:
 	virtual void BroadcastInitialValues() override;
 
 	/// 当角色的Xp值改变时,该委托会广播计算过的xp的百分比值
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable,Category="XP")
 	FOnGetXpSignature OnGetXp;
+
+	
 
 private:
 	/// 根据角色当前的经验值获得经验条的百分比
