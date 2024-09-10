@@ -14,6 +14,7 @@
 #include "CharacterBase.generated.h"
 
 
+class UNiagaraComponent;
 class URPGAuraGameInstanceSubsystem;
 class ABasePlayerState;
 class UNiagaraSystem;
@@ -125,7 +126,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Animation")
 	FName WarpTargetName = "FacingTarget";
 
-	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="VFX")
+	TObjectPtr<UNiagaraComponent> NiagaraComponent;
 	
 	/// 标签到对应的攻击动画蒙太奇数组
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
