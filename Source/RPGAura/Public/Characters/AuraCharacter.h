@@ -16,7 +16,7 @@ class UCameraComponent;
  * Aura人物类
  */
 UCLASS()
-class RPGAURA_API AAuraCharacter : public ACharacterBase ,public IPlayerInterface
+class RPGAURA_API AAuraCharacter : public ACharacterBase, public IPlayerInterface
 {
 	GENERATED_BODY()
 
@@ -37,7 +37,7 @@ public:
 
 	// ~ ICombatInterface
 	virtual int32 GetCharacterLevel() override;
-	
+
 	// ~ ICombatInterface
 
 	// ~ IPlayerInterface
@@ -46,11 +46,11 @@ public:
 	virtual bool CanBeLevelUp() override;
 	virtual void LevelUp() override;
 	virtual int32 GetAttributePointsReward(int32 InCharacterLevel);
-	virtual int32 GetSpellPointsReward(int32 InCharacterLevel) ;
-	virtual void AddToSpellPoints(int32 Points) ;
+	virtual int32 GetSpellPointsReward(int32 InCharacterLevel);
+	virtual void AddToSpellPoints(int32 Points);
 	virtual void AddToAttributesPoints(int32 Points);
 	// ~ IPlayerInterface
-	
+
 
 protected:
 	virtual void BeginPlay() override;
@@ -61,13 +61,16 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Camera")
 	USpringArmComponent* SpringArmComponent;
-	
+
 	/// 初始化当前ACS的能力组件、属性集和ACS的AbilityActorInfo
 	virtual void InitAbilityActorInfo() override;
 
+	/// 播放升级特效,服务器和客户端
+	UFUNCTION(NetMulticast, Reliable)
+	virtual void MultiCastLevelVfx();
 
 private :
 	FString GetNetModeStr() const;
-	
+
 	virtual void OnGrantedTag_HitReact(const FGameplayTag Tag, int32 NewTagCount) override;
 };

@@ -4,6 +4,7 @@
 #include "Characters/AuraCharacter.h"
 
 #include "AbilitySystemComponent.h"
+#include "NiagaraComponent.h"
 #include "Camera/CameraComponent.h"
 #include "CoreTypes/RPGAuraGameplayTags.h"
 #include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
@@ -83,6 +84,15 @@ void AAuraCharacter::InitAbilityActorInfo()
 	AddCharacterAbilities();
 }
 
+void AAuraCharacter::MultiCastLevelVfx_Implementation()
+{
+	if(!NiagaraComponent.Get() || !CameraComponent){return;}
+	
+	NiagaraComponent->SetWorldRotation(FRotator(90,0,180));
+	NiagaraComponent->SetRelativeLocation(GetActorLocation());
+	NiagaraComponent->Activate(true);
+}
+
 
 void AAuraCharacter::InitHUD() const
 {
@@ -140,7 +150,11 @@ void AAuraCharacter::LevelUp()
 	const auto NextLevel = GetMyGiSubSystem()->GetLevelCorrespondingToXP(
 		GetCharacterClass(), GetPlayerCurrentXP(), GetCharacterLevel());
 
-	if (NextLevel != GetCharacterLevel()) { GetMyPlayerState()->SetPlayerLevel(NextLevel); }
+	if (NextLevel != GetCharacterLevel())
+	{
+		GetMyPlayerState()->SetPlayerLevel(NextLevel);
+		MultiCastLevelVfx();
+	}
 }
 
 int32 AAuraCharacter::GetAttributePointsReward(const int32 InCharacterLevel)
