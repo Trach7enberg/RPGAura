@@ -177,7 +177,7 @@ public:
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentMana, BlueprintReadOnly, Category = "Vital Attributes")
 	FGameplayAttributeData CurrentMana;
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, CurrentMana);
-
+ 
 	// Meta属性
 	UPROPERTY(BlueprintReadOnly, Category="Meta Attributes")
 	FGameplayAttributeData InComingDamage;
@@ -267,6 +267,8 @@ public:
 
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual void PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const override;
+	virtual  void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
+	
 	/// 这个函数在游戏效果改变一个属性之后被执行
 	/// @param Data 
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
@@ -278,6 +280,10 @@ public:
 private:
 	/// 用于存前某个GE影响当前角色属性集的相关上下文数据
 	FEffectProp EffectProperties{};
+
+	/// 是否在升级 , 用于修复当角色升级时不会满血满蓝还剩一点才满的问题
+	bool bIsLevelingUpHealth = false;
+	bool bIsLevelingUpMana = false;
 
 	UPROPERTY()
 	TObjectPtr<UBaseAbilitySystemComponent> CurrentMyAbilitySystemComponent;

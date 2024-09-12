@@ -190,50 +190,30 @@ void UBaseAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 void UBaseAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
 	Super::PreAttributeChange(Attribute, NewValue);
-	// if (Attribute == GetBlockChanceAttribute())
-	// {
-	// 	UE_LOG(UBaseAttributeSetLog, Error, TEXT("[%s , %s] , PreOld:%.1f,PreNew:%.1f"), *GetOwningActor()->GetName(),
-	// 		   *Attribute.GetName(), Attribute.GetNumericValue(this), NewValue);
-	// }
 }
 
 void UBaseAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const
 {
 	Super::PreAttributeBaseChange(Attribute, NewValue);
-	if (Attribute == GetCurrentHealthAttribute())
-	{
-		const auto temp = NewValue;
-		NewValue = FMath::Clamp(NewValue, 0.f, GetMaxHealth());
-		// 待修复Bug,血量满了之后 ,获取显示的值没溢出,但实际的值是溢出了的,导致扣血没有反应 (暂时修复) 
-		// TODO  (血量、蓝量已修复Clamp失败的问题还是会有小bug,当药水溢出的持续时间没有结束又扣血会造成血量短暂的反复弹跳)
-		// UE_LOG(UBaseAttributeSetLog, Error, TEXT("Old:%.1f , Current :%.1f , BaseValue :%.1f , CurrentValue:%.1f"),
-		// 	   temp, GetCurrentHealth(), CurrentHealth.GetBaseValue(), CurrentHealth.GetCurrentValue());
-	}
-	else if (Attribute == GetCurrentManaAttribute())
-	{
-		const auto temp = NewValue;
-		NewValue = FMath::Clamp(NewValue, 0.f, GetMaxMana());
-
-		// UE_LOG(UBaseAttributeSetLog, Error, TEXT("Old:%.1f , Current :%.1f"), temp, GetCurrentMana());
-	}
-	// else if (Attribute == GetMaxHealthAttribute())
-	// {
-	// 	NewValue = FMath::Clamp(NewValue, DefaultMaxHealth, NewValue);
-	// }
-	// else if (Attribute == GetMaxManaAttribute())
-	// {
-	// 	NewValue = FMath::Clamp(NewValue, DefaultMaxMana, NewValue);
-	// }
-
-	// UE_LOG(UBaseAttributeSetLog, Error, TEXT("[%s,%s]:%.1f"),
-	//        (GetOwningActor())?*GetOwningActor()->GetName():*FString(""),
-	//        *Attribute.GetName(), NewValue);
-	// if (Attribute == GetBlockChanceAttribute())
-	// {
-	// 	UE_LOG(UBaseAttributeSetLog, Error, TEXT("[%s , %s] , Old:%.1f,New:%.1f"), *GetOwningActor()->GetName(),
-	// 	       *Attribute.GetName(), Attribute.GetNumericValue(this), NewValue);
-	// }
+	if (Attribute == GetCurrentHealthAttribute()) { NewValue = FMath::Clamp(NewValue, 0.f, GetMaxHealth()); }
+	else if (Attribute == GetCurrentManaAttribute()) { NewValue = FMath::Clamp(NewValue, 0.f, GetMaxMana()); }
 }
+
+void UBaseAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
+{
+	Super::PostAttributeChange(Attribute, OldValue, NewValue);
+	if (bIsLevelingUpHealth && Attribute == GetMaxHealthAttribute())
+	{
+		SetCurrentHealth(NewValue);
+		bIsLevelingUpHealth = false;
+	}else if(bIsLevelingUpMana && Attribute == GetMaxManaAttribute())
+	{
+		SetCurrentMana(NewValue);
+		bIsLevelingUpMana = false;
+	}
+}
+
+
 
 
 void UBaseAttributeSet::UpdateCurrentGeProp(const FGameplayEffectModCallbackData& Data, FEffectProp& EffectProp)
@@ -308,7 +288,7 @@ void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 				FGameplayTagContainer(FRPGAuraGameplayTags::Get().Abilities_Effects_HitReact));
 			// UE_LOG(UBaseAttributeSetLog, Error, TEXT("是否暴击[%d] 是否格挡[%d]"), IsCriticalHit, IsBlockHit);
 		}
-		else
+		else // 是致命伤的话
 		{
 			if (CbInterface)
 			{
@@ -328,25 +308,27 @@ void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 	{
 		UE_LOG(UBaseAttributeSetLog, Error, TEXT("[%s]IncomigXP , %.1f"), *GetOwningActor()->GetName(),
 		       Data.EvaluatedData.Attribute.GetNumericValue(this));
-		
+
 		if (!GetGiSubSystem()) { return; }
 		const auto PlayerInterface = Cast<IPlayerInterface>(Instigator);
 		const auto PlayerCombInterface = Cast<ICombatInterface>(Instigator);
 		if (!PlayerInterface || !PlayerCombInterface) { return; }
-		
+
 		const auto OldLevel = PlayerCombInterface->GetCharacterLevel();
 		const auto TempXP = GetIncomingXP();
 		SetIncomingXP(0);
 
 		// 给玩家添加经验,会触发相应的回调函数
 		PlayerInterface->AddToPlayerXP(TempXP);
-		if(PlayerInterface->CanBeLevelUp())
+		if (PlayerInterface->CanBeLevelUp())
 		{
-			//TODO 待添加属性、技能点数奖励
+			bIsLevelingUpHealth = true;
+			bIsLevelingUpMana = true;
 			PlayerInterface->LevelUp();
 			SetCurrentHealth(GetMaxHealth());
 			SetCurrentMana(GetMaxMana());
-			UE_LOG(UBaseAttributeSetLog,Error,TEXT("LevelUp! [%d] >> [%d]"),OldLevel,PlayerCombInterface->GetCharacterLevel());
+			UE_LOG(UBaseAttributeSetLog, Error, TEXT("LevelUp! [%d] >> [%d]"), OldLevel,
+			       PlayerCombInterface->GetCharacterLevel());
 		}
 	}
 }
