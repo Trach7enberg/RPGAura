@@ -7,7 +7,7 @@
 #include "Components/VerticalBox.h"
 #include "CoreTypes/RPGAuraGameplayTags.h"
 #include "FunctionLibrary/WidgetControllerBpFuncLib.h"
-#include "UI/WidgetControllers/AttributeMenuWidgetController.h"
+#include "UI/WidgetControllers/TextValueWidgetController.h"
 
 DEFINE_LOG_CATEGORY_STATIC(UAttributeMenuWidgetLog, All, All);
 
@@ -24,20 +24,24 @@ void UAttributeMenuWidget::InitVerticalArea()
 	// 创建可加属性点数区域
 	CurrentAttributePointRow = CreateWidget<UBaseUserWidget>(GetOwningPlayer(), TextValueRowWidgetClass);
 	CurrentAttributePointArea->AddChild(CurrentAttributePointRow);
+	CurrentAttributePointRow->SetPadding(FMargin(0, 0, 14, 0));
+	CurrentAttributePointRow->SetCurrentGameplayTag(FRPGAuraGameplayTags::Get().Attribute_Main);
+	CurrentAttributePointRow->SetWidgetController(
+		UWidgetControllerBpFuncLib::CreateWidgetController(UTextValueWidgetController::StaticClass(),
+		                                                   GetOwningPlayer()));
 
 	// 创建主要属性widget
 	CreateVerticalAreaWidgets(FRPGAuraGameplayTags::
 	                          GetTagsContainerByType(EGameplayTagType::PrimaryGameplayTags),
 	                          EGameplayTagType::PrimaryGameplayTags,
-	                          VerticalBox_PrimaryAttriArea,TextValueRowButtonWidgetClass);
+	                          VerticalBox_PrimaryAttriArea, TextValueRowButtonWidgetClass);
 
 	// 创建次要属性widget
 	VerticalBox_SecondaryAttriArea->ClearChildren();
 	CreateVerticalAreaWidgets(FRPGAuraGameplayTags::
 	                          GetTagsContainerByType(EGameplayTagType::SecondaryGameplayTags),
 	                          EGameplayTagType::SecondaryGameplayTags,
-	                          VerticalBox_SecondaryAttriArea,TextValueRowWidgetClass);
-	
+	                          VerticalBox_SecondaryAttriArea, TextValueRowButtonWidgetClass);
 }
 
 UBaseUserWidget* UAttributeMenuWidget::GetWidgetByGameplayTag(const EGameplayTagType GameplayTagType,
@@ -84,7 +88,6 @@ void UAttributeMenuWidget::NativeOnInitialized()
 	//
 	// InitVerticalArea();
 	// UE_LOG(UAttributeMenuWidgetLog, Error, TEXT("(2)初始化属性菜单的Vertical区域"))
-	
 }
 
 void UAttributeMenuWidget::NativeConstruct()
@@ -97,7 +100,6 @@ void UAttributeMenuWidget::NativeConstruct()
 	// 	Wc->BroadcastInitialValues();
 	// 	// UE_LOG(UAttributeMenuWidgetLog, Error, TEXT("(3)初始广播属性菜单控制器的委托一次"))
 	// }
-	
 }
 
 
@@ -110,7 +112,8 @@ UBaseUserWidget* UAttributeMenuWidget::FindWidgetByTagFromArray(const TArray<UBa
 
 void UAttributeMenuWidget::CreateVerticalAreaWidgets(const FGameplayTagContainer& TagContainer,
                                                      const EGameplayTagType GameplayTagType,
-                                                     UVerticalBox* VerticalArea, const TSubclassOf<UBaseUserWidget> WidgetClass)
+                                                     UVerticalBox* VerticalArea,
+                                                     const TSubclassOf<UBaseUserWidget> WidgetClass)
 {
 	if (TagContainer.Num() < 0 || !VerticalArea || !WidgetClass)
 	{
@@ -122,7 +125,7 @@ void UAttributeMenuWidget::CreateVerticalAreaWidgets(const FGameplayTagContainer
 	{
 		const auto Widget = CreateWidget<UBaseUserWidget>(GetOwningPlayer(), WidgetClass);
 		Widget->SetCurrentGameplayTag(GameplayTag);
-		VerticalArea->AddChild(Widget);
+		VerticalArea->AddChild(Widget);	
 
 
 		switch (GameplayTagType)

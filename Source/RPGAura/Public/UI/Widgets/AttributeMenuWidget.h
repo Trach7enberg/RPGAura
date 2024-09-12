@@ -44,6 +44,10 @@ protected:
     UPROPERTY(meta=(BindWidget))
     UVerticalBox* VerticalBox_SecondaryAttriArea;
 
+    /// 显示可加属性点数的TextValue
+    UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="AttriMenu|VerticalAreaElement")
+    UBaseUserWidget* CurrentAttributePointRow = nullptr;
+
     /// 用于生成TextValueRowButtonWidget的类
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="AttriMenu|WdigetClass")
     TSubclassOf<UBaseUserWidget> TextValueRowButtonWidgetClass;
@@ -74,8 +78,6 @@ protected:
     virtual void NativeConstruct() override;
 
 private:
-    UPROPERTY()
-    UBaseUserWidget* CurrentAttributePointRow = nullptr;
 
     /// 根据标签查找当前属性面板中的Widget (每一个BaseUserWidget都有一个标签)
     /// @param Array 标签数组指针
