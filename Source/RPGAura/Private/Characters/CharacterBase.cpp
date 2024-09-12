@@ -245,6 +245,7 @@ void ACharacterBase::OnGrantedTag_HitReact(const FGameplayTag Tag, int32 NewTagC
 	BIsHitReacting = NewTagCount > 0;
 
 	// 触发回调函数时,NewTagCount不大于0意味着当前标签正在移除,所以继续行走 否则停止走动
+	// TODO 减速应该只持续一段时间,然后恢复速度 或者把减速作为技能的升级副作用
 	GetCharacterMovement()->MaxWalkSpeed = BIsHitReacting ? MaxWalkingSpeed / 2.f : MaxWalkingSpeed;
 
 	GEngine->AddOnScreenDebugMessage(1, 2, FColor::Red,

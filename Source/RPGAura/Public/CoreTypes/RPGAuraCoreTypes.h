@@ -267,5 +267,15 @@ struct FLevelUpInfoStruct
 		ABasePlayerState使用
 	-------------------------*/
 
-/// 用于广播当人物的经验值改变时的委托
+/// 用于广播当人物的经验值改变时的委托,不用于蓝图绑定
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPlayerInfoChangeSignature, int32);
+
+	/*----------------------------------------------------------
+		UXpBarWidgetController、UTextValueWidgetController使用
+	----------------------------------------------------------*/
+
+/// 经验值改变时的委托(经验值转换成XpBar的百分比了)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGetXpSignature,float, XpPercent);
+
+/// 属性点、技能点增加奖励的委托(任何使用int32的都可以用这个进行广播)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnIntegerChangeSignature,int32, Value);

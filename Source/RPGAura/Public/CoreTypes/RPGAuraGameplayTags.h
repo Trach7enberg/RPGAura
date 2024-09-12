@@ -67,6 +67,7 @@ struct FRPGAuraGameplayTags
 	/// 添加NativeGameplayTag,native意思是在Cpp中,即在Cpp中添加GameplayTag
 	static void InitGameplayTags();
 
+	FGameplayTag Attribute_Main; // 用于表示属性添加面板中的客家属性点数行标签
 	FGameplayTag Attribute_Vital_CurrentHealth;
 	FGameplayTag Attribute_Vital_CurrentMana;
 

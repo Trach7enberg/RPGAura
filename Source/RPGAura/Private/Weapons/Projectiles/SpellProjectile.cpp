@@ -47,7 +47,7 @@ void ASpellProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent,
 	if (!BIsHit) { SpawnVfxAndSound(); }
 
 
-	UE_LOG(ASpellProjectileLog, Warning, TEXT("OverLapActor:[%s]"), *OtherActor->GetName());
+	// UE_LOG(ASpellProjectileLog, Warning, TEXT("OverLapActor:[%s]"), *OtherActor->GetName());
 	if (HasAuthority())
 	{
 		UAbilitySystemComponent* ActorAsc = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);

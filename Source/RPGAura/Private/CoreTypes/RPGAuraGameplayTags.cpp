@@ -22,6 +22,8 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 {
 	// 创建Native GameplayTags
 	{
+		GameplayTags.Attribute_Main = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Attributes.Main");
 		// 主要属性
 		{
 			GameplayTags.Attribute_Vital_CurrentHealth = UGameplayTagsManager::Get().AddNativeGameplayTag(

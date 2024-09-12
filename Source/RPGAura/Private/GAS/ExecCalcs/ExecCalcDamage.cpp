@@ -127,7 +127,7 @@ void UExecCalcDamage::Execute_Implementation(const FGameplayEffectCustomExecutio
 
 	if (!SourceCombatInt || !TargetCombatInt)
 	{
-		UE_LOG(UExecCalcDamageLog, Error, TEXT("[%s]获取化身角色失败!"), *GetName());
+		UE_LOG(UExecCalcDamageLog, Error, TEXT("[%s]转化身角色为接口失败!"), *GetName());
 		return;
 	}
 
@@ -221,7 +221,7 @@ void UExecCalcDamage::Execute_Implementation(const FGameplayEffectCustomExecutio
 		}
 
 		ResistanceValue = FMath::Clamp(ResistanceValue, 0.f, 100.f);
-		UE_LOG(UExecCalcDamageLog,Error,TEXT("物理抗性:[%.2f]"),ResistanceValue);
+		// UE_LOG(UExecCalcDamageLog,Error,TEXT("物理抗性:[%.2f]"),ResistanceValue);
 		Damage += ((GeSpec.GetSetByCallerMagnitude(DamageType) + SourceIntelligence * .25f) * ((100.f - ResistanceValue)
 			/ 100.f));
 	}
@@ -279,24 +279,24 @@ void UExecCalcDamage::Execute_Implementation(const FGameplayEffectCustomExecutio
 	MyGeContext->SetBIsBlockedHit(bIsBlock);
 	MyGeContext->SetBIsCriticalHit(bIsCriticalHit);
 
-	UE_LOG(UExecCalcDamageLog, Warning,
-	       TEXT(
-		       "[Aura护甲穿透因子]:%.2f , "
-		       "[Aura护甲穿透率]:%.2f ,"
-		       "[Aura暴击几率]:%.2f ,"
-		       "[Aura有效暴击几率]:%.2f ,"
-		       "[Aura有效暴击伤害]:%.2f ,"
-		       "[敌方有效护甲因子]:%.2f ,"
-		       "[敌方护甲]:%.2f ,"
-		       "[敌方最终有效护甲]:%.2f ,"
-		       "[敌方抵抗暴击几率]:%.2f ,"
-		       "[敌方格挡几率]:%.2f ,"
-		       "[最终伤害]: %.2f"
-	       ), ArmorPenetrationFactor, SourceArmorPenetration, SourceCriticalHitChance, SourceEffectiveCriticalHitChance,
-	       SourceCriticalHitDamage,
-	       EffectiveArmorFactor,
-	       TargetArmor,
-	       EffectiveArmor, TargetCriticalHitResistance, TargetBlockChance, Damage);
+	// UE_LOG(UExecCalcDamageLog, Warning,
+	//        TEXT(
+	// 	       "[Aura护甲穿透因子]:%.2f , "
+	// 	       "[Aura护甲穿透率]:%.2f ,"
+	// 	       "[Aura暴击几率]:%.2f ,"
+	// 	       "[Aura有效暴击几率]:%.2f ,"
+	// 	       "[Aura有效暴击伤害]:%.2f ,"
+	// 	       "[敌方有效护甲因子]:%.2f ,"
+	// 	       "[敌方护甲]:%.2f ,"
+	// 	       "[敌方最终有效护甲]:%.2f ,"
+	// 	       "[敌方抵抗暴击几率]:%.2f ,"
+	// 	       "[敌方格挡几率]:%.2f ,"
+	// 	       "[最终伤害]: %.2f"
+	//        ), ArmorPenetrationFactor, SourceArmorPenetration, SourceCriticalHitChance, SourceEffectiveCriticalHitChance,
+	//        SourceCriticalHitDamage,
+	//        EffectiveArmorFactor,
+	//        TargetArmor,
+	//        EffectiveArmor, TargetCriticalHitResistance, TargetBlockChance, Damage);
 
 
 	// 修改属性集中名为InComingDamage的属性值
