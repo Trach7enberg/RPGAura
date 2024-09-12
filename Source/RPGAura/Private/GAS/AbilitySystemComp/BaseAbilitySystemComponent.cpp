@@ -3,10 +3,12 @@
 
 #include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
 #include "CoreTypes/RPGAuraGameplayTags.h"
 #include "GAS/AttributeSet/BaseAttributeSet.h"
 #include "GAS/Data/TagToAbilityInfoAsset.h"
 #include "GAS/GameplayAbilities/BaseGameplayAbility.h"
+#include "Interfaces/PlayerInterface.h"
 #include "SubSystems/RPGAuraGameInstanceSubsystem.h"
 
 DEFINE_LOG_CATEGORY_STATIC(UBaseAbilitySystemComponentLog, All, All);
@@ -21,21 +23,22 @@ void UBaseAbilitySystemComponent::InitSetting()
 }
 
 void UBaseAbilitySystemComponent::AddCharacterDefaultAbilities(const TArray<TSubclassOf<UGameplayAbility>>& Abilities,
-                                                               const float CharacterLevel,const bool ActiveWhenGive)
+                                                               const float CharacterLevel, const bool ActiveWhenGive)
 {
 	if (!Abilities.Num()) { return; }
-	for (const auto& AbilityClass : Abilities) { AddCharacterDefaultAbility(AbilityClass, CharacterLevel,ActiveWhenGive); }
+	for (const auto& AbilityClass : Abilities)
+	{
+		AddCharacterDefaultAbility(AbilityClass, CharacterLevel, ActiveWhenGive);
+	}
 }
 
 void UBaseAbilitySystemComponent::AddCharacterDefaultAbility(const TSubclassOf<UGameplayAbility>& AbilityClass,
-                                                             const float CharacterLevel, bool ActiveWhenGive) 
+                                                             const float CharacterLevel, bool ActiveWhenGive)
 {
 	FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass, CharacterLevel);
 
-	if(ActiveWhenGive)
-	{
-		GiveAbilityAndActivateOnce(AbilitySpec);
-	}else
+	if (ActiveWhenGive) { GiveAbilityAndActivateOnce(AbilitySpec); }
+	else
 	{
 		const auto MyAbility = Cast<UBaseGameplayAbility>(AbilitySpec.Ability);
 		if (!MyAbility)
@@ -161,6 +164,23 @@ void UBaseAbilitySystemComponent::BroadCastDefaultActivatableAbilitiesInfo()
 		AbilityInfo.InputTag = GetTagFromAbilitySpecDynamicTags(AbilitySpec, FRPGAuraGameplayTags::Get().InputTag);
 		if (AbilityInfo.InfoDataIsValid()) { Gi->AbilityInfoDelegate.Broadcast(AbilityInfo); }
 	}
+}
+
+void UBaseAbilitySystemComponent::UpgradeAttribute_Implementation(const FGameplayTag& AttributeTag)
+{
+	if (!GetAvatarActor()) { return; }
+	const auto PlayerInterface = Cast<IPlayerInterface>(GetAvatarActor());
+	if (!PlayerInterface || PlayerInterface->GetCurrentAssignableAttributePoints() <= 0) { return; }
+
+	FGameplayEventData PayLoad;
+	PayLoad.EventTag = AttributeTag;
+	PayLoad.EventMagnitude = 1.f;
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActor(),AttributeTag,PayLoad);
+
+	PlayerInterface->AddToAttributesPoints(-1);
+	
+	
 }
 
 void UBaseAbilitySystemComponent::OnRep_ActivateAbilities()
