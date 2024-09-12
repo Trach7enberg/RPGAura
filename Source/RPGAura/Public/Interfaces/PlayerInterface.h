@@ -36,16 +36,28 @@ public:
 	/// 玩家升级
 	virtual void LevelUp() = 0;
 
-	/// 获取可分配的属性点数
+	/// 获取对应等级的属性点奖励
 	/// @return 
 	virtual int32 GetAttributePointsReward(int32 CharacterLevel) = 0;
 
-	
+	/// 获取对应等级的法术点奖励
+	/// @param CharacterLevel 
+	/// @return 
 	virtual int32 GetSpellPointsReward(int32 CharacterLevel) = 0;
 
-	// TODO
+	/// 设置当前角色的可分配法术点
+	/// @param Points 
 	virtual void AddToSpellPoints(int32 Points) = 0;
 
-	// TODO 
+	/// 设置当前角色的可分配属性点
+	/// @param Points 
 	virtual void AddToAttributesPoints(int32 Points) = 0;
+
+	/// 获取当前角色可分配的属性点
+	/// @return 
+	virtual int32 GetCurrentAssignableAttributePoints() = 0;
+
+	/// 获取当前角色可分配的法术点
+	/// @return 
+	virtual int32 GetCurrentAssignableSpellPoints() = 0;
 };
