@@ -86,9 +86,9 @@ void AAuraCharacter::InitAbilityActorInfo()
 
 void AAuraCharacter::MultiCastLevelVfx_Implementation()
 {
-	if(!NiagaraComponent.Get() || !CameraComponent){return;}
-	
-	NiagaraComponent->SetWorldRotation(FRotator(90,0,180));
+	if (!NiagaraComponent.Get() || !CameraComponent) { return; }
+
+	NiagaraComponent->SetWorldRotation(FRotator(90, 0, 180));
 	NiagaraComponent->SetRelativeLocation(GetActorLocation());
 	NiagaraComponent->Activate(true);
 }
@@ -150,9 +150,13 @@ void AAuraCharacter::LevelUp()
 	const auto NextLevel = GetMyGiSubSystem()->GetLevelCorrespondingToXP(
 		GetCharacterClass(), GetPlayerCurrentXP(), GetCharacterLevel());
 
+	const auto TempCurrentLevel = GetCharacterLevel();
 	if (NextLevel != GetCharacterLevel())
 	{
 		GetMyPlayerState()->SetPlayerLevel(NextLevel);
+		const auto Tmp = GetCharacterLevel() - TempCurrentLevel;
+		AddToAttributesPoints(GetMyPlayerState()->GetAttributePointsReward(GetCharacterLevel(), Tmp));
+		AddToSpellPoints(GetMyPlayerState()->GetSpellPointsReward(GetCharacterLevel(), 1));
 		MultiCastLevelVfx();
 	}
 }
@@ -166,10 +170,30 @@ int32 AAuraCharacter::GetAttributePointsReward(const int32 InCharacterLevel)
 int32 AAuraCharacter::GetSpellPointsReward(const int32 InCharacterLevel)
 {
 	if (!GetMyPlayerState()) { return 0; }
-	return GetMyPlayerState()->GetSpellPointsReward(InCharacterLevel);
+	return GetMyPlayerState()->GetSpellPointsReward(InCharacterLevel, 1);
 }
-void AAuraCharacter::AddToSpellPoints(int32 Points) {}
-void AAuraCharacter::AddToAttributesPoints(int32 Points) {}
+
+void AAuraCharacter::AddToSpellPoints(const int32 Points)
+{
+	if (!GetMyPlayerState()) { return ; }
+	GetMyPlayerState()->AddToAssignableSpellPoints(Points);
+}
+void AAuraCharacter::AddToAttributesPoints(const int32 Points)
+{
+	if (!GetMyPlayerState()) { return ; }
+	GetMyPlayerState()->AddToAssignableAttributePoints(Points);
+}
+
+int32 AAuraCharacter::GetCurrentAssignableAttributePoints()
+{
+	if (!GetMyPlayerState()) { return 0; }
+	return GetMyPlayerState()->GetAssignableAttributePoints();
+}
+int32 AAuraCharacter::GetCurrentAssignableSpellPoints()
+{
+	if (!GetMyPlayerState()) { return 0; }
+	return GetMyPlayerState()->GetAssignableSpellPoints();
+}
 
 
 void AAuraCharacter::PossessedBy(AController* NewController)

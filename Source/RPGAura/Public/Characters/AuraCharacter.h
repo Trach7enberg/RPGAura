@@ -45,10 +45,12 @@ public:
 	virtual int32 GetPlayerCurrentXP() override;
 	virtual bool CanBeLevelUp() override;
 	virtual void LevelUp() override;
-	virtual int32 GetAttributePointsReward(int32 InCharacterLevel);
-	virtual int32 GetSpellPointsReward(int32 InCharacterLevel);
-	virtual void AddToSpellPoints(int32 Points);
-	virtual void AddToAttributesPoints(int32 Points);
+	virtual int32 GetAttributePointsReward(int32 InCharacterLevel) override;
+	virtual int32 GetSpellPointsReward(int32 InCharacterLevel) override;
+	virtual void AddToSpellPoints(int32 Points) override;
+	virtual void AddToAttributesPoints(int32 Points) override;
+	virtual int32 GetCurrentAssignableAttributePoints() override;
+	virtual int32 GetCurrentAssignableSpellPoints() override;
 	// ~ IPlayerInterface
 
 
