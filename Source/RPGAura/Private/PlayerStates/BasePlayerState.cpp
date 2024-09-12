@@ -29,6 +29,8 @@ void ABasePlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ABasePlayerState, PlayerLevel);
 	DOREPLIFETIME(ABasePlayerState, PlayerXP);
+	DOREPLIFETIME(ABasePlayerState, AssignableAttributePoints);
+	DOREPLIFETIME(ABasePlayerState, AssignableSpellPoints);
 }
 
 int32 ABasePlayerState::GetMaximumXPofLevel(const int32 TLevel)
@@ -44,20 +46,30 @@ int32 ABasePlayerState::GetMinimumXpRequiredForLevel(const int32 TLevel)
 	return GetGiSubSystem()->LevelUpInfoAsset->GetMinimumXpRequiredForLevel(TLevel);
 }
 
-int32 ABasePlayerState::GetAttributePointsReward(const int32 CharacterLevel)
+int32 ABasePlayerState::GetAttributePointsReward(const int32 CharacterLevel, const int32 MultipleLevel)
 {
 	if (!GetGiSubSystem() || !GetGiSubSystem()->LevelUpInfoAsset || CharacterLevel >= GetGiSubSystem()->LevelUpInfoAsset
 		->LevelUpInfos.Num()) { return 0; }
 
-	return GetGiSubSystem()->LevelUpInfoAsset->LevelUpInfos[CharacterLevel - 1].AttributedPointAward;
+	auto Result = GetGiSubSystem()->LevelUpInfoAsset->LevelUpInfos[CharacterLevel].AttributedPointAward;
+	for (int j = MultipleLevel; j > 1; --j)
+	{
+		Result += GetGiSubSystem()->LevelUpInfoAsset->LevelUpInfos[CharacterLevel - j].AttributedPointAward;
+	}
+	return Result;
 }
 
-int32 ABasePlayerState::GetSpellPointsReward(const int32 CharacterLevel)
+int32 ABasePlayerState::GetSpellPointsReward(const int32 CharacterLevel, int32 MultipleLevel)
 {
 	if (!GetGiSubSystem() || !GetGiSubSystem()->LevelUpInfoAsset || CharacterLevel >= GetGiSubSystem()->LevelUpInfoAsset
 		->LevelUpInfos.Num()) { return 0; }
 
-	return GetGiSubSystem()->LevelUpInfoAsset->LevelUpInfos[CharacterLevel - 1].SpellPointAward;
+	auto Result = GetGiSubSystem()->LevelUpInfoAsset->LevelUpInfos[CharacterLevel].SpellPointAward;
+	for (int j = MultipleLevel; j > 1; --j)
+	{
+		Result += GetGiSubSystem()->LevelUpInfoAsset->LevelUpInfos[CharacterLevel - j].SpellPointAward;
+	}
+	return Result;
 }
 
 void ABasePlayerState::OnRep_PlayerLevel(int32 OldValue) { PlayerLevelChangeDelegate.Broadcast(PlayerLevel); }
@@ -66,6 +78,15 @@ void ABasePlayerState::OnRep_PlayerXP(int32 OldValue)
 {
 	// 当PlayerXP被复制到客户端时,应该广播该值,以便HUD响应
 	PlayerXpChangeDelegate.Broadcast(PlayerXP);
+}
+
+void ABasePlayerState::OnRep_AssignableAttributePoints(int32 OldValue)
+{
+	AssignableAttributePointsChangeDelegate.Broadcast(OldValue);
+}
+void ABasePlayerState::OnRep_AssignableSpellPoints(int32 OldValue)
+{
+	AssignableSpellPointsChangeDelegate.Broadcast(OldValue);
 }
 
 URPGAuraGameInstanceSubsystem* ABasePlayerState::GetGiSubSystem()
