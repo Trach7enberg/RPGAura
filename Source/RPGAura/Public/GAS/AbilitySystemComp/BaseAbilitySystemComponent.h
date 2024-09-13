@@ -76,7 +76,7 @@ public:
 	/// 广播当前能被激活的(角色默认就有的)能力相关的信息数据
 	void BroadCastDefaultActivatableAbilitiesInfo();
 
-	/// 在服务器端升级对应的属性
+	/// 在服务器端根据属性标签升级对应的属性
 	/// @param AttributeTag
 	UFUNCTION(Server,Reliable)
 	void UpgradeAttribute(const FGameplayTag& AttributeTag); 

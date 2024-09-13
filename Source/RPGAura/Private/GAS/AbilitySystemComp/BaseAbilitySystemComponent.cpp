@@ -176,6 +176,7 @@ void UBaseAbilitySystemComponent::UpgradeAttribute_Implementation(const FGamepla
 	PayLoad.EventTag = AttributeTag;
 	PayLoad.EventMagnitude = 1.f;
 
+	// 发送游戏事件给我们的被动能力(有一个EventBase的被动能力会等待Attributes开头的属性标签事件)
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActor(),AttributeTag,PayLoad);
 
 	PlayerInterface->AddToAttributesPoints(-1);
