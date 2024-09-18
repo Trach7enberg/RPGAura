@@ -38,13 +38,17 @@ public:
 	void InitPassiveArea();
 
 protected:
-
 	// 主动技能的显示(UI中)数量
-	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int32 OffensiveGlobeNum = 6;
 
 	// 被动技能的显示(UI中)数量
-	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int32 PassiveGlobeNum = 2;
-	
+
+                  
 };
+
+
+
+
