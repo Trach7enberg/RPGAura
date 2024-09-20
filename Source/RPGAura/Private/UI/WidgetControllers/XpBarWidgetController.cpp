@@ -33,11 +33,20 @@ void UXpBarWidgetController::CalculateXpPercent(int32 Xp)
 	const auto Ps = Cast<ABasePlayerState>(GetWidgetControllerParams().CurrentPlayerState);
 	const auto GiSubSystem = GetWidgetControllerParams().CurrentPlayerController->GetGameInstance()->GetSubsystem<
 		URPGAuraGameInstanceSubsystem>();
+	
+	const auto LocalPlayer = GetWidgetControllerParams().CurrentPlayerController->GetPawn();
+	if (!LocalPlayer)
+	{
+		UE_LOG(UXpBarWidgetControllerLog, Error, TEXT("获取控制器的Pawn失败!"));
+		return;
+	}
 
-	if (!GetWidgetControllerParams().CurrentPlayerController->GetPawn()) { return; }
-	const auto CombatInt = Cast<ICombatInterface>(GetWidgetControllerParams().CurrentPlayerController->GetPawn());
+	if (!Ps || !GiSubSystem) { return; }
 
-	if (!Ps || !GiSubSystem || !GiSubSystem) { return; }
+	const auto CombatInt = Cast<ICombatInterface>(LocalPlayer);
+
+	if (!CombatInt) { return; }
+
 
 	const int32 CurrentXp = Xp;
 
