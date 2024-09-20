@@ -33,7 +33,7 @@ public:
 	virtual void OnRep_PlayerState() override;
 
 	/// 初始化HUD的主要widget
-	void InitHUD() const;
+	void InitHUD();
 
 	// ~ ICombatInterface
 	virtual int32 GetCharacterLevel() override;

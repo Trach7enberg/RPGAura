@@ -94,7 +94,7 @@ void AAuraCharacter::MultiCastLevelVfx_Implementation()
 }
 
 
-void AAuraCharacter::InitHUD() const
+void AAuraCharacter::InitHUD()
 {
 	const auto Pc = Cast<APlayerController>(GetController());
 	if (!Pc)
