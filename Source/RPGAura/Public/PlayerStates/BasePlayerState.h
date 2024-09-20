@@ -58,20 +58,9 @@ public:
 		PlayerLevelChangeDelegate.Broadcast(PlayerLevel);
 	}
 
-	FORCEINLINE void SetPlayerXP(const int32 NewXp)
-	{
-		PlayerXP = NewXp;
-		PlayerXpChangeDelegate.Broadcast(PlayerXP);
-	}
+	 void SetPlayerXP(const int32 NewXp);
 
-	FORCEINLINE void AddToPlayerXP(const int32 AddedXp)
-	{
-		if (!GetGiSubSystem()) { return; }
-		const auto MaxXp = GetGiSubSystem()->GetCharacterDefaultMaxXP();
-		if (GetPlayerCurrentXP() == MaxXp) { return; }
-		PlayerXP = FMath::Clamp(PlayerXP + AddedXp, 0, MaxXp);
-		PlayerXpChangeDelegate.Broadcast(PlayerXP);
-	}
+	 void AddToPlayerXP(const int32 AddedXp);
 
 	FORCEINLINE void AddToPlayerLevel(const int32 AddedLevel)
 	{
@@ -95,11 +84,7 @@ public:
 		AssignableSpellPointsChangeDelegate.Broadcast(AssignableSpellPoints);
 	}
 
-	FORCEINLINE void AddToAssignableAttributePoints(const int32 AddedValue)
-	{
-		AssignableAttributePoints = FMath::Max(AssignableAttributePoints + AddedValue, 0);
-		AssignableAttributePointsChangeDelegate.Broadcast(AssignableAttributePoints);
-	}
+	 void AddToAssignableAttributePoints(const int32 AddedValue);
 
 	FORCEINLINE void AddToAssignableSpellPoints(const int32 AddedValue)
 	{

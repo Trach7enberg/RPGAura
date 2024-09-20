@@ -33,6 +33,28 @@ void ABasePlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(ABasePlayerState, AssignableSpellPoints);
 }
 
+void ABasePlayerState::SetPlayerXP(const int32 NewXp)
+{
+	// TODO 待设置Clamp
+	PlayerXP = NewXp;
+	PlayerXpChangeDelegate.Broadcast(PlayerXP);
+}
+
+void ABasePlayerState::AddToPlayerXP(const int32 AddedXp)
+{
+	if (!GetGiSubSystem()) { return; }
+	const auto MaxXp = GetGiSubSystem()->GetCharacterDefaultMaxXP();
+	if (GetPlayerCurrentXP() == MaxXp) { return; }
+	PlayerXP = FMath::Clamp(PlayerXP + AddedXp, 0, MaxXp);
+	PlayerXpChangeDelegate.Broadcast(PlayerXP);
+}
+
+void ABasePlayerState::AddToAssignableAttributePoints(const int32 AddedValue)
+{
+	AssignableAttributePoints = FMath::Max(AssignableAttributePoints + AddedValue, 0);
+	AssignableAttributePointsChangeDelegate.Broadcast(AssignableAttributePoints);
+}
+
 int32 ABasePlayerState::GetMaximumXPofLevel(const int32 TLevel)
 {
 	if (!GetGiSubSystem() || !GetGiSubSystem()->LevelUpInfoAsset) { return 0; }
@@ -82,11 +104,11 @@ void ABasePlayerState::OnRep_PlayerXP(int32 OldValue)
 
 void ABasePlayerState::OnRep_AssignableAttributePoints(int32 OldValue)
 {
-	AssignableAttributePointsChangeDelegate.Broadcast(OldValue);
+	AssignableAttributePointsChangeDelegate.Broadcast(AssignableAttributePoints);
 }
 void ABasePlayerState::OnRep_AssignableSpellPoints(int32 OldValue)
 {
-	AssignableSpellPointsChangeDelegate.Broadcast(OldValue);
+	AssignableSpellPointsChangeDelegate.Broadcast(AssignableSpellPoints);
 }
 
 URPGAuraGameInstanceSubsystem* ABasePlayerState::GetGiSubSystem()
