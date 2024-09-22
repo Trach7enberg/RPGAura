@@ -46,13 +46,13 @@ public:
 	/// @param Area 给定的区域(垂直盒或者水平盒)
 	/// @param Num 创建重复Widget的数量
 	/// @param WidgetControllerClass 要创建Widget的小部件控制器
-	/// @param TagToAbilityInfos
+	/// @param WidgetTags
 	/// @param HorizontalAlignment BoxSlot的水平对齐格式
 	/// @param VerticalAlignment BoxSlot的垂直对齐格式
 	template <typename BoxSlotType>
 	static void CreateMultipleWidget(const TSubclassOf<UBaseUserWidget> WidgetClass, APlayerController* WidgetOwner,
 	                                 UPanelWidget* Area, const int32 Num,
-	                                 TArray<FTagToAbilityInfo>& TagToAbilityInfos,
+	                                 FGameplayTagContainer& WidgetTags,
 	                                 const TSubclassOf<UBaseWidgetController> WidgetControllerClass =
 		                                 UBaseWidgetController::StaticClass(),
 	                                 EHorizontalAlignment HorizontalAlignment = HAlign_Fill,
@@ -63,7 +63,7 @@ template <typename BoxSlotType>
 void UWidgetControllerBpFuncLib::CreateMultipleWidget(const TSubclassOf<UBaseUserWidget> WidgetClass,
                                                       APlayerController* WidgetOwner, UPanelWidget* Area,
                                                       const int32 Num,
-                                                      TArray<FTagToAbilityInfo>& TagToAbilityInfos,
+                                                      FGameplayTagContainer& WidgetTags,
                                                       const TSubclassOf<UBaseWidgetController> WidgetControllerClass,
                                                       EHorizontalAlignment HorizontalAlignment,
                                                       EVerticalAlignment VerticalAlignment)
@@ -82,7 +82,7 @@ void UWidgetControllerBpFuncLib::CreateMultipleWidget(const TSubclassOf<UBaseUse
 		if (!Widget) { continue; }
 
 		// 设置Widget的游戏标签(能力相对应的输入键)
-		if (i < TagToAbilityInfos.Num()) { Widget->SetCurrentGameplayTag(TagToAbilityInfos[i].InputTag); }
+		if (i < WidgetTags.Num()) { Widget->SetCurrentGameplayTag(WidgetTags.GetByIndex(i)); }
 		
 		Widget->SetWidgetController(CreateWidgetController(WidgetControllerClass,
 																   WidgetOwner));
