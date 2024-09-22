@@ -34,13 +34,15 @@ public:
 	/// @param Abilities 能力列表
 	/// @param CharacterLevel
 	/// @param ActiveWhenGive
-	void AddCharacterDefaultAbilities(const TArray<TSubclassOf<UGameplayAbility>>& Abilities, float CharacterLevel = 1, const bool ActiveWhenGive = false);
-	
+	void AddCharacterDefaultAbilities(const TArray<TSubclassOf<UGameplayAbility>>& Abilities, float CharacterLevel = 1,
+	                                  const bool ActiveWhenGive = false);
+
 	/// 给玩家添加一个默认能力(通过能力类上的StarUp标签来给予)
 	/// @param AbilityClass 能力类
 	/// @param CharacterLevel
 	/// @param ActiveWhenGive 给予能力时是否激活能力
-	void AddCharacterDefaultAbility(const TSubclassOf<UGameplayAbility>& AbilityClass, float CharacterLevel = 1, bool ActiveWhenGive = false) ;
+	void AddCharacterDefaultAbility(const TSubclassOf<UGameplayAbility>& AbilityClass, float CharacterLevel = 1,
+	                                bool ActiveWhenGive = false);
 
 	/// 处理InputAction按下时的能力触发问题
 	/// @param InputTag 输入的游戏标签
@@ -73,13 +75,18 @@ public:
 	static FGameplayTag GetTagFromAbilitySpecDynamicTags(const FGameplayAbilitySpec& AbilitySpec,
 	                                                     const FGameplayTag& TargetTag);
 
+	/// 从AbilitySpec中获取Abilities Status标签
+	/// @param AbilitySpec 
+	/// @return 
+	static FGameplayTag GetAbilityStatusFromSpec(const FGameplayAbilitySpec& AbilitySpec);
+
 	/// 广播当前能被激活的(角色默认就有的)能力相关的信息数据
 	void BroadCastDefaultActivatableAbilitiesInfo();
 
 	/// 在服务器端根据属性标签升级对应的属性
 	/// @param AttributeTag
-	UFUNCTION(Server,Reliable)
-	void UpgradeAttribute(const FGameplayTag& AttributeTag); 
+	UFUNCTION(Server, Reliable)
+	void UpgradeAttribute(const FGameplayTag& AttributeTag);
 
 protected:
 	/// 当前ACS被应用任意的GE到自己身上时触发的回调函数

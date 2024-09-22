@@ -22,6 +22,15 @@ void UBaseAbilitySystemComponent::InitSetting()
 	OnGameplayEffectAppliedDelegateToSelf.AddUObject(this, &UBaseAbilitySystemComponent::ClientOnGEAppliedToSelf);
 }
 
+FGameplayTag UBaseAbilitySystemComponent::GetAbilityStatusFromSpec(const FGameplayAbilitySpec& AbilitySpec)
+{
+	for (const auto& Tag : AbilitySpec.DynamicAbilityTags)
+	{
+		if (Tag.MatchesTag(FRPGAuraGameplayTags::Get().Abilities_Status)) { return Tag; }
+	}
+	return FGameplayTag();
+}
+
 void UBaseAbilitySystemComponent::AddCharacterDefaultAbilities(const TArray<TSubclassOf<UGameplayAbility>>& Abilities,
                                                                const float CharacterLevel, const bool ActiveWhenGive)
 {
@@ -33,9 +42,12 @@ void UBaseAbilitySystemComponent::AddCharacterDefaultAbilities(const TArray<TSub
 }
 
 void UBaseAbilitySystemComponent::AddCharacterDefaultAbility(const TSubclassOf<UGameplayAbility>& AbilityClass,
-                                                             const float CharacterLevel, bool ActiveWhenGive)
+                                                             const float CharacterLevel, const bool ActiveWhenGive)
 {
 	FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass, CharacterLevel);
+
+	// 添加能力已经装备的标签
+	AbilitySpec.DynamicAbilityTags.AddTag(FRPGAuraGameplayTags::Get().Abilities_Status_Equipped);
 
 	if (ActiveWhenGive) { GiveAbilityAndActivateOnce(AbilitySpec); }
 	else
@@ -157,11 +169,12 @@ void UBaseAbilitySystemComponent::BroadCastDefaultActivatableAbilitiesInfo()
 
 	for (const auto& AbilitySpec : GetActivatableAbilities())
 	{
-		FTagToAbilityInfo AbilityInfo = Gi->AbilityInfoAsset->FindAbilityInfoByAbilityTag(
+		FTagToAbilityInfo AbilityInfo = Gi->AbilityInfoAsset->FindOffensiveAbilityInfo(
 			GetTagFromAbilitySpec(AbilitySpec, FRPGAuraGameplayTags::Get().Abilities_Attack));
 
 		// 从能力里获得触发该能力对应的输入键(标签)
 		AbilityInfo.InputTag = GetTagFromAbilitySpecDynamicTags(AbilitySpec, FRPGAuraGameplayTags::Get().InputTag);
+		AbilityInfo.StatusTag =  GetAbilityStatusFromSpec(AbilitySpec);
 		if (AbilityInfo.InfoDataIsValid()) { Gi->AbilityInfoDelegate.Broadcast(AbilityInfo); }
 	}
 }
@@ -177,11 +190,9 @@ void UBaseAbilitySystemComponent::UpgradeAttribute_Implementation(const FGamepla
 	PayLoad.EventMagnitude = 1.f;
 
 	// 发送游戏事件给我们的被动能力(有一个EventBase的被动能力会等待Attributes开头的属性标签事件)
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActor(),AttributeTag,PayLoad);
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActor(), AttributeTag, PayLoad);
 
 	PlayerInterface->AddToAttributesPoints(-1);
-	
-	
 }
 
 void UBaseAbilitySystemComponent::OnRep_ActivateAbilities()
