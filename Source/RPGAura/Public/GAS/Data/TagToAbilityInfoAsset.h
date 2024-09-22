@@ -17,9 +17,17 @@ class RPGAURA_API UTagToAbilityInfoAsset : public UDataAsset
 	GENERATED_BODY()
 
 public:
-	// 技能信息结构体数组
+	// 主动技能信息结构体数组
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	TArray<FTagToAbilityInfo> AbilityInfos;
+	TArray<FTagToAbilityInfo> AbilityInfosOffensive;
 
-	FTagToAbilityInfo FindAbilityInfoByAbilityTag(const FGameplayTag& Tag,bool bLogNotFound = true) const;
+	// 被动技能信息结构体数组
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TArray<FTagToAbilityInfo> AbilityInfosPassive;
+
+	FTagToAbilityInfo FindOffensiveAbilityInfo(const FGameplayTag& Tag, bool bLogNotFound = true) const;
+
+	/// 通过给定的标签查找与该标签Match的AbilityInfo
+	FTagToAbilityInfo FindPassiveAbilityInfo(const FGameplayTag& Tag, bool bLogNotFound = true) const;
+
 };
