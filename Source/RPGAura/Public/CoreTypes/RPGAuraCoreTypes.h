@@ -218,6 +218,10 @@ struct FTagToAbilityInfo
 	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
 	FGameplayTag InputTag = FGameplayTag();
 
+	// 当前技能的状态,是装备还是未解锁等等
+	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
+	FGameplayTag StatusTag = FGameplayTag();
+
 	// 与当前技能对应的图标
 	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
 	TObjectPtr<const UTexture2D> AbilityIcon = nullptr;
