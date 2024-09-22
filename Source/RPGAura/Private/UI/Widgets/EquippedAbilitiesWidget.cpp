@@ -26,7 +26,7 @@ void UEquippedAbilitiesWidget::InitOffensiveEquippedArea()
 	const auto Gi = GetOwningPlayer()->GetGameInstance()->GetSubsystem<URPGAuraGameInstanceSubsystem>();
 	if (!Gi) { return; }
 
-	auto TagToAbilityInfos = Gi->AbilityInfoAsset.Get()->AbilityInfos;
+	auto TagToAbilityInfos = Gi->AbilityInfoAsset.Get()->AbilityInfosOffensive;
 
 	UWidgetControllerBpFuncLib::CreateMultipleWidget<UHorizontalBoxSlot>(
 		EquippedSpell, GetOwningPlayer(), OffensiveEquippedArea.Get()
@@ -44,7 +44,7 @@ void UEquippedAbilitiesWidget::InitPassiveEquippedArea()
 	const auto Gi = GetOwningPlayer()->GetGameInstance()->GetSubsystem<URPGAuraGameInstanceSubsystem>();
 	if (!Gi) { return; }
 
-	auto TagToAbilityInfos = TArray<FTagToAbilityInfo>();
+	auto TagToAbilityInfos = Gi->AbilityInfoAsset.Get()->AbilityInfosPassive;
 	UWidgetControllerBpFuncLib::CreateMultipleWidget<UVerticalBoxSlot>(
 		EquippedSpell, GetOwningPlayer(), PassiveEquippedArea
 		, EquippedAbilityNum_Passive, TagToAbilityInfos, UEquippedAbilityWidgetController::StaticClass());
