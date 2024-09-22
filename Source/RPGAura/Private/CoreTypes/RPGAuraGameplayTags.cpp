@@ -18,12 +18,17 @@ FGameplayTagContainer FRPGAuraGameplayTags::PrimaryGameplayTagsContainer;
 FGameplayTagContainer FRPGAuraGameplayTags::SecondaryGameplayTagsContainer;
 FGameplayTagContainer FRPGAuraGameplayTags::DamageTypesTagsContainer;
 
+FGameplayTagContainer FRPGAuraGameplayTags::AttackSpellFireTagsContainer;
+FGameplayTagContainer FRPGAuraGameplayTags::AttackSpellLightningTagsContainer;
+FGameplayTagContainer FRPGAuraGameplayTags::AttackSpellArcaneTagsContainer;
+FGameplayTagContainer FRPGAuraGameplayTags::PassiveTagsContainer;
+
 void FRPGAuraGameplayTags::InitGameplayTags()
 {
 	// 创建Native GameplayTags
 	{
 		GameplayTags.Attribute_Main = UGameplayTagsManager::Get().AddNativeGameplayTag(
-				"Attributes.Main");
+			"Attributes.Main");
 		// 主要属性
 		{
 			GameplayTags.Attribute_Vital_CurrentHealth = UGameplayTagsManager::Get().AddNativeGameplayTag(
@@ -96,6 +101,10 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 			GameplayTags.InputTag_2 = UGameplayTagsManager::Get().AddNativeGameplayTag("InputTag.2", FString("主键盘2"));
 			GameplayTags.InputTag_3 = UGameplayTagsManager::Get().AddNativeGameplayTag("InputTag.3", FString("主键盘3"));
 			GameplayTags.InputTag_4 = UGameplayTagsManager::Get().AddNativeGameplayTag("InputTag.4", FString("主键盘4"));
+			GameplayTags.InputTag_Passive_1 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"InputTag.Passive1", FString(""));
+			GameplayTags.InputTag_Passive_2 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"InputTag.Passive2", FString(""));
 		}
 
 
@@ -141,6 +150,30 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 
 			GameplayTags.Abilities_Attack_Spell_Fire_FireBolt = UGameplayTagsManager::Get().AddNativeGameplayTag(
 				"Abilities.Attack.Spell.Fire.FireBolt", FString("火球法术技能"));
+		}
+
+		//能力状态
+		{
+			GameplayTags.Abilities_Status = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Status", FString(""));
+			GameplayTags.Abilities_Status_Locked = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Status.Locked", FString(""));
+			GameplayTags.Abilities_Status_Unlocked = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Status.Unlocked", FString(""));
+			GameplayTags.Abilities_Status_Eligible = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Status.Eligible", FString(""));
+			GameplayTags.Abilities_Status_Equipped = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Status.Equipped", FString(""));
+		}
+
+		//能力的分类
+		{
+			GameplayTags.Abilities_Type_Offensive = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Type.Offensive", FString(""));
+			GameplayTags.Abilities_Type_Passive = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Type.Passive", FString(""));
+			GameplayTags.Abilities_Type_Normal = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Type.Normal", FString(""));
 		}
 
 		// 技能冷却标签
@@ -225,6 +258,8 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.InputTag_2);
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.InputTag_3);
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.InputTag_4);
+		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.InputTag_Passive_1);
+		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.InputTag_Passive_2);
 
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Abilities_DamageType_Physical);
 		GameplayTags.GameplayTagsContainer.AddTag(GameplayTags.Abilities_DamageType_Fire);
@@ -287,6 +322,8 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 		GameplayTags.TagToNumMap.Add(GameplayTags.InputTag_2, EGameplayTagNum::Input2);
 		GameplayTags.TagToNumMap.Add(GameplayTags.InputTag_3, EGameplayTagNum::Input3);
 		GameplayTags.TagToNumMap.Add(GameplayTags.InputTag_4, EGameplayTagNum::Input4);
+		GameplayTags.TagToNumMap.Add(GameplayTags.InputTag_Passive_1, EGameplayTagNum::Input_Passive1);
+		GameplayTags.TagToNumMap.Add(GameplayTags.InputTag_Passive_2, EGameplayTagNum::Input_Passive2);
 
 		GameplayTags.TagToNumMap.Add(GameplayTags.Abilities_DamageType_Physical,
 		                             EGameplayTagNum::Abilities_Damage_Spell_Physical);
@@ -317,6 +354,17 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 		                                             GameplayTags.Attributes_Secondary_Resistance_Arcane);
 		GameplayTags.DamageTypesToResistancesMap.Add(GameplayTags.Abilities_DamageType_Physical,
 		                                             GameplayTags.Attributes_Secondary_Resistance_Physical);
+	}
+
+	// 添加火系法术攻击技能标签到容器里
+	{
+		GameplayTags.AttackSpellFireTagsContainer.AddTag(GameplayTags.Abilities_Attack_Spell_Fire_FireBolt);
+	}
+
+	// 添加被动技能标签到对应的容器
+	{
+		GameplayTags.PassiveTagsContainer.AddTag(GameplayTags.InputTag_Passive_1);
+		GameplayTags.PassiveTagsContainer.AddTag(GameplayTags.InputTag_Passive_2);
 	}
 }
 

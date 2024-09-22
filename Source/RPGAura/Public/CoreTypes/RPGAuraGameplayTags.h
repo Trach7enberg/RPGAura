@@ -38,6 +38,8 @@ enum class EGameplayTagNum : uint8
 	Input2,
 	Input3,
 	Input4,
+	Input_Passive1,
+	Input_Passive2,
 
 	MaxHealth,
 	MaxMana,
@@ -104,6 +106,10 @@ struct FRPGAuraGameplayTags
 	FGameplayTag InputTag_2;
 	FGameplayTag InputTag_3;
 	FGameplayTag InputTag_4;
+
+	// 被动技能输入标签 TODO 同时也标识被动技能,待更改
+	FGameplayTag InputTag_Passive_1;
+	FGameplayTag InputTag_Passive_2;
 	
 
 	// 用于GA的伤害类型, 法术伤害
@@ -125,8 +131,22 @@ struct FRPGAuraGameplayTags
 	FGameplayTag Abilities_Attack_Spell;	// 萨满法术攻击标签
 	FGameplayTag Abilities_Attack_Summon;	// 萨满法术攻击标签
 
+	// 用于标识法术装备菜单的当前能力技能的状态,一个能力同一时间只能有一种状态标签
+	FGameplayTag Abilities_Status;	// 能力状态父标签
+	FGameplayTag Abilities_Status_Locked;
+	FGameplayTag Abilities_Status_Eligible;
+	FGameplayTag Abilities_Status_Unlocked;
+	FGameplayTag Abilities_Status_Equipped;
+
+	// 能力的分类,主动还是被动,无则是一些通用的能力,比如受击反应能力
+	FGameplayTag Abilities_Type_Offensive;
+	FGameplayTag Abilities_Type_Passive;
+	FGameplayTag Abilities_Type_Normal;
+
 	// 实际的技能标签
-	FGameplayTag Abilities_Attack_Spell_Fire_FireBolt; // 火球技能
+	FGameplayTag Abilities_Attack_Spell_Fire_FireBolt; // 火系法术下的火球技能
+	FGameplayTag Abilities_Attack_Spell_Lightning; // TODO 闪电系
+	FGameplayTag Abilities_Attack_Spell_Arcane; // TODO 奥术系
 
 	// 能力冷却的标签
 	FGameplayTag Abilities_CoolDown_Fire_FireBolt; // 火球技能冷却时间标签
@@ -159,12 +179,16 @@ struct FRPGAuraGameplayTags
 	static TMap<FGameplayTag, FGameplayTag> DamageTypesToResistancesMap;
 
 	// 包含当前项目所有标签的标签容器
-	static FGameplayTagContainer GameplayTagsContainer;
-	static FGameplayTagContainer VitalGameplayTagsContainer;
-	static FGameplayTagContainer PrimaryGameplayTagsContainer;
-	static FGameplayTagContainer SecondaryGameplayTagsContainer;
+	static FGameplayTagContainer GameplayTagsContainer;	// 包含需要用到的标签(几乎全部)的标签容器
+	static FGameplayTagContainer VitalGameplayTagsContainer;	// 和属性集的重要属性一一对应的标签容器
+	static FGameplayTagContainer PrimaryGameplayTagsContainer;	// 和属性集的主要属性一一对应的标签容器
+	static FGameplayTagContainer SecondaryGameplayTagsContainer; // 和属性集的次要属性一一对应的标签容器
 	static FGameplayTagContainer DamageTypesTagsContainer; // 所有伤害类型
-
+	
+	static FGameplayTagContainer AttackSpellFireTagsContainer; // 所有火系法术攻击技能的标签容器
+	static FGameplayTagContainer AttackSpellLightningTagsContainer; // 所有闪电系法术攻击技能的标签容器
+	static FGameplayTagContainer AttackSpellArcaneTagsContainer; // 所有奥术系法术攻击技能的标签容器
+	static FGameplayTagContainer PassiveTagsContainer;	// 所有被动技能所对应的标签容器
 
 private:
 	// 存储所有游戏标签的静态类的实例
