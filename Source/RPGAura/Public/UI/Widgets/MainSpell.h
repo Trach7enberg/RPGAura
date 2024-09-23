@@ -9,7 +9,7 @@
 class UVerticalBox;
 class UHorizontalBox;
 /**
- * MainSpell小部件
+ * MainSpell小部件(显示人物当前装备技能、血球蓝球栏的UI)
  */
 UCLASS()
 class RPGAURA_API UMainSpell : public UBaseUserWidget
