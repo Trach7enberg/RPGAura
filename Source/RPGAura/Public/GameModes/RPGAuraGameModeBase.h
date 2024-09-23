@@ -6,6 +6,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "RPGAuraGameModeBase.generated.h"
 
+class UTagToAbilityInfoAsset;
 /**
  * 游戏模式类
  */
@@ -14,4 +15,6 @@ class RPGAURA_API ARPGAuraGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
 	ARPGAuraGameModeBase();
+
+
 };
