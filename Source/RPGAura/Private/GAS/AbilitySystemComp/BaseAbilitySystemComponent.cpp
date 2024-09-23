@@ -31,6 +31,48 @@ FGameplayTag UBaseAbilitySystemComponent::GetAbilityStatusFromSpec(const FGamepl
 	return FGameplayTag();
 }
 
+FGameplayAbilitySpec* UBaseAbilitySystemComponent::GetSpecFromAbilityTag(const FGameplayTag& AbilityTag)
+{
+	if (!AbilityTag.IsValid()) { return nullptr; }
+
+	FScopedAbilityListLock AbilityListLock(*this);
+	for (auto& AbilitySpec : GetActivatableAbilities())
+	{
+		for (auto DynamicAbilityTag : AbilitySpec.DynamicAbilityTags)
+		{
+			if (DynamicAbilityTag.MatchesTag(AbilityTag)) { return &AbilitySpec; }
+		}
+	}
+	return nullptr;
+}
+
+void UBaseAbilitySystemComponent::UpdateAbilityStatus(const int32 Level)
+{
+	if (Level < 1) { return; }
+
+	const auto AbilityInfo = URPGAuraGameInstanceSubsystem::GetAbilityInfoAsset(GetAvatarActor());
+	if(!AbilityInfo){return;}
+	
+	for (const auto& Info : AbilityInfo->AbilityInfosOffensive)
+	{
+		if(Level < Info.LevelRequirement || !Info.AbilityTag.IsValid()){continue;}
+
+		// 获取到能力说明能力已存在
+		if(GetSpecFromAbilityTag(Info.AbilityTag)){continue;}
+
+		FGameplayAbilitySpec GameplayAbilitySpec = FGameplayAbilitySpec(Info.AbilityClass,1);
+		// 把能力的状态设置为Eligible,并给予能力但是不激活
+		GameplayAbilitySpec.DynamicAbilityTags.AddTag(FRPGAuraGameplayTags::Get().Abilities_Status_Eligible);
+		GiveAbility(GameplayAbilitySpec);
+
+		// 标记刚刚给予的能力为脏值,强迫该AbilitySpec立马进行Replicate,而不是等到下一个更新
+		// 例如我们的法术菜单上的技能球的状态显示要即使的,所以我们得立即进行复制
+		MarkAbilitySpecDirty(GameplayAbilitySpec);
+		ClientOnAbilityStatusChanged(Info.AbilityTag, FRPGAuraGameplayTags::Get().Abilities_Status_Eligible);
+		
+	}
+}
+
 void UBaseAbilitySystemComponent::AddCharacterDefaultAbilities(const TArray<TSubclassOf<UGameplayAbility>>& Abilities,
                                                                const float CharacterLevel, const bool ActiveWhenGive)
 {
@@ -161,21 +203,34 @@ FGameplayTag UBaseAbilitySystemComponent::GetTagFromAbilitySpecDynamicTags(const
 
 void UBaseAbilitySystemComponent::BroadCastDefaultActivatableAbilitiesInfo()
 {
+	if (!GetOwner()) { return; }
+
 	const auto Gi = GetOwner()->GetGameInstance()->GetSubsystem<URPGAuraGameInstanceSubsystem>();
 	if (!Gi) { return; }
+
+	const auto Infos = URPGAuraGameInstanceSubsystem::GetAbilityInfoAsset(GetOwner());
+	if (Infos == nullptr)
+	{
+		UE_LOG(UBaseAbilitySystemComponentLog, Error, TEXT("[%s]获取技能信息消息数据资产表失败"), *GetNameSafe(this));
+		return;
+	}
 
 	// 安全地遍历所有可激活的能力，当前范围将被锁定,如果有新增加或者被移除的能力不会改变GetActivatableAbilities的结果,完成当前范围之后才会改变
 	FScopedAbilityListLock AbilityListLock(*this);
 
 	for (const auto& AbilitySpec : GetActivatableAbilities())
 	{
-		FTagToAbilityInfo AbilityInfo = Gi->AbilityInfoAsset->FindOffensiveAbilityInfo(
-			GetTagFromAbilitySpec(AbilitySpec, FRPGAuraGameplayTags::Get().Abilities_Attack));
+		const auto TempAbilityTag = GetTagFromAbilitySpec(AbilitySpec, FRPGAuraGameplayTags::Get().Abilities_Attack);
+
+		// 能力标签找不到就不需要进行下面步骤了
+		if (!TempAbilityTag.IsValid()) { continue; }
+
+		FTagToAbilityInfo AbilityInfo = Infos->FindOffensiveAbilityInfo(TempAbilityTag);
 
 		// 从能力里获得触发该能力对应的输入键(标签)
 		AbilityInfo.InputTag = GetTagFromAbilitySpecDynamicTags(AbilitySpec, FRPGAuraGameplayTags::Get().InputTag);
-		AbilityInfo.StatusTag =  GetAbilityStatusFromSpec(AbilitySpec);
-		if (AbilityInfo.InfoDataIsValid()) { Gi->AbilityInfoDelegate.Broadcast(AbilityInfo); }
+		AbilityInfo.StatusTag = GetAbilityStatusFromSpec(AbilitySpec);
+		if (AbilityInfo.InfoDataInputIsValid()) { Gi->AbilityInfoDelegate.Broadcast(AbilityInfo); }
 	}
 }
 
@@ -200,6 +255,12 @@ void UBaseAbilitySystemComponent::OnRep_ActivateAbilities()
 	Super::OnRep_ActivateAbilities();
 	// TODO 只广播一次,而不是每次OnRep都广播
 	BroadCastDefaultActivatableAbilitiesInfo();
+}
+
+void UBaseAbilitySystemComponent::ClientOnAbilityStatusChanged_Implementation(const FGameplayTag& AbilityTag,
+	const FGameplayTag& AbilityStatusTag)
+{
+	OnAbilityStatusChanged.Broadcast(AbilityTag, AbilityStatusTag);
 }
 
 void UBaseAbilitySystemComponent::ClientOnGEAppliedToSelf_Implementation(
