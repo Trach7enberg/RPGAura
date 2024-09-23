@@ -7,6 +7,7 @@
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
+#include "CoreTypes/RPGAuraGameplayTags.h"
 #include "FunctionLibrary/WidgetControllerBpFuncLib.h"
 #include "GAS/Data/TagToAbilityInfoAsset.h"
 #include "SubSystems/RPGAuraGameInstanceSubsystem.h"
@@ -23,14 +24,9 @@ void UEquippedAbilitiesWidget::InitOffensiveEquippedArea()
 		return;
 	}
 
-	const auto Gi = GetOwningPlayer()->GetGameInstance()->GetSubsystem<URPGAuraGameInstanceSubsystem>();
-	if (!Gi) { return; }
-
-	auto TagToAbilityInfos = Gi->AbilityInfoAsset.Get()->AbilityInfosOffensive;
-
 	UWidgetControllerBpFuncLib::CreateMultipleWidget<UHorizontalBoxSlot>(
 		EquippedSpell, GetOwningPlayer(), OffensiveEquippedArea.Get()
-		, EquippedAbilityNum_Offensive, TagToAbilityInfos, UEquippedAbilityWidgetController::StaticClass(),
+		, EquippedAbilityNum_Offensive, FRPGAuraGameplayTags::Get().InputOffensiveTagsContainer, UEquippedAbilityWidgetController::StaticClass(),
 		HAlign_Center, VAlign_Center);
 }
 
@@ -41,11 +37,8 @@ void UEquippedAbilitiesWidget::InitPassiveEquippedArea()
 		UE_LOG(UEquippedAbilitiesWidgetLog, Error, TEXT("[%s]致命错误"), *GetNameSafe(this));
 		return;
 	}
-	const auto Gi = GetOwningPlayer()->GetGameInstance()->GetSubsystem<URPGAuraGameInstanceSubsystem>();
-	if (!Gi) { return; }
-
-	auto TagToAbilityInfos = Gi->AbilityInfoAsset.Get()->AbilityInfosPassive;
+	
 	UWidgetControllerBpFuncLib::CreateMultipleWidget<UVerticalBoxSlot>(
 		EquippedSpell, GetOwningPlayer(), PassiveEquippedArea
-		, EquippedAbilityNum_Passive, TagToAbilityInfos, UEquippedAbilityWidgetController::StaticClass());
+		, EquippedAbilityNum_Passive, FRPGAuraGameplayTags::Get().PassiveTagsContainer, UEquippedAbilityWidgetController::StaticClass());
 }
