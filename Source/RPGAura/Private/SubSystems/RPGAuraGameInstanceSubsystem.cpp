@@ -6,29 +6,33 @@
 #include "AbilitySystemComponent.h"
 
 #include "CoreTypes/RPGAuraGasCoreTypes.h"
+#include "GameModes/RPGAuraGameModeBase.h"
 #include "GAS/Data/CharacterClassInfo.h"
 #include "GAS/Data/PickupMessageAsset.h"
 #include "GAS/Data/TagToAbilityInfoAsset.h"
 #include "GAS/Data/LevelUpInfoAsset.h"
+#include "Kismet/GameplayStatics.h"
 
 DEFINE_LOG_CATEGORY_STATIC(URPGAuraGameInstanceSubsystemLog, All, All);
+
+TObjectPtr<UTagToAbilityInfoAsset> URPGAuraGameInstanceSubsystem::AbilityInfoAsset;
 
 void URPGAuraGameInstanceSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
+
 	CharacterClassInfo = LoadObject<UCharacterClassInfo>(
 		this,TEXT(
 			"/Script/RPGAura.CharacterClassInfo'/Game/Blueprints/GAS/Data/DataAssets/DA_CharacterClassInfo.DA_CharacterClassInfo'"));
 
+	AbilityInfoAsset = LoadObject<UTagToAbilityInfoAsset>(
+		this,TEXT(
+			"/Script/RPGAura.TagToAbilityInfoAsset'/Game/Blueprints/GAS/Data/DataAssets/DA_TagToAbilityInfo.DA_TagToAbilityInfo'"));
 
 	MessageWidgetDataAsset = LoadObject<UPickupMessageAsset>(
 		this,TEXT(
 			"/Script/RPGAura.PickupMessageAsset'/Game/Blueprints/GAS/Data/DataAssets/DA_PickupMessage.DA_PickupMessage'"));
-
-	AbilityInfoAsset = LoadObject<UTagToAbilityInfoAsset>(
-		this,TEXT(
-			"/Script/RPGAura.TagToAbilityInfoAsset'/Game/Blueprints/GAS/Data/DataAssets/DA_TagToAbilityInfo.DA_TagToAbilityInfo'"));
 
 	LevelUpInfoAsset = LoadObject<ULevelUpInfoAsset>(
 		this,TEXT(
@@ -38,14 +42,15 @@ void URPGAuraGameInstanceSubsystem::Initialize(FSubsystemCollectionBase& Collect
 	{
 		UE_LOG(URPGAuraGameInstanceSubsystemLog, Error, TEXT("[%s]加载角色职业信息资产失败!!"), *GetNameSafe(this));
 	}
+	if (!AbilityInfoAsset)
+	{
+		UE_LOG(URPGAuraGameInstanceSubsystemLog, Error, TEXT("[%s]加载能力信息资产失败!!"), *GetNameSafe(this));
+	}
 	if (!MessageWidgetDataAsset)
 	{
 		UE_LOG(URPGAuraGameInstanceSubsystemLog, Error, TEXT("[%s]加载弹出消息数据资产表失败"), *GetNameSafe(this));
 	}
-	if (!AbilityInfoAsset)
-	{
-		UE_LOG(URPGAuraGameInstanceSubsystemLog, Error, TEXT("[%s]加载技能信息消息数据资产表失败"), *GetNameSafe(this));
-	}
+
 	if (!LevelUpInfoAsset)
 	{
 		UE_LOG(URPGAuraGameInstanceSubsystemLog, Error, TEXT("[%s]加载角色等级数据资产表失败"), *GetNameSafe(this));
@@ -106,28 +111,29 @@ void URPGAuraGameInstanceSubsystem::InitializeDefaultAttributes(UAbilitySystemCo
 int32 URPGAuraGameInstanceSubsystem::
 GetXpRewardFromClassAndLevel(const ECharacterClass CharacterClass, const int32 CharacterLevel) const
 {
-	if (!CharacterClassInfo->CharacterClassInformation.Num() )
+	if (!CharacterClassInfo->CharacterClassInformation.Num())
 	{
 		UE_LOG(URPGAuraGameInstanceSubsystemLog, Error, TEXT("数据资产为null!!"));
 		return 0;
 	}
-	
+
 	const auto ScalableFloat = CharacterClassInfo->FindClassDefaultInfo(CharacterClass).XPReward;
 
 	// 截取浮点数为int32
 	return StaticCast<int32>(ScalableFloat.GetValueAtLevel(CharacterLevel));
 }
 
-int32 URPGAuraGameInstanceSubsystem::GetLevelCorrespondingToXP(const ECharacterClass CharacterClass, const int32 CharacterXP,
+int32 URPGAuraGameInstanceSubsystem::GetLevelCorrespondingToXP(const ECharacterClass CharacterClass,
+                                                               const int32 CharacterXP,
                                                                const int32 CharacterLevel) const
 {
-	if (!LevelUpInfoAsset ||!LevelUpInfoAsset->LevelUpInfos.Num())
+	if (!LevelUpInfoAsset || !LevelUpInfoAsset->LevelUpInfos.Num())
 	{
 		UE_LOG(URPGAuraGameInstanceSubsystemLog, Error, TEXT("数据资产为null!!"));
 		return CharacterLevel;
 	}
 
-	return LevelUpInfoAsset->GetLevelCorrespondingToXP(CharacterClass,CharacterXP,CharacterLevel);
+	return LevelUpInfoAsset->GetLevelCorrespondingToXP(CharacterClass, CharacterXP, CharacterLevel);
 }
 
 int32 URPGAuraGameInstanceSubsystem::GetCharacterDefaultMaxLevel()
@@ -138,8 +144,8 @@ int32 URPGAuraGameInstanceSubsystem::GetCharacterDefaultMaxLevel()
 		return 0;
 	}
 	return LevelUpInfoAsset->LevelUpInfos.Num() - 1;
-
 }
+
 int32 URPGAuraGameInstanceSubsystem::GetCharacterDefaultMaxXP()
 {
 	if (!LevelUpInfoAsset || !LevelUpInfoAsset->LevelUpInfos.Num())
@@ -148,4 +154,9 @@ int32 URPGAuraGameInstanceSubsystem::GetCharacterDefaultMaxXP()
 		return 0;
 	}
 	return LevelUpInfoAsset->LevelUpInfos[LevelUpInfoAsset->LevelUpInfos.Num() - 1].LeveRequirement;
+}
+
+UTagToAbilityInfoAsset* URPGAuraGameInstanceSubsystem::GetAbilityInfoAsset(const UObject* WorldContextObject)
+{
+	return AbilityInfoAsset.Get();
 }

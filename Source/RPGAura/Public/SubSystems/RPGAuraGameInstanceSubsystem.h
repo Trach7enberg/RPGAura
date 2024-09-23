@@ -35,10 +35,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="DataAssets|CharacterClassDefaults")
 	TObjectPtr<UCharacterClassInfo> CharacterClassInfo;
 
-	// 技能信息资产
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="DataAssets|AbilityInfos")
-	TObjectPtr<UTagToAbilityInfoAsset> AbilityInfoAsset;
-
 	// 玩家等级信息资产
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="DataAssets|Player")
 	TObjectPtr<ULevelUpInfoAsset> LevelUpInfoAsset;
@@ -65,6 +61,7 @@ public:
 	int32 GetXpRewardFromClassAndLevel(ECharacterClass CharacterClass,int32 CharacterLevel) const;
 
 	/// 根据给定的XP值返回从数据资产中找到所对应的等级
+	/// 找不到则返回角色当前等级
 	/// @param CharacterClass 
 	/// @param CharacterXP
 	/// @param CharacterLevel
@@ -81,4 +78,13 @@ public:
 	/// @return 
 	UFUNCTION(BlueprintCallable,Category="Level")
 	int32 GetCharacterDefaultMaxXP();
+
+	/// 获取AbilityInfo数据资产,结果可能为nullptr
+	/// @param WorldContextObject 
+	/// @return 
+	static UTagToAbilityInfoAsset* GetAbilityInfoAsset(const UObject* WorldContextObject);
+	
+protected:
+	// 技能信息资产,其中部分信息由GameMode设置
+	static TObjectPtr<UTagToAbilityInfoAsset> AbilityInfoAsset ;
 };
