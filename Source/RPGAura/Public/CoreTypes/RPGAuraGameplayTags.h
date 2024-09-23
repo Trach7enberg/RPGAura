@@ -143,9 +143,9 @@ struct FRPGAuraGameplayTags
 	FGameplayTag Abilities_Type_Passive;
 	FGameplayTag Abilities_Type_Normal;
 
-	// 实际的技能标签
+	// 实际的技能标签 ,分为火、电、奥术三系
 	FGameplayTag Abilities_Attack_Spell_Fire_FireBolt; // 火系法术下的火球技能
-	FGameplayTag Abilities_Attack_Spell_Lightning; // TODO 闪电系
+	FGameplayTag Abilities_Attack_Spell_Lightning_Electrocute; // 雷电系法术下的触电技能
 	FGameplayTag Abilities_Attack_Spell_Arcane; // TODO 奥术系
 
 	// 能力冷却的标签
@@ -184,6 +184,10 @@ struct FRPGAuraGameplayTags
 	static FGameplayTagContainer PrimaryGameplayTagsContainer;	// 和属性集的主要属性一一对应的标签容器
 	static FGameplayTagContainer SecondaryGameplayTagsContainer; // 和属性集的次要属性一一对应的标签容器
 	static FGameplayTagContainer DamageTypesTagsContainer; // 所有伤害类型
+
+	// 包含输入键对应的标签的数组
+	static FGameplayTagContainer InputOffensiveTagsContainer;
+	static FGameplayTagContainer InputPassiveTagsContainer;
 	
 	static FGameplayTagContainer AttackSpellFireTagsContainer; // 所有火系法术攻击技能的标签容器
 	static FGameplayTagContainer AttackSpellLightningTagsContainer; // 所有闪电系法术攻击技能的标签容器

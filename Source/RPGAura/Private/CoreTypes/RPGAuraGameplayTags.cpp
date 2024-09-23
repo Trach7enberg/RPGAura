@@ -18,6 +18,9 @@ FGameplayTagContainer FRPGAuraGameplayTags::PrimaryGameplayTagsContainer;
 FGameplayTagContainer FRPGAuraGameplayTags::SecondaryGameplayTagsContainer;
 FGameplayTagContainer FRPGAuraGameplayTags::DamageTypesTagsContainer;
 
+FGameplayTagContainer FRPGAuraGameplayTags::InputOffensiveTagsContainer;
+FGameplayTagContainer FRPGAuraGameplayTags::InputPassiveTagsContainer;
+
 FGameplayTagContainer FRPGAuraGameplayTags::AttackSpellFireTagsContainer;
 FGameplayTagContainer FRPGAuraGameplayTags::AttackSpellLightningTagsContainer;
 FGameplayTagContainer FRPGAuraGameplayTags::AttackSpellArcaneTagsContainer;
@@ -150,6 +153,9 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 
 			GameplayTags.Abilities_Attack_Spell_Fire_FireBolt = UGameplayTagsManager::Get().AddNativeGameplayTag(
 				"Abilities.Attack.Spell.Fire.FireBolt", FString("火球法术技能"));
+			GameplayTags.Abilities_Attack_Spell_Lightning_Electrocute = UGameplayTagsManager::Get().
+				AddNativeGameplayTag(
+					"Abilities.Attack.Spell.Lightning.Electrocute", FString("触电法术技能"));
 		}
 
 		//能力状态
@@ -356,9 +362,30 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 		                                             GameplayTags.Attributes_Secondary_Resistance_Physical);
 	}
 
+	// 主动输入技能的输入键添加到对应容器
+	{
+		GameplayTags.InputOffensiveTagsContainer.AddTag(GameplayTags.InputTag_LMB);
+		GameplayTags.InputOffensiveTagsContainer.AddTag(GameplayTags.InputTag_RMB);
+		GameplayTags.InputOffensiveTagsContainer.AddTag(GameplayTags.InputTag_1);
+		GameplayTags.InputOffensiveTagsContainer.AddTag(GameplayTags.InputTag_2);
+		GameplayTags.InputOffensiveTagsContainer.AddTag(GameplayTags.InputTag_3);
+		GameplayTags.InputOffensiveTagsContainer.AddTag(GameplayTags.InputTag_4);
+	}
+	
+	// 添加被动标识标签添加到对应容器
+	{
+		GameplayTags.InputPassiveTagsContainer.AddTag(GameplayTags.InputTag_Passive_1);
+		GameplayTags.InputPassiveTagsContainer.AddTag(GameplayTags.InputTag_Passive_2);
+	}
 	// 添加火系法术攻击技能标签到容器里
 	{
 		GameplayTags.AttackSpellFireTagsContainer.AddTag(GameplayTags.Abilities_Attack_Spell_Fire_FireBolt);
+	}
+
+	// 添加电系技能标签到容器里
+	{
+		GameplayTags.AttackSpellLightningTagsContainer.
+		             AddTag(GameplayTags.Abilities_Attack_Spell_Lightning_Electrocute);
 	}
 
 	// 添加被动技能标签到对应的容器
