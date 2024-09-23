@@ -14,5 +14,8 @@ class RPGAURA_API USkillTreeOffensWidgetController : public UBaseWidgetControlle
 {
 	GENERATED_BODY()
 
+public:
+	virtual void BindCallBack() override;
+	virtual void BroadcastInitialValues() override;
 	
 };
