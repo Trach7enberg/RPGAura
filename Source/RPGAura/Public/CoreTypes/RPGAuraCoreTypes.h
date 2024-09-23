@@ -214,11 +214,12 @@ struct FTagToAbilityInfo
 	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
 	FGameplayTag AbilityCoolDownTag = FGameplayTag();
 
-	// 与当前技能相对于的输入标签
+	// 与当前技能相对于的输入标签,由程序设置,手动设置暂无效果(通过能力查找)
+	// 手动设置仅用作显示装备栏上的按键输入名称
 	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
 	FGameplayTag InputTag = FGameplayTag();
 
-	// 当前技能的状态,是装备还是未解锁等等
+	// 当前技能的状态,是装备还是未解锁等等,由程序设置,手动设置暂无效果(通过能力查找)
 	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
 	FGameplayTag StatusTag = FGameplayTag();
 
@@ -230,11 +231,26 @@ struct FTagToAbilityInfo
 	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
 	TObjectPtr<const UMaterialInterface> AbilityBackGroundMaterial = nullptr;
 
-	/// 成员数据是否有效
+	// 当前技能所需要的人物等级
+	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
+	int32 LevelRequirement = 1;
+
+	// 当前技能对应的游戏能力类
+	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
+	TSubclassOf<UGameplayAbility> AbilityClass = nullptr;
+
+	/// 和输入键标签有关的成员数据是否有效
 	/// @return 
-	bool InfoDataIsValid() const
+	bool InfoDataInputIsValid() const
 	{
 		return AbilityTag.IsValid() && InputTag.IsValid() && AbilityIcon && AbilityBackGroundMaterial;
+	}
+
+	/// 和能力标签有关的成员数据是否有效
+	/// @return 
+	bool InfoDataAbilityIsValid() const
+	{
+		return AbilityTag.IsValid()  && AbilityIcon && AbilityBackGroundMaterial;
 	}
 };
 
