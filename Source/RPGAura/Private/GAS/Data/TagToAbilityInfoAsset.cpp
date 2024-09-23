@@ -7,31 +7,30 @@
 
 DEFINE_LOG_CATEGORY_STATIC(UTagToAbilityInfoAssetLog, All, All);
 
-FTagToAbilityInfo UTagToAbilityInfoAsset::FindOffensiveAbilityInfo(const FGameplayTag& Tag,
+FTagToAbilityInfo UTagToAbilityInfoAsset::FindOffensiveAbilityInfo(const FGameplayTag& AbilityTag,
                                                                       const bool bLogNotFound) const
 {
-	for (const FTagToAbilityInfo& AbilityInfo : AbilityInfosOffensive)
+	for(int i = 0;AbilityTag.IsValid() && i<AbilityInfosOffensive.Num();++i)
 	{
-		if (AbilityInfo.AbilityTag == Tag) { return AbilityInfo; }
+		if (AbilityInfosOffensive[i].AbilityTag == AbilityTag) { return AbilityInfosOffensive[i]; }
 	}
-
 	if (bLogNotFound)
 	{
-		UE_LOG(UTagToAbilityInfoAssetLog, Warning, TEXT("[%s]无法找到标签为[%s]的技能信息"), *GetNameSafe(this), *Tag.ToString());
+		UE_LOG(UTagToAbilityInfoAssetLog, Warning, TEXT("[%s]无法找到标签为[%s]的主动技能信息"), *GetNameSafe(this), *AbilityTag.ToString());
 	}
 	return FTagToAbilityInfo();
 }
 
-FTagToAbilityInfo UTagToAbilityInfoAsset::FindPassiveAbilityInfo(const FGameplayTag& Tag, bool bLogNotFound) const
+FTagToAbilityInfo UTagToAbilityInfoAsset::FindPassiveAbilityInfo(const FGameplayTag& AbilityTag, bool bLogNotFound) const
 {
-	for (const FTagToAbilityInfo& AbilityInfo : AbilityInfosPassive)
+	for(int i = 0;AbilityTag.IsValid() && i<AbilityInfosPassive.Num();++i)
 	{
-		if (AbilityInfo.AbilityTag == Tag) { return AbilityInfo; }
+		if (AbilityInfosPassive[i].AbilityTag == AbilityTag) { return AbilityInfosPassive[i]; }
 	}
 
 	if (bLogNotFound)
 	{
-		UE_LOG(UTagToAbilityInfoAssetLog, Warning, TEXT("[%s]无法找到标签为[%s]的技能信息"), *GetNameSafe(this), *Tag.ToString());
+		UE_LOG(UTagToAbilityInfoAssetLog, Warning, TEXT("[%s]无法找到标签为[%s]的被动技能信息"), *GetNameSafe(this), *AbilityTag.ToString());
 	}
 	return FTagToAbilityInfo();
 }

@@ -25,9 +25,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TArray<FTagToAbilityInfo> AbilityInfosPassive;
 
-	FTagToAbilityInfo FindOffensiveAbilityInfo(const FGameplayTag& Tag, bool bLogNotFound = true) const;
+	/// 通过给定的主动能力标签查找与该标签Match的AbilityInfo
+	/// @param AbilityTag 
+	/// @param bLogNotFound 
+	/// @return 
+	FTagToAbilityInfo FindOffensiveAbilityInfo(const FGameplayTag& AbilityTag, bool bLogNotFound = true) const;
 
-	/// 通过给定的标签查找与该标签Match的AbilityInfo
-	FTagToAbilityInfo FindPassiveAbilityInfo(const FGameplayTag& Tag, bool bLogNotFound = true) const;
+	/// 通过给定的被动能力标签查找与该标签Match的AbilityInfo
+	FTagToAbilityInfo FindPassiveAbilityInfo(const FGameplayTag& AbilityTag, bool bLogNotFound = true) const;
 
 };
