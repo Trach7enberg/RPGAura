@@ -80,7 +80,7 @@ public:
 
 	FORCEINLINE void SetAssignableSpellPoints(const int32 NewAssignableSpellPoints)
 	{
-		this->AssignableSpellPoints = NewAssignableSpellPoints;
+		this->AssignableSpellPoints = FMath::Max(NewAssignableSpellPoints,0);
 		AssignableSpellPointsChangeDelegate.Broadcast(AssignableSpellPoints);
 	}
 
