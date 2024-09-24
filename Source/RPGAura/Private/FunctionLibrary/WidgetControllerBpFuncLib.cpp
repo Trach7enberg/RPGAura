@@ -26,7 +26,13 @@ void UWidgetControllerBpFuncLib::CreateWidgetControllerParams(AController* Owner
 		UE_LOG(UWidgetControllerBpFuncLibLog, Error, TEXT("当前Owner不是玩家控制器!"));
 		return;
 	}
-
+	const auto GiSubSystem = CurrentPlayerController->GetGameInstance()->GetSubsystem<URPGAuraGameInstanceSubsystem>();
+	
+	if (!GiSubSystem)
+	{
+		UE_LOG(UWidgetControllerBpFuncLibLog, Error, TEXT("无法获取游戏实例子系统!"));
+		return;
+	}
 	const auto MyPlayerState = CurrentPlayerController->GetPlayerState<ABasePlayerState>();
 	if (!MyPlayerState) { return; }
 
@@ -35,7 +41,8 @@ void UWidgetControllerBpFuncLib::CreateWidgetControllerParams(AController* Owner
 	Params = {
 		CurrentPlayerController, MyPlayerState,
 		MyPlayerState->GetAbilitySystemComponent(),
-		MyPlayerState->GetAttributeSet()
+		MyPlayerState->GetAttributeSet(),
+		GiSubSystem,
 	};
 }
 

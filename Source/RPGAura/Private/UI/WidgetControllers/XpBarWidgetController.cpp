@@ -31,8 +31,8 @@ void UXpBarWidgetController::CalculateXpPercent(int32 Xp)
 	if (!IsWidgetControllerParamsValid()) { return; }
 
 	const auto Ps = Cast<ABasePlayerState>(GetWidgetControllerParams().CurrentPlayerState);
-	const auto GiSubSystem = GetWidgetControllerParams().CurrentPlayerController->GetGameInstance()->GetSubsystem<
-		URPGAuraGameInstanceSubsystem>();
+
+	if (!Ps ) { return; }
 	
 	const auto LocalPlayer = GetWidgetControllerParams().CurrentPlayerController->GetPawn();
 	if (!LocalPlayer)
@@ -41,7 +41,7 @@ void UXpBarWidgetController::CalculateXpPercent(int32 Xp)
 		return;
 	}
 
-	if (!Ps || !GiSubSystem) { return; }
+	
 
 	const auto CombatInt = Cast<ICombatInterface>(LocalPlayer);
 
@@ -54,8 +54,9 @@ void UXpBarWidgetController::CalculateXpPercent(int32 Xp)
 	// 1. 获取当前等级满经验值所需要的经验值数
 	// 2. 获取升级到当前等级所需的最小经验值数
 	// 3. 计算当前经验值所占进度条百分比
-	const auto CurrentLevel = GiSubSystem->GetLevelCorrespondingToXP(CombatInt->GetCharacterClass(), CurrentXp,
-	                                                                 CombatInt->GetCharacterLevel());
+	const auto CurrentLevel = GetWidgetControllerParams().GameInstanceSubsystem->GetLevelCorrespondingToXP(
+		CombatInt->GetCharacterClass(), CurrentXp,
+		CombatInt->GetCharacterLevel());
 	float CurrentLevelMaxXP = Ps->GetMaximumXPofLevel(CurrentLevel);
 
 	CurrentLevelMaxXP = (CurrentLevelMaxXP == 0) ? CurrentXp : CurrentLevelMaxXP;

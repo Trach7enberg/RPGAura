@@ -19,17 +19,16 @@ void USkillTreeOffensWidgetController::BindCallBack()
 	const auto AbilityInfos = URPGAuraGameInstanceSubsystem::GetAbilityInfoAsset(
 		GetWidgetControllerParams().CurrentPlayerController);
 	if (!AbilityInfos) { return; }
-
-	if (!MyGi) { return; }
+	
 	const auto MyAsc = Cast<UBaseAbilitySystemComponent>(GetWidgetControllerParams().CurrentAbilitySystemComponent);
 
 	if (!MyAsc) { return; }
 	MyAsc->OnAbilityStatusChanged.AddLambda(
-		[this,MyGi,AbilityInfos](const FGameplayTag& AbilityTag, const FGameplayTag& AbilityStatusTag)
+		[this,AbilityInfos](const FGameplayTag& AbilityTag, const FGameplayTag& AbilityStatusTag)
 		{
 			FTagToAbilityInfo AbilityInfo = AbilityInfos->FindOffensiveAbilityInfo(AbilityTag);
 			AbilityInfo.StatusTag = AbilityStatusTag;
-			if (AbilityInfo.InfoDataAbilityIsValid()) { MyGi->AbilityInfoDelegate.Broadcast(AbilityInfo); }
+			if (AbilityInfo.InfoDataAbilityIsValid()) { GetWidgetControllerParams().GameInstanceSubsystem->AbilityInfoDelegate.Broadcast(AbilityInfo); }
 		});
 }
 
