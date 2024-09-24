@@ -26,7 +26,7 @@ FGameplayTag UBaseAbilitySystemComponent::GetAbilityStatusFromSpec(const FGamepl
 {
 	for (const auto& Tag : AbilitySpec.DynamicAbilityTags)
 	{
-		if (Tag.MatchesTag(FRPGAuraGameplayTags::Get().Abilities_Status)) { return Tag; }
+		if (Tag.MatchesTag(FRPGAuraGameplayTags::Get().Abilities_Status_Equipped)) { return Tag; }
 	}
 	return FGameplayTag();
 }
@@ -38,9 +38,11 @@ FGameplayAbilitySpec* UBaseAbilitySystemComponent::GetSpecFromAbilityTag(const F
 	FScopedAbilityListLock AbilityListLock(*this);
 	for (auto& AbilitySpec : GetActivatableAbilities())
 	{
-		for (auto DynamicAbilityTag : AbilitySpec.DynamicAbilityTags)
+		if (AbilitySpec.Ability.Get()->AbilityTags.HasTag(AbilityTag))
 		{
-			if (DynamicAbilityTag.MatchesTag(AbilityTag)) { return &AbilitySpec; }
+			UE_LOG(UBaseAbilitySystemComponentLog, Error, TEXT("[AbilityName]:%s , [HasAbilityTag]:%s"),
+			       *AbilitySpec.Ability.Get()->GetName(), *AbilityTag.GetTagName().ToString());
+			return &AbilitySpec;
 		}
 	}
 	return nullptr;
@@ -51,16 +53,20 @@ void UBaseAbilitySystemComponent::UpdateAbilityStatus(const int32 Level)
 	if (Level < 1) { return; }
 
 	const auto AbilityInfo = URPGAuraGameInstanceSubsystem::GetAbilityInfoAsset(GetAvatarActor());
-	if(!AbilityInfo){return;}
-	
+	if (!AbilityInfo) { return; }
+
+	// 遍历能力信息数据资产,
 	for (const auto& Info : AbilityInfo->AbilityInfosOffensive)
 	{
-		if(Level < Info.LevelRequirement || !Info.AbilityTag.IsValid()){continue;}
+		if (Level < Info.LevelRequirement || !Info.AbilityTag.IsValid()) { continue; }
 
-		// 获取到能力说明能力已存在
-		if(GetSpecFromAbilityTag(Info.AbilityTag)){continue;}
+		// 通过给定的能力标签在已激活的能力数组中查找含有该标签的能力
+		// 获取到能力说明能力已存在则跳过
+		const auto Spec = GetSpecFromAbilityTag(Info.AbilityTag);
 
-		FGameplayAbilitySpec GameplayAbilitySpec = FGameplayAbilitySpec(Info.AbilityClass,1);
+		if (Spec) { continue; }
+
+		FGameplayAbilitySpec GameplayAbilitySpec = FGameplayAbilitySpec(Info.AbilityClass, 1);
 		// 把能力的状态设置为Eligible,并给予能力但是不激活
 		GameplayAbilitySpec.DynamicAbilityTags.AddTag(FRPGAuraGameplayTags::Get().Abilities_Status_Eligible);
 		GiveAbility(GameplayAbilitySpec);
@@ -69,7 +75,6 @@ void UBaseAbilitySystemComponent::UpdateAbilityStatus(const int32 Level)
 		// 例如我们的法术菜单上的技能球的状态显示要即使的,所以我们得立即进行复制
 		MarkAbilitySpecDirty(GameplayAbilitySpec);
 		ClientOnAbilityStatusChanged(Info.AbilityTag, FRPGAuraGameplayTags::Get().Abilities_Status_Eligible);
-		
 	}
 }
 
@@ -88,8 +93,11 @@ void UBaseAbilitySystemComponent::AddCharacterDefaultAbility(const TSubclassOf<U
 {
 	FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass, CharacterLevel);
 
-	// 添加能力已经装备的标签
-	AbilitySpec.DynamicAbilityTags.AddTag(FRPGAuraGameplayTags::Get().Abilities_Status_Equipped);
+	// 添加能力已经装备的标签,能力状态标签同一时刻只能有一个,如果有则不添加
+	if (!AbilitySpec.DynamicAbilityTags.HasTag(FRPGAuraGameplayTags::Get().Abilities_Status))
+	{
+		AbilitySpec.DynamicAbilityTags.AddTag(FRPGAuraGameplayTags::Get().Abilities_Status_Equipped);
+	}
 
 	if (ActiveWhenGive) { GiveAbilityAndActivateOnce(AbilitySpec); }
 	else
@@ -102,6 +110,7 @@ void UBaseAbilitySystemComponent::AddCharacterDefaultAbility(const TSubclassOf<U
 		}
 		// 给能力添加标签
 		AbilitySpec.DynamicAbilityTags.AddTag(MyAbility->DefaultInputTag);
+
 		GiveAbility(AbilitySpec);
 	}
 }
@@ -258,7 +267,7 @@ void UBaseAbilitySystemComponent::OnRep_ActivateAbilities()
 }
 
 void UBaseAbilitySystemComponent::ClientOnAbilityStatusChanged_Implementation(const FGameplayTag& AbilityTag,
-	const FGameplayTag& AbilityStatusTag)
+                                                                              const FGameplayTag& AbilityStatusTag)
 {
 	OnAbilityStatusChanged.Broadcast(AbilityTag, AbilityStatusTag);
 }
