@@ -13,5 +13,6 @@ UCLASS()
 class RPGAURA_API UEquippedSpellMenu : public UBaseUserWidget
 {
 	GENERATED_BODY()
-	
+
+public:
 };
