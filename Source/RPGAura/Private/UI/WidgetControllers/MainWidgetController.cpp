@@ -48,12 +48,6 @@ void UMainWidgetController::OnGetAssetTags(const FGameplayTagContainer& AssetTag
         UE_LOG(UMainWidgetControllerLog, Error, TEXT("控制器的基本参数无效!"));
         return;
     }
-    auto GiSubSystem = GetWidgetControllerParams().CurrentPlayerController->GetGameInstance()->GetSubsystem<URPGAuraGameInstanceSubsystem>();
-    if(!GiSubSystem || !GiSubSystem->MessageWidgetDataAsset)
-    {
-        UE_LOG(UMainWidgetControllerLog, Error, TEXT("子系统或者数据资产获取失败!"));
-        return;
-    }
     
     for (auto AssetTag : AssetTags)
     {
@@ -62,7 +56,7 @@ void UMainWidgetController::OnGetAssetTags(const FGameplayTagContainer& AssetTag
         // 如果当前获得的资产Tag不是Message开头的标签的话就跳过
         if (AssetTag.MatchesTag(MessageTag))
         {
-            const auto Row = GiSubSystem->MessageWidgetDataAsset.Get()->FindPickupMessageByTag(AssetTag);
+            const auto Row = GetWidgetControllerParams().GameInstanceSubsystem->MessageWidgetDataAsset.Get()->FindPickupMessageByTag(AssetTag);
             // 广播当前数据表中的表行
             OnMessageWidgetRow.Broadcast(Row);
         }

@@ -53,21 +53,13 @@ void UAttributeMenuWidgetController::BroadcastInitialValues()
 	const auto MyAcs = Cast<UBaseAbilitySystemComponent>(GetWidgetControllerParams().CurrentAbilitySystemComponent);
 	if (!MyAcs) { return; }
 
-	const auto GameInstanceSubSystem = GetWidgetControllerParams().CurrentPlayerController->GetGameInstance()->
-																   GetSubsystem<URPGAuraGameInstanceSubsystem>();
-	if (!GameInstanceSubSystem)
-	{
-		UE_LOG(UAttributeMenuWidgetControllerLog, Error, TEXT("GameInstance子系统获取失败!"));
-		return;
-	}
-
 	// UE_LOG(UAttributeMenuWidgetControllerLog, Error, TEXT("ALL:%d"), FRPGAuraGameplayTags::GetGameplayTagsMap().Num());
 	// UE_LOG(UAttributeMenuWidgetControllerLog, Error, TEXT("ALL:%d"), MyAs->TagToAttributeMap.Num());
 
 	// 遍历属性集的主要和次要属性,广播属性信息
 	// DoFirstBroadcast(MyAs, FRPGAuraGameplayTags::PrimaryGameplayTagsArray);
 	// DoFirstBroadcast(MyAs, FRPGAuraGameplayTags::SecondaryGameplayTagsArray);
-	for (const auto& Pair : MyAs->TagToAttributeMap) { BroadcastAttributeInfoStruct(GameInstanceSubSystem,MyAs, Pair.Key, Pair.Value()); }
+	for (const auto& Pair : MyAs->TagToAttributeMap) { BroadcastAttributeInfoStruct(GetWidgetControllerParams().GameInstanceSubsystem,MyAs, Pair.Key, Pair.Value()); }
 }
 
 void UAttributeMenuWidgetController::HandleAnyAttributeChange(const URPGAuraGameInstanceSubsystem* Subsystem,const UBaseAttributeSet* MyAs,
