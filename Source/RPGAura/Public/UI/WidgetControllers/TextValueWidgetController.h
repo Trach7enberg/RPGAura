@@ -23,6 +23,10 @@ public:
 	/// 可分配的属性点变化时候的委托
 	UPROPERTY(BlueprintAssignable)
 	FOnIntegerChangeSignature OnAssignableAttributePointsChange;
+
+	/// 可分配的法术点变化时候的委托
+	UPROPERTY(BlueprintAssignable)
+	FOnIntegerChangeSignature OnAssignableSpellPointsChange;
 	
 	virtual void BindCallBack() override;
 	virtual void BroadcastInitialValues() override;

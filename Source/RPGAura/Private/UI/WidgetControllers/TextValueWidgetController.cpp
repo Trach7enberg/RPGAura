@@ -16,9 +16,15 @@ void UTextValueWidgetController::BindCallBack()
 
 	const auto MyPs = Cast<ABasePlayerState>(GetWidgetControllerParams().CurrentPlayerState);
 	if (!MyPs) { return; }
+	
 	MyPs->AssignableAttributePointsChangeDelegate.AddLambda([this](int32 NewValue)
 	{
 		OnAssignableAttributePointsChange.Broadcast(NewValue);
+	});
+
+	MyPs->AssignableSpellPointsChangeDelegate.AddLambda([this](int32 NewValue)
+	{
+		OnAssignableSpellPointsChange.Broadcast(NewValue);
 	});
 }
 
@@ -26,14 +32,14 @@ void UTextValueWidgetController::BroadcastInitialValues()
 {
 	if (!IsWidgetControllerParamsValid()) { return; }
 	const auto MyPs = Cast<ABasePlayerState>(GetWidgetControllerParams().CurrentPlayerState);
-	if (MyPs) { OnAssignableAttributePointsChange.Broadcast(MyPs->GetAssignableAttributePoints()); }
+	if (MyPs)
+	{
+		OnAssignableAttributePointsChange.Broadcast(MyPs->GetAssignableAttributePoints());
+		OnAssignableSpellPointsChange.Broadcast(MyPs->GetAssignableSpellPoints());
+	}
 }
 
-void UTextValueWidgetController::CostPoint(const FGameplayTag& AttributeTag)
-{
-	UpgradeAttribute(AttributeTag);
-	
-}
+void UTextValueWidgetController::CostPoint(const FGameplayTag& AttributeTag) { UpgradeAttribute(AttributeTag); }
 
 bool UTextValueWidgetController::UpgradeAttribute(const FGameplayTag& AttributeTag)
 {
