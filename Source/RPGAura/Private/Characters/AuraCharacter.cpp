@@ -146,19 +146,24 @@ bool AAuraCharacter::CanBeLevelUp()
 
 void AAuraCharacter::LevelUp()
 {
-	if (!GetMyPlayerState() || !GetMyGiSubSystem()) { return; }
+	if (!GetMyPlayerState() || !GetMyGiSubSystem() || !GetAbilitySystemComponent()) { return; }
+	const auto MyAsc = Cast<UBaseAbilitySystemComponent>(GetAbilitySystemComponent());
+	if (!MyAsc) { return; }
+
 	const auto NextLevel = GetMyGiSubSystem()->GetLevelCorrespondingToXP(
 		GetCharacterClass(), GetPlayerCurrentXP(), GetCharacterLevel());
 
 	const auto TempCurrentLevel = GetCharacterLevel();
-	if (NextLevel != GetCharacterLevel())
-	{
-		GetMyPlayerState()->SetPlayerLevel(NextLevel);
-		const auto Tmp = GetCharacterLevel() - TempCurrentLevel;
-		AddToAttributesPoints(GetMyPlayerState()->GetAttributePointsReward(GetCharacterLevel(), Tmp));
-		AddToSpellPoints(GetMyPlayerState()->GetSpellPointsReward(GetCharacterLevel(), 1));
-		MultiCastLevelVfx();
-	}
+	if (NextLevel == GetCharacterLevel()) { return; }
+
+	GetMyPlayerState()->SetPlayerLevel(NextLevel);
+	// 先前的等级与当前等级之差
+	const auto LevelDifference = GetCharacterLevel() - TempCurrentLevel;
+	AddToAttributesPoints(GetMyPlayerState()->GetAttributePointsReward(GetCharacterLevel(), LevelDifference));
+	AddToSpellPoints(GetMyPlayerState()->GetSpellPointsReward(GetCharacterLevel(), 1));
+	MyAsc->UpdateAbilityStatus(GetCharacterLevel());
+
+	MultiCastLevelVfx();
 }
 
 int32 AAuraCharacter::GetAttributePointsReward(const int32 InCharacterLevel)
@@ -175,12 +180,13 @@ int32 AAuraCharacter::GetSpellPointsReward(const int32 InCharacterLevel)
 
 void AAuraCharacter::AddToSpellPoints(const int32 Points)
 {
-	if (!GetMyPlayerState()) { return ; }
+	if (!GetMyPlayerState()) { return; }
 	GetMyPlayerState()->AddToAssignableSpellPoints(Points);
 }
+
 void AAuraCharacter::AddToAttributesPoints(const int32 Points)
 {
-	if (!GetMyPlayerState()) { return ; }
+	if (!GetMyPlayerState()) { return; }
 	GetMyPlayerState()->AddToAssignableAttributePoints(Points);
 }
 
@@ -189,6 +195,7 @@ int32 AAuraCharacter::GetCurrentAssignableAttributePoints()
 	if (!GetMyPlayerState()) { return 0; }
 	return GetMyPlayerState()->GetAssignableAttributePoints();
 }
+
 int32 AAuraCharacter::GetCurrentAssignableSpellPoints()
 {
 	if (!GetMyPlayerState()) { return 0; }

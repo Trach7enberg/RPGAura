@@ -13,5 +13,8 @@ UCLASS()
 class RPGAURA_API UEsmWidgetController : public UBaseWidgetController
 {
 	GENERATED_BODY()
-	
+
+public:
+	virtual void BindCallBack() override;
+	virtual void BroadcastInitialValues() override;
 };

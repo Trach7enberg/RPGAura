@@ -14,6 +14,7 @@
 #include "CharacterBase.generated.h"
 
 
+class UBaseAbilitySystemComponent;
 class UNiagaraComponent;
 class URPGAuraGameInstanceSubsystem;
 class ABasePlayerState;
@@ -40,7 +41,7 @@ public:
 
 	/// 解除高亮当前角色
 	virtual void UnHighLight();
-	
+
 	virtual void LifeSpanExpired() override;
 
 	/// 多播RPC,服务器和客户端都会调用,用于处理角色死亡
@@ -58,7 +59,7 @@ public:
 	// ~ ICombatInterface
 	virtual int32 GetCharacterLevel() override { return 0; };
 	virtual ECharacterClass GetCharacterClass() override;
-	
+
 	virtual FVector GetCombatSocketLocation(const FGameplayTag& GameplayTag) override;
 	virtual void UpdateCharacterFacingTarget(const FVector& TargetLoc) override;
 	virtual UAnimMontage* GetHitReactAnim() override;
@@ -84,7 +85,6 @@ public:
 	virtual void StartSummonAnim() override;
 	// ~ ICombatInterface
 
-	
 
 protected:
 	virtual void BeginPlay() override;
@@ -102,22 +102,22 @@ protected:
 	float MaxWalkingSpeed;
 
 	// 角色等级
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
-	 float CharacterLevel;
+	UPROPERTY(BlueprintReadOnly, Category="Combat")
+	float CharacterLevel;
 
 	// 当前角色能拥有召唤物的最大数量
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
 	int32 MaxSummonsCount;
-	
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
 	FName AttackSocketName_BodyTip = "TipSocket";
-	
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
 	FName AttackSocketName_LeftHand = "LeftHandAttackSocket";
-	
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
 	FName AttackSocketName_RightHand = "RightHandAttackSocket";
-	
+
 	// 当前角色的职业类别
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
 	ECharacterClass CharacterClass;
@@ -128,13 +128,13 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="VFX")
 	TObjectPtr<UNiagaraComponent> NiagaraComponent;
-	
+
 	/// 标签到对应的攻击动画蒙太奇数组
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
 	TArray<FMontageWithTag> AttackMontageWithTagArray;
 
 	// 武器逻辑组件
-	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite, Category="Weapon")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Weapon")
 	TObjectPtr<UWeaponLogicBaseComponent> WeaponLogicBaseComponent;
 
 	/// GAS的能力组件
@@ -191,9 +191,9 @@ protected:
 
 	// 用于角色被召唤时动画的时间线组件
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Combat")
-	TObjectPtr<UTimelineComponent>SummonTimelineComponent;
+	TObjectPtr<UTimelineComponent> SummonTimelineComponent;
 
-	
+
 	/// 给角色授予能力
 	void AddCharacterAbilities();
 
@@ -226,11 +226,11 @@ protected:
 
 private:
 	/// 当前角色是否死亡
-	bool bIsDie ;
+	bool bIsDie;
 
 	// 溶解材质实例蓝图里的参数名字
 	FName ScalarParam = "Dissolve";
-	
+
 	// 当前角色能拥有召唤物的数量
 	int32 CurrentSummonsCount;
 
@@ -274,7 +274,7 @@ private:
 
 	// 初始化溶解时间线组件
 	void InitDissolveTimeLine();
-	
+
 	// 开始溶解时间线
 	void StartDissolveTimeline();
 
@@ -295,7 +295,7 @@ private:
 
 	// 开始召唤时间线动画
 	void StartSummonTimeline() const;
-	
+
 
 	// 召唤时间线update时调用的函数
 	UFUNCTION()
