@@ -7,6 +7,8 @@
 #include "ScalableFloat.h"
 #include "RPGAuraCoreTypes.generated.h"
 
+class URPGAuraGameInstanceSubsystem;
+class USpellButtonWidgetController;
 struct FScalableFloat;
 class UGameplayAbility;
 class UGameplayEffect;
@@ -28,9 +30,10 @@ struct FWidgetControllerParams
 	FWidgetControllerParams(APlayerController* Pc,
 	                        APlayerState* Ps,
 	                        UAbilitySystemComponent* Asc,
-	                        UAttributeSet* As) :
+	                        UAttributeSet* As,
+	                        URPGAuraGameInstanceSubsystem* MyGiSubSystem) :
 		CurrentPlayerController(Pc), CurrentPlayerState(Ps),
-		CurrentAbilitySystemComponent(Asc), CurrentAttributeSet(As) {}
+		CurrentAbilitySystemComponent(Asc), CurrentAttributeSet(As), GameInstanceSubsystem(MyGiSubSystem) {}
 
 	UPROPERTY(BlueprintReadOnly, Category="WidgetController")
 	TObjectPtr<APlayerController> CurrentPlayerController = nullptr;
@@ -43,6 +46,9 @@ struct FWidgetControllerParams
 
 	UPROPERTY(BlueprintReadOnly, Category="WidgetController")
 	TObjectPtr<UAttributeSet> CurrentAttributeSet = nullptr;
+
+	UPROPERTY(BlueprintReadOnly, Category="WidgetController")
+	TObjectPtr<URPGAuraGameInstanceSubsystem> GameInstanceSubsystem = nullptr;
 };
 
 
@@ -248,26 +254,23 @@ struct FTagToAbilityInfo
 
 	/// 和能力标签有关的成员数据是否有效
 	/// @return 
-	bool InfoDataAbilityIsValid() const
-	{
-		return AbilityTag.IsValid()  && AbilityIcon && AbilityBackGroundMaterial;
-	}
+	bool InfoDataAbilityIsValid() const { return AbilityTag.IsValid() && AbilityIcon && AbilityBackGroundMaterial; }
 };
 
 // 输入键与对应绑定的能力变化或初始化时的委托
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAbilityInfoSignature,
                                             const FTagToAbilityInfo&, Info);
 
-	/*-------------------------
-		ULevelUpInfoAsset使用
-	-------------------------*/
+/*-------------------------
+	ULevelUpInfoAsset使用
+-------------------------*/
 /// 相应等级所对应的升级奖励结构体信息
 USTRUCT(BlueprintType)
 struct FLevelUpInfoStruct
 {
 	GENERATED_BODY()
-	
-	FLevelUpInfoStruct(){}
+
+	FLevelUpInfoStruct() {}
 	FLevelUpInfoStruct(const int32 NewLeveRequirement): LeveRequirement(NewLeveRequirement) {}
 
 	/// 当前等级所需要的经验值
@@ -283,19 +286,29 @@ struct FLevelUpInfoStruct
 	int32 SpellPointAward = 1;
 };
 
-	/*-------------------------
-		ABasePlayerState使用
-	-------------------------*/
+/*-------------------------
+	ABasePlayerState使用
+-------------------------*/
 
 /// 用于广播当人物的经验值改变时的委托,不用于蓝图绑定
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPlayerInfoChangeSignature, int32);
 
-	/*----------------------------------------------------------
-		UXpBarWidgetController、UTextValueWidgetController使用
-	----------------------------------------------------------*/
+/*----------------------------------------------------------
+	UXpBarWidgetController、UTextValueWidgetController使用
+----------------------------------------------------------*/
 
 /// 经验值改变时的委托(经验值转换成XpBar的百分比了)
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGetXpSignature,float, XpPercent);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGetXpSignature, float, XpPercent);
 
 /// 属性点、技能点增加奖励的委托(任何使用int32的都可以用这个进行广播)
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnIntegerChangeSignature,int32, Value);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnIntegerChangeSignature, int32, Value);
+
+
+/*--------------------------------------------------------------------
+	URPGAuraGameInstanceSubsystem、USpellButtonWidgetController使用	
+--------------------------------------------------------------------*/
+
+/// 法术菜单的按钮发生点击变化时的委托,用于限制法术菜单中只能选中一个法术按钮球
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSpellButtonSelectedChange, const USpellButtonWidgetController*,
+                                               SpellButtonWidgetController, const FGameplayTag&, WidgetTag,
+                                               const FGameplayTag&, AbilityStatusTag);
