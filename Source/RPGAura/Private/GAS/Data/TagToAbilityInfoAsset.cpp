@@ -35,4 +35,15 @@ FTagToAbilityInfo UTagToAbilityInfoAsset::FindPassiveAbilityInfo(const FGameplay
 	return FTagToAbilityInfo();
 }
 
+TArray<FTagToAbilityInfo> UTagToAbilityInfoAsset::GetAllAbilityInfos()
+{
+	if(AllAbilityInfos.Num() == 0)
+	{
+		AllAbilityInfos.Append(AbilityInfosOffensive);
+		AllAbilityInfos.Append(AbilityInfosPassive);
+	}
+
+	return AllAbilityInfos;
+}
+
 

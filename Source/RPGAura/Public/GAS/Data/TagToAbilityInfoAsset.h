@@ -34,4 +34,10 @@ public:
 	/// 通过给定的被动能力标签查找与该标签Match的AbilityInfo
 	FTagToAbilityInfo FindPassiveAbilityInfo(const FGameplayTag& AbilityTag, bool bLogNotFound = true) const;
 
+	/// 获取所有的能力信息结构体
+	/// @return 
+	TArray<FTagToAbilityInfo> GetAllAbilityInfos();
+private:
+	UPROPERTY()
+	TArray<FTagToAbilityInfo> AllAbilityInfos;
 };
