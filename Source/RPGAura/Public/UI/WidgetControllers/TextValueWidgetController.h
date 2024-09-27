@@ -12,7 +12,7 @@ struct FGameplayAttribute;
 class UBaseAttributeSet;
 class UAttributeInfo;
 /**
- *  TextValueRow Widget的控制器
+ *  TextValueRow Widget的控制器 
  */
 UCLASS()
 class RPGAURA_API UTextValueWidgetController : public UBaseWidgetController
@@ -31,9 +31,14 @@ public:
 	virtual void BindCallBack() override;
 	virtual void BroadcastInitialValues() override;
 
-	/// 消耗点数,一次只能消耗一点
+	/// 消耗(可分配的属性)点数,一次只能消耗一点
 	UFUNCTION(BlueprintCallable)
 	void CostPoint(const FGameplayTag& AttributeTag);
+
+	/// 消耗可分配法术点数
+	/// @param AbilityTag 
+	UFUNCTION(BlueprintCallable)
+	void SpendSpellPoint(const FGameplayTag& AbilityTag);
 
 private:
 	/// 升级对应的属性

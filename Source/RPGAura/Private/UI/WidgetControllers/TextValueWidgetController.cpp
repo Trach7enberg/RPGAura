@@ -41,6 +41,17 @@ void UTextValueWidgetController::BroadcastInitialValues()
 
 void UTextValueWidgetController::CostPoint(const FGameplayTag& AttributeTag) { UpgradeAttribute(AttributeTag); }
 
+void UTextValueWidgetController::SpendSpellPoint(const FGameplayTag& AbilityTag)
+{
+	if (!IsWidgetControllerParamsValid() || !AbilityTag.IsValid()) { return ; }
+
+	const auto MyAsc =
+		Cast<UBaseAbilitySystemComponent>(GetWidgetControllerParams().CurrentAbilitySystemComponent);
+
+	if (!MyAsc) { return ; }
+	MyAsc->UpgradeSpellPoint(AbilityTag);
+}
+
 bool UTextValueWidgetController::UpgradeAttribute(const FGameplayTag& AttributeTag)
 {
 	if (!IsWidgetControllerParamsValid()) { return false; }
