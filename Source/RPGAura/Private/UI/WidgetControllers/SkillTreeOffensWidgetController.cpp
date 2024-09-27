@@ -13,9 +13,6 @@ void USkillTreeOffensWidgetController::BindCallBack()
 {
 	if (!IsWidgetControllerParamsValid()) { return; }
 
-	const auto MyGi = GetWidgetControllerParams().CurrentPlayerController->GetGameInstance()->GetSubsystem<
-		URPGAuraGameInstanceSubsystem>();
-
 	const auto AbilityInfos = URPGAuraGameInstanceSubsystem::GetAbilityInfoAsset(
 		GetWidgetControllerParams().CurrentPlayerController);
 	if (!AbilityInfos) { return; }
@@ -24,12 +21,19 @@ void USkillTreeOffensWidgetController::BindCallBack()
 
 	if (!MyAsc) { return; }
 	MyAsc->OnAbilityStatusChanged.AddLambda(
-		[this,AbilityInfos](const FGameplayTag& AbilityTag, const FGameplayTag& AbilityStatusTag)
+		[this,AbilityInfos](const FGameplayTag& AbilityTag, const FGameplayTag& AbilityStatusTag,int32 AbilityLevel)
 		{
+			// 广播AbilityInfo用于(主动)技能树技能球按钮的显示状态
 			FTagToAbilityInfo AbilityInfo = AbilityInfos->FindOffensiveAbilityInfo(AbilityTag);
 			AbilityInfo.StatusTag = AbilityStatusTag;
-			if (AbilityInfo.InfoDataAbilityIsValid()) { GetWidgetControllerParams().GameInstanceSubsystem->AbilityInfoDelegate.Broadcast(AbilityInfo); }
+			if (AbilityInfo.InfoDataAbilityIsValid())
+			{
+				GetWidgetControllerParams().GameInstanceSubsystem->OnSpellButtonAbilityInfoChange.Broadcast(AbilityInfo);
+			}
 		});
 }
 
-void USkillTreeOffensWidgetController::BroadcastInitialValues() {}
+void USkillTreeOffensWidgetController::BroadcastInitialValues()
+{
+	
+}
