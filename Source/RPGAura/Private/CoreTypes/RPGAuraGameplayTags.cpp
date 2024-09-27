@@ -21,6 +21,7 @@ FGameplayTagContainer FRPGAuraGameplayTags::DamageTypesTagsContainer;
 FGameplayTagContainer FRPGAuraGameplayTags::InputOffensiveTagsContainer;
 FGameplayTagContainer FRPGAuraGameplayTags::InputPassiveTagsContainer;
 
+FGameplayTagContainer FRPGAuraGameplayTags::AttackOffensiveTagsContainer;
 FGameplayTagContainer FRPGAuraGameplayTags::AttackSpellFireTagsContainer;
 FGameplayTagContainer FRPGAuraGameplayTags::AttackSpellLightningTagsContainer;
 FGameplayTagContainer FRPGAuraGameplayTags::AttackSpellArcaneTagsContainer;
@@ -138,7 +139,7 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 				"Montage.CombatSocket.RightHand", FString(""));
 		}
 
-		// 启动攻击能力的标签
+		// 主动攻击能力的标签
 		{
 			GameplayTags.Abilities_Attack = UGameplayTagsManager::Get().AddNativeGameplayTag(
 				"Abilities.Attack", FString());
@@ -156,6 +157,16 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 			GameplayTags.Abilities_Attack_Spell_Lightning_Electrocute = UGameplayTagsManager::Get().
 				AddNativeGameplayTag(
 					"Abilities.Attack.Spell.Lightning.Electrocute", FString("触电法术技能"));
+		}
+
+		// 被动能力标识
+		{
+			GameplayTags.Abilities_Passive = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Passive", FString());
+			GameplayTags.Abilities_Passive_1 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Passive.1", FString());
+			GameplayTags.Abilities_Passive_2 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Passive.2", FString());
 		}
 
 		//能力状态
@@ -388,10 +399,17 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 		             AddTag(GameplayTags.Abilities_Attack_Spell_Lightning_Electrocute);
 	}
 
+	// 添加所有主动攻击标签到容器
+	{
+		GameplayTags.AttackOffensiveTagsContainer.AppendTags(GameplayTags.AttackSpellFireTagsContainer);
+		GameplayTags.AttackOffensiveTagsContainer.AppendTags(GameplayTags.AttackSpellFireTagsContainer);
+		GameplayTags.AttackOffensiveTagsContainer.AppendTags(GameplayTags.AttackSpellArcaneTagsContainer);
+	}
+
 	// 添加被动技能标签到对应的容器
 	{
-		GameplayTags.PassiveTagsContainer.AddTag(GameplayTags.InputTag_Passive_1);
-		GameplayTags.PassiveTagsContainer.AddTag(GameplayTags.InputTag_Passive_2);
+		GameplayTags.PassiveTagsContainer.AddTag(GameplayTags.Abilities_Passive_1);
+		GameplayTags.PassiveTagsContainer.AddTag(GameplayTags.Abilities_Passive_2);
 	}
 }
 
