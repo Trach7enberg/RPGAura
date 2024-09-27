@@ -31,9 +31,14 @@ public:
 	UPROPERTY(BlueprintAssignable, Category="GAS | Abilities")
 	FAbilityInfoSignature AbilityInfoDelegate;
 
-	// 法术菜单的按钮发生点击变化时的委托
+	// 法术菜单的按钮发生点击变化时的委托,不在cpp中绑定委托,只在蓝图中绑定事件
+	// (升级按钮、装备按钮以及技能球按钮绑定了该委托)
 	UPROPERTY(BlueprintAssignable, Category="Widget | SpellButton")
 	FOnSpellButtonSelectedChange OnSpellButtonSelectedChange;
+
+	// 法术菜单的技能按钮的能力信息发生变化时候用的委托
+	UPROPERTY(BlueprintAssignable, Category="Widget | SpellButton")
+	FAbilityInfoSignature OnSpellButtonAbilityInfoChange;
 
 	// 游戏角色职业信息资产
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="DataAssets|CharacterClassDefaults")
