@@ -161,7 +161,7 @@ void AAuraCharacter::LevelUp()
 	const auto LevelDifference = GetCharacterLevel() - TempCurrentLevel;
 	AddToAttributesPoints(GetMyPlayerState()->GetAttributePointsReward(GetCharacterLevel(), LevelDifference));
 	AddToSpellPoints(GetMyPlayerState()->GetSpellPointsReward(GetCharacterLevel(), 1));
-	MyAsc->UpdateAbilityStatus(GetCharacterLevel());
+	MyAsc->UpdateAbilityStatusWhenLevelUp(GetCharacterLevel());
 
 	MultiCastLevelVfx();
 }

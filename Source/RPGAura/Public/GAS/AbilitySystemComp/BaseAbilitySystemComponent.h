@@ -11,8 +11,8 @@ class FAbilityInfoSignature;
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnGetAssetTagsDelegate, const FGameplayTagContainer& /* AssetTags */);
 
 // 能力的状态改变时的广播
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnAbilityStatusChanged, const FGameplayTag& /* AbilityTag */,
-                                    const FGameplayTag& /* AbilityStatusTag */);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnAbilityStatusChanged, const FGameplayTag& /* AbilityTag */,
+                                       const FGameplayTag& /* AbilityStatusTag */, int32 /*AbilityLevel*/);
 
 
 /**
@@ -34,7 +34,7 @@ public:
 	// 应用GE时候 广播资产标签,用于弹出拾取信息
 	FOnGetAssetTagsDelegate OnGetAssetTagsDelegate;
 
-	// 应用于一个能力的状态变化时
+	// 应用于一个(角色的主动被动)能力的状态变化时
 	FOnAbilityStatusChanged OnAbilityStatusChanged;
 
 	/// 给玩家添加默认能力,可能有多个
@@ -91,18 +91,26 @@ public:
 	/// @param AbilityTag 
 	/// @return 
 	FGameplayAbilitySpec* GetSpecFromAbilityTag(const FGameplayTag& AbilityTag);
-
-	/// 给予角色给定等级能启用的能力并且更新该能力的状态到Widget
+	
+	/// 当角色升级时,给予角色给定等级能启用的所有能力并且更新该能力的状态到Widget
 	/// @param Level 给定的等级
-	void UpdateAbilityStatus(const int32 Level);
+	void UpdateAbilityStatusWhenLevelUp(const int32 Level);
 
 	/// 广播当前能被激活的(角色默认就有的)能力相关的信息数据
 	void BroadCastDefaultActivatableAbilitiesInfo();
 
+	/// 广播默认法术菜单上的技能按钮所需要的信息
+	void BroadCastDefaultSpellButtonAbilitiesInfo();
+	
 	/// 在服务器端根据属性标签升级对应的属性
-	/// @param AttributeTag
+	/// @param AttributeTag 与属性值一一对应的标签
 	UFUNCTION(Server, Reliable)
 	void UpgradeAttribute(const FGameplayTag& AttributeTag);
+
+	/// 在服务端根据能力标签消耗法术点
+	/// @param AbilityTag 与能力一一对应的能力标签
+	UFUNCTION(Server, Reliable)
+	void UpgradeSpellPoint(const FGameplayTag& AbilityTag);
 
 protected:
 	/// 当前ACS被应用任意的GE到自己身上时触发的回调函数
@@ -119,7 +127,23 @@ protected:
 
 	/// 角色的能力状态改变时候的广播
 	/// @param AbilityTag 
-	/// @param AbilityStatusTag 
+	/// @param AbilityStatusTag
+	/// @param AbilityLevel 
 	UFUNCTION(Client, Reliable)
-	void ClientOnAbilityStatusChanged(const FGameplayTag& AbilityTag, const FGameplayTag& AbilityStatusTag);
+	void ClientOnAbilityStatusChanged(const FGameplayTag& AbilityTag, const FGameplayTag& AbilityStatusTag,
+	                                  int32 AbilityLevel);
+
+	/// 往给定容器里添加能力状态标签,能力状态标签同一时刻只能有一个,如果有相同的则不添加
+	/// @param TagContainer 给定的标签容器
+	/// @param AbilityStatusTag
+	/// @param RemovedTag 需要在TagContainer中移除的标签
+	void AddAbilityStatusTagToTagContainer(FGameplayTagContainer& TagContainer, const FGameplayTag AbilityStatusTag,
+	                                       const FGameplayTag& RemovedTag = FGameplayTag{});
+
+	/// 通过(AbilityTag)更新指定能力状态
+	/// @param AbilityTag
+	/// @param AbilityStatusTag
+	/// @param AbilityLevel
+	void UpdateAbilityStatus(const FGameplayTag& AbilityTag,const FGameplayTag& AbilityStatusTag, int32 AbilityLevel);
+
 };

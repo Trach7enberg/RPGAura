@@ -26,7 +26,7 @@ FGameplayTag UBaseAbilitySystemComponent::GetAbilityStatusFromSpec(const FGamepl
 {
 	for (const auto& Tag : AbilitySpec.DynamicAbilityTags)
 	{
-		if (Tag.MatchesTag(FRPGAuraGameplayTags::Get().Abilities_Status_Equipped)) { return Tag; }
+		if (Tag.MatchesTag(FRPGAuraGameplayTags::Get().Abilities_Status)) { return Tag; }
 	}
 	return FGameplayTag();
 }
@@ -38,17 +38,21 @@ FGameplayAbilitySpec* UBaseAbilitySystemComponent::GetSpecFromAbilityTag(const F
 	FScopedAbilityListLock AbilityListLock(*this);
 	for (auto& AbilitySpec : GetActivatableAbilities())
 	{
-		if (AbilitySpec.Ability.Get()->AbilityTags.HasTag(AbilityTag))
-		{
-			UE_LOG(UBaseAbilitySystemComponentLog, Error, TEXT("[AbilityName]:%s , [HasAbilityTag]:%s"),
-			       *AbilitySpec.Ability.Get()->GetName(), *AbilityTag.GetTagName().ToString());
-			return &AbilitySpec;
-		}
+		// 能力标签被添加在该能力的AbilityTags容器中,不是dynamicTags中
+		if (AbilitySpec.Ability.Get()->AbilityTags.HasTag(AbilityTag)) { return &AbilitySpec; }
 	}
 	return nullptr;
 }
 
-void UBaseAbilitySystemComponent::UpdateAbilityStatus(const int32 Level)
+void UBaseAbilitySystemComponent::UpdateAbilityStatus(const FGameplayTag& AbilityTag,
+                                                      const FGameplayTag& AbilityStatusTag, const int32 AbilityLevel)
+{
+	if (!AbilityTag.IsValid() || !AbilityStatusTag.IsValid()) { return; }
+
+	ClientOnAbilityStatusChanged(AbilityTag, AbilityStatusTag, AbilityLevel);
+}
+
+void UBaseAbilitySystemComponent::UpdateAbilityStatusWhenLevelUp(const int32 Level)
 {
 	if (Level < 1) { return; }
 
@@ -61,20 +65,23 @@ void UBaseAbilitySystemComponent::UpdateAbilityStatus(const int32 Level)
 		if (Level < Info.LevelRequirement || !Info.AbilityTag.IsValid()) { continue; }
 
 		// 通过给定的能力标签在已激活的能力数组中查找含有该标签的能力
-		// 获取到能力说明能力已存在则跳过
 		const auto Spec = GetSpecFromAbilityTag(Info.AbilityTag);
 
+		// 获取到能力说明能力已存在则跳过,我们需要的是未获得的能力
 		if (Spec) { continue; }
 
 		FGameplayAbilitySpec GameplayAbilitySpec = FGameplayAbilitySpec(Info.AbilityClass, 1);
-		// 把能力的状态设置为Eligible,并给予能力但是不激活
-		GameplayAbilitySpec.DynamicAbilityTags.AddTag(FRPGAuraGameplayTags::Get().Abilities_Status_Eligible);
+
+		// 把能力的状态设置为Eligible,并给予能力但是不激活 
+		AddAbilityStatusTagToTagContainer(GameplayAbilitySpec.DynamicAbilityTags,
+		                                  FRPGAuraGameplayTags::Get().Abilities_Status_Eligible);
 		GiveAbility(GameplayAbilitySpec);
 
 		// 标记刚刚给予的能力为脏值,强迫该AbilitySpec立马进行Replicate,而不是等到下一个更新
 		// 例如我们的法术菜单上的技能球的状态显示要即使的,所以我们得立即进行复制
 		MarkAbilitySpecDirty(GameplayAbilitySpec);
-		ClientOnAbilityStatusChanged(Info.AbilityTag, FRPGAuraGameplayTags::Get().Abilities_Status_Eligible);
+		UpdateAbilityStatus(Info.AbilityTag, FRPGAuraGameplayTags::Get().Abilities_Status_Eligible,
+		                    GameplayAbilitySpec.Level);
 	}
 }
 
@@ -93,11 +100,8 @@ void UBaseAbilitySystemComponent::AddCharacterDefaultAbility(const TSubclassOf<U
 {
 	FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass, CharacterLevel);
 
-	// 添加能力已经装备的标签,能力状态标签同一时刻只能有一个,如果有则不添加
-	if (!AbilitySpec.DynamicAbilityTags.HasTag(FRPGAuraGameplayTags::Get().Abilities_Status))
-	{
-		AbilitySpec.DynamicAbilityTags.AddTag(FRPGAuraGameplayTags::Get().Abilities_Status_Equipped);
-	}
+	AddAbilityStatusTagToTagContainer(AbilitySpec.DynamicAbilityTags,
+	                                  FRPGAuraGameplayTags::Get().Abilities_Status_Equipped);
 
 	if (ActiveWhenGive) { GiveAbilityAndActivateOnce(AbilitySpec); }
 	else
@@ -192,7 +196,7 @@ void UBaseAbilitySystemComponent::TryActivateAbilityByDefaultInputTag(const FGam
 FGameplayTag UBaseAbilitySystemComponent::GetTagFromAbilitySpec(const FGameplayAbilitySpec& AbilitySpec,
                                                                 const FGameplayTag& TargetTag)
 {
-	if (!AbilitySpec.Ability) { return FGameplayTag(); }
+	if (!AbilitySpec.Ability.Get()) { return FGameplayTag(); }
 
 	for (auto& Tag : AbilitySpec.Ability.Get()->AbilityTags) { if (Tag.MatchesTag(TargetTag)) { return Tag; } }
 
@@ -243,6 +247,77 @@ void UBaseAbilitySystemComponent::BroadCastDefaultActivatableAbilitiesInfo()
 	}
 }
 
+void UBaseAbilitySystemComponent::BroadCastDefaultSpellButtonAbilitiesInfo()
+{
+	if (!GetOwner()) { return; }
+
+	const auto Gi = GetOwner()->GetGameInstance()->GetSubsystem<URPGAuraGameInstanceSubsystem>();
+	if (!Gi) { return; }
+
+	const auto Infos = URPGAuraGameInstanceSubsystem::GetAbilityInfoAsset(GetOwner());
+	if (Infos == nullptr)
+	{
+		UE_LOG(UBaseAbilitySystemComponentLog, Error, TEXT("[%s]获取技能信息消息数据资产表失败"), *GetNameSafe(this));
+		return;
+	}
+
+	FScopedAbilityListLock AbilityListLock(*this);
+
+	// 遍历数据资产,并且对应的能力广播信息
+	for (auto Info : Infos->GetAllAbilityInfos())
+	{
+		if (!Info.AbilityTag.IsValid()) { continue; }
+		const auto Spec = GetSpecFromAbilityTag(Info.AbilityTag);
+		if (!Spec) { continue; }
+
+		Info.StatusTag = GetAbilityStatusFromSpec(*Spec);
+		if (!Info.InfoDataAbilityIsValid()) { continue; }
+
+		Gi->OnSpellButtonAbilityInfoChange.Broadcast(Info);
+	}
+}
+
+void UBaseAbilitySystemComponent::UpgradeSpellPoint_Implementation(const FGameplayTag& AbilityTag)
+{
+	if (!AbilityTag.IsValid() || !GetAvatarActor()) { return; }
+
+	const auto PlayerInterface = Cast<IPlayerInterface>(GetAvatarActor());
+	if (!PlayerInterface || PlayerInterface->GetCurrentAssignableSpellPoints() <= 0) { return; }
+
+	// 通过能力标签获取AbilitySpec
+	const auto Spec = GetSpecFromAbilityTag(AbilityTag);
+
+	if (!Spec) { return; }
+
+	// 从AbilitySpec获取这个能力的能力状态标签
+	const auto StatusTag = GetAbilityStatusFromSpec(*Spec);
+
+	if (!StatusTag.IsValid()) { return; }
+
+	FGameplayTag NewStatusTag{};
+	// 如果该能力状态是符合条件的话,则消耗点数然后设置状态为Unlock
+	if (StatusTag.MatchesTagExact(FRPGAuraGameplayTags::Get().Abilities_Status_Eligible))
+	{
+		NewStatusTag = FRPGAuraGameplayTags::Get().Abilities_Status_Unlocked;
+		AddAbilityStatusTagToTagContainer(Spec->DynamicAbilityTags,
+		                                  NewStatusTag,
+		                                  FRPGAuraGameplayTags::Get().Abilities_Status_Eligible);
+		PlayerInterface->AddToSpellPoints(-1);
+	}
+	else if (StatusTag.MatchesTagExact(FRPGAuraGameplayTags::Get().Abilities_Status_Equipped) || StatusTag.
+		MatchesTagExact(FRPGAuraGameplayTags::Get().Abilities_Status_Unlocked))
+	{
+		// 当前能力状态已经装备或者解锁的情况下,只允许升级该能力的等级
+		// TODO 立即刷新能力的等级需要重新给予该能力,否则需要等待下次激活能力新等级才生效
+		Spec->Level += 1;
+		PlayerInterface->AddToSpellPoints(-1);
+	}
+
+	// 因为修改了Spec,因此立即更新Spec,而不是在下一个更新
+	MarkAbilitySpecDirty(*Spec);
+	UpdateAbilityStatus(AbilityTag, NewStatusTag, Spec->Level);
+}
+
 void UBaseAbilitySystemComponent::UpgradeAttribute_Implementation(const FGameplayTag& AttributeTag)
 {
 	if (!GetAvatarActor()) { return; }
@@ -267,9 +342,10 @@ void UBaseAbilitySystemComponent::OnRep_ActivateAbilities()
 }
 
 void UBaseAbilitySystemComponent::ClientOnAbilityStatusChanged_Implementation(const FGameplayTag& AbilityTag,
-                                                                              const FGameplayTag& AbilityStatusTag)
+                                                                              const FGameplayTag& AbilityStatusTag,
+                                                                              int32 AbilityLevel)
 {
-	OnAbilityStatusChanged.Broadcast(AbilityTag, AbilityStatusTag);
+	OnAbilityStatusChanged.Broadcast(AbilityTag, AbilityStatusTag, AbilityLevel);
 }
 
 void UBaseAbilitySystemComponent::ClientOnGEAppliedToSelf_Implementation(
@@ -286,4 +362,15 @@ void UBaseAbilitySystemComponent::ClientOnGEAppliedToSelf_Implementation(
 	GameplayEffectSpec.GetAllAssetTags(Tags);
 
 	if (Tags.Num()) { OnGetAssetTagsDelegate.Broadcast(Tags); }
+}
+
+void UBaseAbilitySystemComponent::AddAbilityStatusTagToTagContainer(FGameplayTagContainer& TagContainer,
+                                                                    const FGameplayTag AbilityStatusTag,
+                                                                    const FGameplayTag& RemovedTag)
+{
+	if (TagContainer.HasTagExact(AbilityStatusTag)) { return; }
+
+	if (RemovedTag.IsValid()) { TagContainer.RemoveTag(RemovedTag); }
+
+	TagContainer.AddTag(AbilityStatusTag);
 }
