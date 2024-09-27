@@ -254,7 +254,10 @@ struct FTagToAbilityInfo
 
 	/// 和能力标签有关的成员数据是否有效
 	/// @return 
-	bool InfoDataAbilityIsValid() const { return AbilityTag.IsValid() && AbilityIcon && AbilityBackGroundMaterial; }
+	bool InfoDataAbilityIsValid() const
+	{
+		return AbilityTag.IsValid() && StatusTag.IsValid() && AbilityIcon && AbilityBackGroundMaterial;
+	}
 };
 
 // 输入键与对应绑定的能力变化或初始化时的委托
@@ -310,5 +313,5 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnIntegerChangeSignature, int32, Va
 
 /// 法术菜单的按钮发生点击变化时的委托,用于限制法术菜单中只能选中一个法术按钮球
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSpellButtonSelectedChange, const USpellButtonWidgetController*,
-                                               SpellButtonWidgetController, const FGameplayTag&, WidgetTag,
+                                               SpellButtonWidgetController, const FGameplayTag&, AbilityTag,
                                                const FGameplayTag&, AbilityStatusTag);
