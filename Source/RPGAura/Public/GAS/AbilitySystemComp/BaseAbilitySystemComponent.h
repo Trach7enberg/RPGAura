@@ -6,6 +6,7 @@
 #include "AbilitySystemComponent.h"
 #include "BaseAbilitySystemComponent.generated.h"
 
+struct FAbilityDescription;
 class FAbilityInfoSignature;
 // 在GAS当中GE应用到玩家身上,并且获取资产标签时的委托
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnGetAssetTagsDelegate, const FGameplayTagContainer& /* AssetTags */);
@@ -111,6 +112,11 @@ public:
 	/// @param AbilityTag 与能力一一对应的能力标签
 	UFUNCTION(Server, Reliable)
 	void UpgradeSpellPoint(const FGameplayTag& AbilityTag);
+
+	/// 通过能力标签获取对应能力的详细描述
+	/// @param AbilityTag  
+	/// @return 
+	FAbilityDescription GetAbilityDescriptionByAbilityTag(const FGameplayTag& AbilityTag);
 
 protected:
 	/// 当前ACS被应用任意的GE到自己身上时触发的回调函数

@@ -308,14 +308,15 @@ void UBaseAbilitySystemComponent::UpgradeSpellPoint_Implementation(const FGamepl
 		MatchesTagExact(FRPGAuraGameplayTags::Get().Abilities_Status_Unlocked))
 	{
 		// 当前能力状态已经装备或者解锁的情况下,只允许升级该能力的等级
-		// TODO 立即刷新能力的等级需要重新给予该能力,否则需要等待下次激活能力新等级才生效
-		Spec->Level += 1;
+		// TODO 立即刷新能力的等级需要重新给予该能力,否则需要等待下次激活能力,新等级才生效
 		PlayerInterface->AddToSpellPoints(-1);
+		Spec->Level += 1;
 	}
 
 	// 因为修改了Spec,因此立即更新Spec,而不是在下一个更新
 	MarkAbilitySpecDirty(*Spec);
 	UpdateAbilityStatus(AbilityTag, NewStatusTag, Spec->Level);
+	UE_LOG(UBaseAbilitySystemComponentLog,Error,TEXT("升级成功!"));
 }
 
 void UBaseAbilitySystemComponent::UpgradeAttribute_Implementation(const FGameplayTag& AttributeTag)
@@ -332,6 +333,21 @@ void UBaseAbilitySystemComponent::UpgradeAttribute_Implementation(const FGamepla
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActor(), AttributeTag, PayLoad);
 
 	PlayerInterface->AddToAttributesPoints(-1);
+}
+
+FAbilityDescription UBaseAbilitySystemComponent::GetAbilityDescriptionByAbilityTag(const FGameplayTag& AbilityTag)
+{
+	if (!AbilityTag.IsValid()) { return FAbilityDescription(); }
+
+	// TODO 应该通过数据资产获取对应技能的详细描述
+	const auto Spec = GetSpecFromAbilityTag(AbilityTag);
+	if (!Spec) { return FAbilityDescription(); }
+
+	const auto MyAbility = Cast<UBaseGameplayAbility>(Spec->Ability.Get());
+	if (!MyAbility) { return FAbilityDescription(); }
+
+
+	return MyAbility->GetAbilityDescription(AbilityTag, Spec->Level);
 }
 
 void UBaseAbilitySystemComponent::OnRep_ActivateAbilities()
