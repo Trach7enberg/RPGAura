@@ -216,6 +216,10 @@ struct FTagToAbilityInfo
 	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
 	FGameplayTag AbilityTag = FGameplayTag();
 
+	// 能力对应的名字
+	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
+	FText AbilityName = FText();
+
 	// 能力对应的冷却标签(如果能力使用了冷却的话)
 	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
 	FGameplayTag AbilityCoolDownTag = FGameplayTag();
@@ -315,3 +319,43 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnIntegerChangeSignature, int32, Va
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSpellButtonSelectedChange, const USpellButtonWidgetController*,
                                                SpellButtonWidgetController, const FGameplayTag&, AbilityTag,
                                                const FGameplayTag&, AbilityStatusTag);
+
+/*---------------------------
+	UBaseGameplayAbility使用
+---------------------------*/
+
+/// 描述能力详细信息的结构体
+USTRUCT(BlueprintType)
+struct FAbilityDescription
+{
+	GENERATED_BODY()
+
+	FAbilityDescription(){}
+	
+	/// 能力标签
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Ability")
+	FGameplayTag AbilityTag = FGameplayTag();
+
+	/// 当前能力的正常描述
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Descriptions", meta=(MultiLine))
+	FText DescriptionNormal = FText();
+
+	/// 当前能力未解锁的描述
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Descriptions", meta=(MultiLine))
+	FText DescriptionLocked = FText();
+
+	/// 当前能力下一等级的描述
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Descriptions", meta=(MultiLine))
+	FText DescriptionNextLevel = FText();
+	
+	/// 当前技能描述结构体是否有效
+	/// @return 
+	bool IsDescriptionValid() const { return AbilityTag.IsValid(); }
+
+	/// 当前技能描述内容是否为空
+	/// @return 
+	bool IsDescriptionEmpty() const
+	{
+		return DescriptionNormal.IsEmpty() && DescriptionLocked.IsEmpty() && DescriptionNextLevel.IsEmpty();
+	}
+};
