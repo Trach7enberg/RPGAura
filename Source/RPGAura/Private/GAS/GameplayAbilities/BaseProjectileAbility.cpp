@@ -4,10 +4,14 @@
 #include "GAS/GameplayAbilities/BaseProjectileAbility.h"
 
 #include "AbilitySystemComponent.h"
+#include "CoreTypes/RPGAuraCoreTypes.h"
 #include "Interfaces/CombatInterface.h"
 #include "Weapons/Projectiles/BaseProjectile.h"
 
-DEFINE_LOG_CATEGORY_STATIC(UBaseProjectileAbilityLog,All,All);
+DEFINE_LOG_CATEGORY_STATIC(UBaseProjectileAbilityLog, All, All);
+
+
+UBaseProjectileAbility::UBaseProjectileAbility() {}
 
 void UBaseProjectileAbility::SpawnProjectile(const FHitResult& HitResult,
                                              const FGameplayTag SocketAssociatedWithMontageTag)
@@ -25,7 +29,7 @@ void UBaseProjectileAbility::SpawnProjectile(const FHitResult& HitResult,
 		UE_LOG(UBaseProjectileAbilityLog, Error, TEXT("Actor信息获取失败!"));
 		return;
 	}
-	
+
 	// Instigate : 引发者就是引发我们正在进行的事情的角色 , 必须是Pawn
 	const auto Instigate = Cast<APawn>(GetAvatarActorFromActorInfo());
 	if (!Instigate) { return; }
@@ -41,7 +45,7 @@ void UBaseProjectileAbility::SpawnProjectile(const FHitResult& HitResult,
 	const auto AttackSocketLoc = CombatInter->GetCombatSocketLocation(SocketAssociatedWithMontageTag);
 	Transform.SetLocation(AttackSocketLoc);
 
-	const FRotator Rotation =  (HitResult.ImpactPoint - AttackSocketLoc).Rotation();
+	const FRotator Rotation = (HitResult.ImpactPoint - AttackSocketLoc).Rotation();
 
 	// 飞弹的倾斜度是与地面平行
 	// Rotation.Pitch = 0.f;
@@ -72,22 +76,50 @@ void UBaseProjectileAbility::SpawnProjectile(const FHitResult& HitResult,
 		DamageEffectClass, GetAbilityLevel(), EffectContextHandle);
 
 	// 分配SetByCaller
-	AssignTagSetByCallerMagnitudeWithDamageType(GameplayEffectSpecHandle,GetAbilityLevel());
+	AssignTagSetByCallerMagnitudeWithDamageType(GameplayEffectSpecHandle, GetAbilityLevel());
 
-	if(Projectile && IsValid(Projectile))
+	if (Projectile && IsValid(Projectile))
 	{
 		Projectile->DamageEffectSpecHandle = GameplayEffectSpecHandle;
 		// 完成飞弹生成
 		Projectile->FinishSpawning(Transform);
-	}else
-	{
-		UE_LOG(UBaseProjectileAbilityLog, Error, TEXT("[%s]生成飞弹失败!"),*GetName());
 	}
+	else { UE_LOG(UBaseProjectileAbilityLog, Error, TEXT("[%s]生成飞弹失败!"), *GetName()); }
 }
 
+void UBaseProjectileAbility::UpdateAbilityDescription(const FGameplayTag& AbilityTag, int32 AbilityLevel)
+{
+	if (!CurrentAbilityDescription.IsDescriptionValid()) { return ; }
+	const auto DescStrNormal = CurrentAbilityDescription.DescriptionNormal.ToString();
+	const auto DescStrLocked = CurrentAbilityDescription.DescriptionLocked.ToString();
+	const auto DescStrNextLevel = CurrentAbilityDescription.DescriptionNextLevel.ToString();
+
+	const auto FormatNormalStr = FString::Format(*DescStrNormal, {
+													 AbilityLevel,
+													 FString::Printf(
+														 TEXT("%.1f"),
+														 GetEstimatedDamageFromDamageTypesMap(AbilityLevel)),
+													 AbilityLevel
+												 });
+	const auto FormatNextLevelStr = FString::Format(*DescStrNextLevel, {
+														AbilityLevel + 1,
+														FString::Printf(
+															TEXT("%.1f"),
+															GetEstimatedDamageFromDamageTypesMap(AbilityLevel + 1)),
+														AbilityLevel + 1,
+													});
+	CurrentAbilityDescription.DescriptionNormal = FText::FromString(FormatNormalStr);
+	CurrentAbilityDescription.DescriptionNextLevel = FText::FromString(FormatNextLevelStr);
+}
+
+
+
 void UBaseProjectileAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
-                                             const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
+                                             const FGameplayAbilityActorInfo* ActorInfo,
+                                             const FGameplayAbilityActivationInfo ActivationInfo,
                                              const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 }
+
+
