@@ -70,3 +70,13 @@ void UBaseDamageAbility::AssignTagSetByCallerMagnitudeWithDamageType(const FGame
 		Context->AddDamageType(Pair.Key);
 	}
 }
+
+float UBaseDamageAbility::GetEstimatedDamageFromDamageTypesMap(const int32 AbilityLevel)
+{
+	float Damage = 0.f;
+	for (auto& Pair : DamageTypesMap)
+	{
+		Damage += Pair.Value.GetValueAtLevel(AbilityLevel);
+	}
+	return Damage;
+}

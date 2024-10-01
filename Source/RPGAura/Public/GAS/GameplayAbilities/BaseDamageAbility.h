@@ -42,4 +42,8 @@ protected:
 	/// @param AbilityLevel
 	void AssignTagSetByCallerMagnitudeWithDamageType(const FGameplayEffectSpecHandle& SpecHandle,
 	                                                 const float AbilityLevel) const;
+
+	/// 从DamageTypesMap里的伤害类型评估当前能力造成的基础伤害
+	/// @return 
+	float GetEstimatedDamageFromDamageTypesMap(int32 AbilityLevel);
 };
