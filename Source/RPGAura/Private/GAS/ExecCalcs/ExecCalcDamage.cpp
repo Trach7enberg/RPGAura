@@ -222,6 +222,7 @@ void UExecCalcDamage::Execute_Implementation(const FGameplayEffectCustomExecutio
 
 		ResistanceValue = FMath::Clamp(ResistanceValue, 0.f, 100.f);
 		// UE_LOG(UExecCalcDamageLog,Error,TEXT("物理抗性:[%.2f]"),ResistanceValue);
+		// 有多种伤害类型,那么伤害会叠加
 		Damage += ((GeSpec.GetSetByCallerMagnitude(DamageType) + SourceIntelligence * .25f) * ((100.f - ResistanceValue)
 			/ 100.f));
 	}

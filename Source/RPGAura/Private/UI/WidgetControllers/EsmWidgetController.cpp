@@ -19,3 +19,5 @@ void UEsmWidgetController::BroadcastInitialValues()
 	// 广播技能树区域(包括被动和主动)的技能按钮更新显示所需要的能力信息
 	MyAsc->BroadCastDefaultSpellButtonAbilitiesInfo();
 }
+
+

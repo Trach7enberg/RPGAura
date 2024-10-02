@@ -89,29 +89,48 @@ void UBaseProjectileAbility::SpawnProjectile(const FHitResult& HitResult,
 
 void UBaseProjectileAbility::UpdateAbilityDescription(const FGameplayTag& AbilityTag, int32 AbilityLevel)
 {
-	if (!CurrentAbilityDescription.IsDescriptionValid()) { return ; }
+	if (!CurrentAbilityDescription.IsDescriptionValid()) { return; }
 	const auto DescStrNormal = CurrentAbilityDescription.DescriptionNormal.ToString();
 	const auto DescStrLocked = CurrentAbilityDescription.DescriptionLocked.ToString();
 	const auto DescStrNextLevel = CurrentAbilityDescription.DescriptionNextLevel.ToString();
 
 	const auto FormatNormalStr = FString::Format(*DescStrNormal, {
-													 AbilityLevel,
-													 FString::Printf(
-														 TEXT("%.1f"),
-														 GetEstimatedDamageFromDamageTypesMap(AbilityLevel)),
-													 AbilityLevel
-												 });
+		                                             // 多少枚投射物
+		                                             AbilityLevel,
+		                                             // 预计伤害
+		                                             FString::Printf(
+			                                             TEXT("%.1f"),
+			                                             GetEstimatedDamageFromDamageTypesMap(AbilityLevel)),
+		                                             // 能力蓝耗值
+		                                             FString::Printf(
+			                                             TEXT("%.1f"),
+			                                             FMath::Abs(GetManaCost(AbilityLevel))),
+		                                             // 能力冷却时间
+		                                             FString::Printf(TEXT("%.1f"), GetCoolDown(AbilityLevel)),
+		                                             // 当前技能等级
+		                                             AbilityLevel
+	                                             });
+
+	const auto NextLevel = AbilityLevel + 1;
 	const auto FormatNextLevelStr = FString::Format(*DescStrNextLevel, {
-														AbilityLevel + 1,
-														FString::Printf(
-															TEXT("%.1f"),
-															GetEstimatedDamageFromDamageTypesMap(AbilityLevel + 1)),
-														AbilityLevel + 1,
-													});
+		                                                // 多少枚投射物
+		                                                NextLevel,
+		                                                // 预计伤害
+		                                                FString::Printf(
+			                                                TEXT("%.1f"),
+			                                                GetEstimatedDamageFromDamageTypesMap(NextLevel)),
+		                                                // 能力蓝耗值
+		                                                FString::Printf(
+			                                                TEXT("%.1f"),
+			                                                FMath::Abs(GetManaCost(NextLevel))),
+		                                                // 能力冷却时间
+		                                                FString::Printf(TEXT("%.1f"), GetCoolDown(NextLevel)),
+		                                                // 当前技能等级
+		                                                NextLevel
+	                                                });
 	CurrentAbilityDescription.DescriptionNormal = FText::FromString(FormatNormalStr);
 	CurrentAbilityDescription.DescriptionNextLevel = FText::FromString(FormatNextLevelStr);
 }
-
 
 
 void UBaseProjectileAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
@@ -121,5 +140,3 @@ void UBaseProjectileAbility::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 }
-
-
