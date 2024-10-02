@@ -40,6 +40,14 @@ protected:
     /// @param AbilityLevel 
     virtual void UpdateAbilityDescription(const FGameplayTag& AbilityTag, int32 AbilityLevel);
 
+    /// 根据等级获取当前技能的蓝耗
+    /// @param InLevel 
+    /// @return 
+    float GetManaCost(float InLevel) const;
 
+    /// 获取当前能力的静态冷却时间(如果有)
+    /// @param InLevel 
+    /// @return 
+    float GetCoolDown(float InLevel) const;
     
 };
