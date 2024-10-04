@@ -216,10 +216,14 @@ struct FTagToAbilityInfo
 	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
 	FGameplayTag AbilityTag = FGameplayTag();
 
-	// 能力对应的名字
+	// 当前能力的分类
 	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
-	FText AbilityName = FText();
+	FGameplayTag AbilityType = FGameplayTag();
 
+	// 当前技能的状态,是装备还是未解锁等等,由程序设置,手动设置暂无效果(通过能力查找)
+	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
+	FGameplayTag StatusTag = FGameplayTag();
+	
 	// 能力对应的冷却标签(如果能力使用了冷却的话)
 	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
 	FGameplayTag AbilityCoolDownTag = FGameplayTag();
@@ -229,9 +233,9 @@ struct FTagToAbilityInfo
 	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
 	FGameplayTag InputTag = FGameplayTag();
 
-	// 当前技能的状态,是装备还是未解锁等等,由程序设置,手动设置暂无效果(通过能力查找)
+	// 能力对应的名字
 	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
-	FGameplayTag StatusTag = FGameplayTag();
+	FText AbilityName = FText();
 
 	// 与当前技能对应的图标
 	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
@@ -253,14 +257,16 @@ struct FTagToAbilityInfo
 	/// @return 
 	bool InfoDataInputIsValid() const
 	{
-		return AbilityTag.IsValid() && InputTag.IsValid() && AbilityIcon && AbilityBackGroundMaterial;
+		return AbilityTag.IsValid() && AbilityType.IsValid() && InputTag.IsValid() && AbilityIcon &&
+			AbilityBackGroundMaterial;
 	}
 
 	/// 和能力标签有关的成员数据是否有效
 	/// @return 
 	bool InfoDataAbilityIsValid() const
 	{
-		return AbilityTag.IsValid() && StatusTag.IsValid() && AbilityIcon && AbilityBackGroundMaterial;
+		return AbilityTag.IsValid() && AbilityType.IsValid() && StatusTag.IsValid() && AbilityIcon &&
+			AbilityBackGroundMaterial;
 	}
 };
 
@@ -316,9 +322,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnIntegerChangeSignature, int32, Va
 --------------------------------------------------------------------*/
 
 /// 法术菜单的按钮发生点击变化时的委托,用于限制法术菜单中只能选中一个法术按钮球
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSpellButtonSelectedChange, const USpellButtonWidgetController*,
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnSpellButtonSelectedChange, const USpellButtonWidgetController*,
                                                SpellButtonWidgetController, const FGameplayTag&, AbilityTag,
-                                               const FGameplayTag&, AbilityStatusTag);
+                                               const FGameplayTag&, AbilityStatusTag, const FGameplayTag&, AbilityTypeTag);
 
 /*---------------------------
 	UBaseGameplayAbility使用
@@ -330,8 +336,8 @@ struct FAbilityDescription
 {
 	GENERATED_BODY()
 
-	FAbilityDescription(){}
-	
+	FAbilityDescription() {}
+
 	/// 能力标签
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Ability")
 	FGameplayTag AbilityTag = FGameplayTag();
@@ -347,7 +353,7 @@ struct FAbilityDescription
 	/// 当前能力下一等级的描述
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Descriptions", meta=(MultiLine))
 	FText DescriptionNextLevel = FText();
-	
+
 	/// 当前技能描述结构体是否有效
 	/// @return 
 	bool IsDescriptionValid() const { return AbilityTag.IsValid(); }
