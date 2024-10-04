@@ -267,6 +267,7 @@ void UBaseAbilitySystemComponent::BroadCastDefaultSpellButtonAbilitiesInfo()
 	for (auto Info : Infos->GetAllAbilityInfos())
 	{
 		if (!Info.AbilityTag.IsValid()) { continue; }
+		// 从已激活的能力中查找
 		const auto Spec = GetSpecFromAbilityTag(Info.AbilityTag);
 		if (!Spec) { continue; }
 
