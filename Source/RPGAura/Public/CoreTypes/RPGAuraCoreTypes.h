@@ -326,6 +326,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnSpellButtonSelectedChange, cons
                                                SpellButtonWidgetController, const FGameplayTag&, AbilityTag,
                                                const FGameplayTag&, AbilityStatusTag, const FGameplayTag&, AbilityTypeTag);
 
+// 装备、切换法术菜单中的技能到技能栏时
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(FOnAbilityEquippedChange,const FGameplayTag&, AbilityTag,
+											   const FGameplayTag&, AbilityStatusTag, const FGameplayTag&, NewInputSlot,const FGameplayTag&, OldInputSlot,const bool, bIsSwapAbilitySlot);
+
 /*---------------------------
 	UBaseGameplayAbility使用
 ---------------------------*/
