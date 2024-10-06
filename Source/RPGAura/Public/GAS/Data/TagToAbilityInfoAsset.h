@@ -32,7 +32,16 @@ public:
 	FTagToAbilityInfo FindOffensiveAbilityInfo(const FGameplayTag& AbilityTag, bool bLogNotFound = true) const;
 
 	/// 通过给定的被动能力标签查找与该标签Match的AbilityInfo
+	/// @param AbilityTag 
+	/// @param bLogNotFound 
+	/// @return 
 	FTagToAbilityInfo FindPassiveAbilityInfo(const FGameplayTag& AbilityTag, bool bLogNotFound = true) const;
+
+	/// 通过给定的能力标签查找与该标签Match的AbilityInfo
+	/// @param AbilityTag 
+	/// @param bLogNotFound 
+	/// @return 
+	FTagToAbilityInfo FindAbilityInfo(const FGameplayTag& AbilityTag, bool bLogNotFound = true) const;
 
 	/// 获取所有的能力信息结构体
 	/// @return 

@@ -35,6 +35,20 @@ FTagToAbilityInfo UTagToAbilityInfoAsset::FindPassiveAbilityInfo(const FGameplay
 	return FTagToAbilityInfo();
 }
 
+FTagToAbilityInfo UTagToAbilityInfoAsset::FindAbilityInfo(const FGameplayTag& AbilityTag, bool bLogNotFound) const
+{
+	for(int i = 0;AbilityTag.IsValid() && i<AllAbilityInfos.Num();++i)
+	{
+		if (AllAbilityInfos[i].AbilityTag == AbilityTag) { return AllAbilityInfos[i]; }
+	}
+
+	if (bLogNotFound)
+	{
+		UE_LOG(UTagToAbilityInfoAssetLog, Warning, TEXT("[%s]无法找到标签为[%s]的技能信息"), *GetNameSafe(this), *AbilityTag.ToString());
+	}
+	return FTagToAbilityInfo();
+}
+
 TArray<FTagToAbilityInfo> UTagToAbilityInfoAsset::GetAllAbilityInfos()
 {
 	if(AllAbilityInfos.Num() == 0)
