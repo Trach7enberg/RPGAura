@@ -40,6 +40,10 @@ public:
 	UPROPERTY(BlueprintAssignable, Category="Widget | SpellButton")
 	FAbilityInfoSignature OnSpellButtonAbilityInfoChange;
 
+	// 装备、切换法术菜单中的技能到技能栏时候用的委托(切换技能位置时清空原先的技能显示、开启禁用冷却显示)
+	UPROPERTY(BlueprintAssignable, Category="Widget | SpellEquippedButton")
+	FOnAbilityEquippedChange OnAbilityEquippedChange;
+
 	// 游戏角色职业信息资产
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="DataAssets|CharacterClassDefaults")
 	TObjectPtr<UCharacterClassInfo> CharacterClassInfo;
