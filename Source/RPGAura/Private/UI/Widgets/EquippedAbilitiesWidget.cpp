@@ -9,8 +9,6 @@
 #include "Components/VerticalBoxSlot.h"
 #include "CoreTypes/RPGAuraGameplayTags.h"
 #include "FunctionLibrary/WidgetControllerBpFuncLib.h"
-#include "GAS/Data/TagToAbilityInfoAsset.h"
-#include "SubSystems/RPGAuraGameInstanceSubsystem.h"
 #include "UI/WidgetControllers/EquippedAbilityWidgetController.h"
 
 class URPGAuraGameInstanceSubsystem;
