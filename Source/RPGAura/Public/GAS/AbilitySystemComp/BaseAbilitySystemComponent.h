@@ -6,6 +6,8 @@
 #include "AbilitySystemComponent.h"
 #include "BaseAbilitySystemComponent.generated.h"
 
+struct FTagToAbilityInfo;
+class URPGAuraGameInstanceSubsystem;
 struct FAbilityDescription;
 class FAbilityInfoSignature;
 // 在GAS当中GE应用到玩家身上,并且获取资产标签时的委托
@@ -76,7 +78,7 @@ public:
 	static FGameplayTag GetTagFromAbilitySpec(const FGameplayAbilitySpec& AbilitySpec, const FGameplayTag& TargetTag);
 
 	/// 从AbilitySpec的DynamicAbilityTags中获取包含有TargetTag标签的标签
-	/// (DynamicAbilityTags容器保存有我们能力类中的InputTag)
+	/// (如DynamicAbilityTags容器保存有我们能力类中的InputTag)
 	/// @param AbilitySpec 
 	/// @param TargetTag 
 	/// @return 
@@ -92,7 +94,17 @@ public:
 	/// @param AbilityTag 
 	/// @return 
 	FGameplayAbilitySpec* GetSpecFromAbilityTag(const FGameplayTag& AbilityTag);
-	
+
+	/// 根据输入插槽标签获取对应的能力Spec,返回值可能为nullptr
+	/// @param InputTag 
+	/// @return 
+	FGameplayAbilitySpec* GetSpecFromInputTag(const FGameplayTag& InputTag);
+
+	/// 根据能力标签获取对应的能力状态
+	/// @param AbilityTag 
+	/// @return 
+	FGameplayTag GetSpecAbilityStatusFromAbilityTag(const FGameplayTag& AbilityTag);
+
 	/// 当角色升级时,给予角色给定等级能启用的所有能力并且更新该能力的状态到Widget
 	/// @param Level 给定的等级
 	void UpdateAbilityStatusWhenLevelUp(const int32 Level);
@@ -102,7 +114,7 @@ public:
 
 	/// 广播默认法术菜单上的技能按钮所需要的信息
 	void BroadCastDefaultSpellButtonAbilitiesInfo();
-	
+
 	/// 在服务器端根据属性标签升级对应的属性
 	/// @param AttributeTag 与属性值一一对应的标签
 	UFUNCTION(Server, Reliable)
@@ -112,6 +124,12 @@ public:
 	/// @param AbilityTag 与能力一一对应的能力标签
 	UFUNCTION(Server, Reliable)
 	void UpgradeSpellPoint(const FGameplayTag& AbilityTag);
+
+	/// 装备能力到对应的插槽(输入标签)
+	/// @param ToEquipAbilityTag 要装备的能力标签
+	/// @param NewInputSlot 要装备的新输入插槽
+	UFUNCTION(Server, Reliable)
+	void ServerEquipAbility(const FGameplayTag& ToEquipAbilityTag, const FGameplayTag& NewInputSlot);
 
 	/// 通过能力标签获取对应能力的详细描述
 	/// @param AbilityTag  
@@ -139,17 +157,40 @@ protected:
 	void ClientOnAbilityStatusChanged(const FGameplayTag& AbilityTag, const FGameplayTag& AbilityStatusTag,
 	                                  int32 AbilityLevel);
 
-	/// 往给定容器里添加能力状态标签,能力状态标签同一时刻只能有一个,如果有相同的则不添加
+	/// 客户端切换、装备技能
+	/// @param NewAbilityInfo 准备装到新插槽上的能力的技能信息
+	/// @param OldSpec 新插槽位置上已装备技能(如果装备了)的能力Spec
+	/// @param NewInputSlot 当前技能要装备的新插槽位置
+	/// @param OldInputSlot 新插槽位置上已装备技能(如果装备了)的插槽位置
+	/// @param bIsSwapAbilitySlot 是否在技能位上互换两个技能的位置
+	UFUNCTION(Client, Reliable)
+	void ClientEquipAbility(const FTagToAbilityInfo& NewAbilityInfo, const FGameplayAbilitySpec& OldSpec,
+	                        const FGameplayTag& NewInputSlot,
+	                        const FGameplayTag& OldInputSlot,
+	                        const bool bIsSwapAbilitySlot);
+
+	/// 从标签容器中删除给定的目标标签
+	/// @param TagContainer 
+	/// @param TagToRemove 
+	/// @return 
+	bool RemoveTagFromTagContainer(FGameplayTagContainer& TagContainer, const FGameplayTag& TagToRemove);
+
+	/// 往给定容器里添加标签,标签同一时刻只能有一个,如果有相同的则不添加
 	/// @param TagContainer 给定的标签容器
-	/// @param AbilityStatusTag
+	/// @param TagToAdded
 	/// @param RemovedTag 需要在TagContainer中移除的标签
-	void AddAbilityStatusTagToTagContainer(FGameplayTagContainer& TagContainer, const FGameplayTag AbilityStatusTag,
-	                                       const FGameplayTag& RemovedTag = FGameplayTag{});
+	void AddTagToAbilitySpecContainer(FGameplayTagContainer& TagContainer, const FGameplayTag TagToAdded,
+	                                  const FGameplayTag& RemovedTag = FGameplayTag{});
 
 	/// 通过(AbilityTag)更新指定能力状态
 	/// @param AbilityTag
 	/// @param AbilityStatusTag
 	/// @param AbilityLevel
-	void UpdateAbilityStatus(const FGameplayTag& AbilityTag,const FGameplayTag& AbilityStatusTag, int32 AbilityLevel);
+	void UpdateAbilityStatus(const FGameplayTag& AbilityTag, const FGameplayTag& AbilityStatusTag, int32 AbilityLevel);
 
+private:
+	/// GI子系统
+	TObjectPtr<URPGAuraGameInstanceSubsystem> GameInstanceSubsystem;
+
+	URPGAuraGameInstanceSubsystem* GetMyGiSystem();
 };
