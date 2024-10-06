@@ -185,6 +185,8 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 
 		//能力的分类
 		{
+			GameplayTags.Abilities_Type = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Type", FString(""));
 			GameplayTags.Abilities_Type_Offensive = UGameplayTagsManager::Get().AddNativeGameplayTag(
 				"Abilities.Type.Offensive", FString(""));
 			GameplayTags.Abilities_Type_Passive = UGameplayTagsManager::Get().AddNativeGameplayTag(

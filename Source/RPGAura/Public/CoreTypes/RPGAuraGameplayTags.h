@@ -148,6 +148,7 @@ struct FRPGAuraGameplayTags
 	FGameplayTag Abilities_Passive_2;
 
 	// 能力的分类,主动还是被动,无则是一些通用的能力,比如受击反应能力
+	FGameplayTag Abilities_Type;
 	FGameplayTag Abilities_Type_Offensive;
 	FGameplayTag Abilities_Type_Passive;
 	FGameplayTag Abilities_Type_Normal;
