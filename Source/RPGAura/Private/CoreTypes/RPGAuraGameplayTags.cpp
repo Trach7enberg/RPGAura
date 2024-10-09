@@ -11,6 +11,7 @@ FRPGAuraGameplayTags FRPGAuraGameplayTags::GameplayTags;
 
 TMap<FGameplayTag, EGameplayTagNum> FRPGAuraGameplayTags::TagToNumMap;
 TMap<FGameplayTag, FGameplayTag> FRPGAuraGameplayTags::DamageTypesToResistancesMap;
+TMap<FGameplayTag, FGameplayTag> FRPGAuraGameplayTags::DamageTypesToDeBuffMap;
 
 FGameplayTagContainer FRPGAuraGameplayTags::GameplayTagsContainer;
 FGameplayTagContainer FRPGAuraGameplayTags::VitalGameplayTagsContainer;
@@ -26,6 +27,7 @@ FGameplayTagContainer FRPGAuraGameplayTags::AttackSpellFireTagsContainer;
 FGameplayTagContainer FRPGAuraGameplayTags::AttackSpellLightningTagsContainer;
 FGameplayTagContainer FRPGAuraGameplayTags::AttackSpellArcaneTagsContainer;
 FGameplayTagContainer FRPGAuraGameplayTags::PassiveTagsContainer;
+FGameplayTagContainer FRPGAuraGameplayTags::DeBuffEffectsTagsContainer;
 
 void FRPGAuraGameplayTags::InitGameplayTags()
 {
@@ -159,6 +161,34 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 					"Abilities.Attack.Spell.Lightning.Electrocute", FString("触电法术技能"));
 		}
 
+		// DeBuff
+		{
+			GameplayTags.Abilities_DeBuff = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.DeBuff", FString(""));
+			GameplayTags.Abilities_DeBuff_Burn = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.DeBuff.Burn", FString(""));
+			GameplayTags.Abilities_DeBuff_Stun = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.DeBuff_Stun", FString(""));
+			GameplayTags.Abilities_DeBuff_Arcane = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.DeBuff_Arcane", FString(""));
+			GameplayTags.Abilities_DeBuff_Physical = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.DeBuff_Physical", FString(""));
+		}
+
+		// DeBuff Effect
+		{
+			GameplayTags.Abilities_DeBuff_Effects = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.DeBuff.Effects", FString(""));
+			GameplayTags.Abilities_DeBuff_Effects_Chance = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.DeBuff.Effects.Chance", FString(""));
+			GameplayTags.Abilities_DeBuff_Effects_Damage = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.DeBuff.Effects.Damage", FString(""));
+			GameplayTags.Abilities_DeBuff_Effects_Duration = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.DeBuff.Effects.Duration", FString(""));
+			GameplayTags.Abilities_DeBuff_Effects_Frequency = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.DeBuff.Effects.Frequency", FString(""));
+		}
+		
 		// 被动能力标识
 		{
 			GameplayTags.Abilities_Passive = UGameplayTagsManager::Get().AddNativeGameplayTag(
@@ -375,6 +405,17 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 		                                             GameplayTags.Attributes_Secondary_Resistance_Physical);
 	}
 
+	{
+		GameplayTags.DamageTypesToDeBuffMap.Add(GameplayTags.Abilities_DamageType_Fire,
+													 GameplayTags.Abilities_DeBuff_Burn);
+		GameplayTags.DamageTypesToDeBuffMap.Add(GameplayTags.Abilities_DamageType_Lightning,
+													 GameplayTags.Abilities_DeBuff_Stun);
+		GameplayTags.DamageTypesToDeBuffMap.Add(GameplayTags.Abilities_DamageType_Arcane,
+													 GameplayTags.Abilities_DeBuff_Arcane);
+		GameplayTags.DamageTypesToDeBuffMap.Add(GameplayTags.Abilities_DamageType_Physical,
+													 GameplayTags.Abilities_DeBuff_Physical);
+	}
+
 	// 主动输入技能的输入键添加到对应容器
 	{
 		GameplayTags.InputOffensiveTagsContainer.AddTag(GameplayTags.InputTag_LMB);
@@ -412,6 +453,14 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 	{
 		GameplayTags.PassiveTagsContainer.AddTag(GameplayTags.Abilities_Passive_1);
 		GameplayTags.PassiveTagsContainer.AddTag(GameplayTags.Abilities_Passive_2);
+	}
+
+	// 添加DeBuff效果标签到对应的容器
+	{
+		GameplayTags.DeBuffEffectsTagsContainer.AddTag(GameplayTags.Abilities_DeBuff_Effects_Chance);
+		GameplayTags.DeBuffEffectsTagsContainer.AddTag(GameplayTags.Abilities_DeBuff_Effects_Damage);
+		GameplayTags.DeBuffEffectsTagsContainer.AddTag(GameplayTags.Abilities_DeBuff_Effects_Duration);
+		GameplayTags.DeBuffEffectsTagsContainer.AddTag(GameplayTags.Abilities_DeBuff_Effects_Frequency);
 	}
 }
 
