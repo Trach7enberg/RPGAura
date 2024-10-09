@@ -6,7 +6,9 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "GAS/Data/AbilityDescriptionAsset.h"
 #include "CoreTypes/RPGAuraGameplayTags.h"
+#include "CoreTypes/RPGAuraGasCoreTypes.h"
 #include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
+#include "GAS/Globals/GameAbilitySystemGlobals.h"
 #include "Interfaces/CombatInterface.h"
 
 DEFINE_LOG_CATEGORY_STATIC(URPGAuraBlueprintFunctionLibraryLog, All, All);
@@ -87,6 +89,91 @@ FAbilityDescription URPGAuraBlueprintFunctionLibrary::GetAbilityDescription(
 	if (!MyAsc) { return FAbilityDescription(); }
 
 	return MyAsc->GetAbilityDescriptionByAbilityTag(AbilityTag);
+}
+
+void URPGAuraBlueprintFunctionLibrary::AssignTagSetByCallerMagnitudeWithDamageTypes(
+	const TMap<FGameplayTag, FScalableFloat>& DamageTypesMap, const FGameplayEffectSpecHandle& SpecHandle,
+	const float AbilityLevel)
+{
+	if (!SpecHandle.IsValid() || !SpecHandle.Data) { return; }
+
+	const auto GeContext = UGameAbilitySystemGlobals::GetCustomGeContext(SpecHandle.Data.Get()->GetContext().Get());
+	if (!GeContext || !DamageTypesMap.Num())
+	{
+		UE_LOG(URPGAuraBlueprintFunctionLibraryLog, Warning, TEXT("DamageTypesMap为空或者SepcHandle无效!"));
+		return;
+	}
+
+	for (const auto& Pair : DamageTypesMap)
+	{
+		// 分配一个键值对给SetByCaller,键是游戏标签,值是设定的Magnitude,到时候在GE蓝图中选择我们分配的标签,该GE就会应用我们这里设定的Magnitude值
+		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle,
+		                                                              Pair.Key,
+		                                                              Pair.Value.GetValueAtLevel(AbilityLevel));
+		GeContext->AddDamageType(Pair.Key);
+	}
+}
+
+void URPGAuraBlueprintFunctionLibrary::AssignTagSetByCallerMagnitude(const FGameplayEffectSpecHandle& SpecHandle,
+                                                                     const FGameplayTagContainer& Tags,
+                                                                     const TArray<float>& Magnitudes)
+{
+	if (!SpecHandle.IsValid() || !SpecHandle.Data) { return; }
+
+	const auto GeContext = UGameAbilitySystemGlobals::GetCustomGeContext(SpecHandle.Data.Get()->GetContext().Get());
+	if (!GeContext || !Tags.Num() || !Magnitudes.Num() || Tags.Num() != Magnitudes.Num())
+	{
+		// UE_LOG(URPGAuraBlueprintFunctionLibraryLog, Warning, TEXT("数组为空、幅度与标签数组长度不相同或者SepcHandle无效!"));
+		return;
+	}
+	for (int i = 0; i < Tags.Num(); ++i)
+	{
+		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle,
+		                                                              Tags.GetByIndex(i), Magnitudes[i]);
+	}
+}
+
+FActiveGameplayEffectHandle URPGAuraBlueprintFunctionLibrary::ApplyDamageGameplayEffectByParams(
+	const FDamageEffectParams& Params)
+{
+	if (!Params.IsParamsValid())
+	{
+		UE_LOG(URPGAuraBlueprintFunctionLibraryLog,Warning,TEXT("Params无效,无法应用伤害GE!"));
+		return FActiveGameplayEffectHandle();
+	}
+	const auto SourceAvatar = Params.SourceAbilitySystemComponent->GetAvatarActor();
+	if (!SourceAvatar) { return FActiveGameplayEffectHandle(); }
+
+	auto EffectContext = Params.SourceAbilitySystemComponent->MakeEffectContext();
+	const auto GeSpecHandle = Params.SourceAbilitySystemComponent->MakeOutgoingSpec(
+		Params.DamageGameplayEffectClass, Params.AbilityLevel, EffectContext);
+	EffectContext.AddSourceObject(SourceAvatar);
+
+	AssignTagSetByCallerMagnitudeWithDamageTypes(Params.DamageTypesMap, GeSpecHandle, Params.AbilityLevel);
+	AssignTagSetByCallerMagnitude(GeSpecHandle, FRPGAuraGameplayTags::Get().DeBuffEffectsTagsContainer, TArray{
+		                              Params.DeBuffChance, Params.DeBuffDamage, Params.DeBuffDuration,
+		                              Params.DeBuffFrequency
+	                              });
+
+	return Params.TargetAbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*GeSpecHandle.Data);
+}
+
+void URPGAuraBlueprintFunctionLibrary::FillDeBuffInfoFromGeSpec(const FGameplayTag& DamageTag,
+	const FGameplayTag& DeBuffTag,  FDeBuffInfo& DeBuffInfo, const FGameplayEffectSpec& GeSpec)
+{
+	if(!DamageTag.IsValid() || !DeBuffTag.IsValid()){return;}
+	
+	DeBuffInfo.DamageType = DamageTag;
+	DeBuffInfo.DeBuffType = DeBuffTag;
+	DeBuffInfo.bIsSuccessfulDeBuff = true;
+	
+	DeBuffInfo.DeBuffDamage = GeSpec.GetSetByCallerMagnitude(
+				FRPGAuraGameplayTags::Get().Abilities_DeBuff_Effects_Damage);
+	DeBuffInfo.DeBuffDuration = GeSpec.GetSetByCallerMagnitude(
+		FRPGAuraGameplayTags::Get().Abilities_DeBuff_Effects_Duration);
+	DeBuffInfo.DeBuffFrequency = GeSpec.GetSetByCallerMagnitude(
+		FRPGAuraGameplayTags::Get().Abilities_DeBuff_Effects_Frequency);
+	
 }
 
 
