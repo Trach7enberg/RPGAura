@@ -31,10 +31,15 @@ void ASlingshotProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedCompon
                                            UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
                                            const FHitResult& SweepResult)
 {
-	// 检查Ge上下文是否有效
-	if (!DamageEffectSpecHandle.IsValid() || !DamageEffectSpecHandle.Data.IsValid()) { return; }
-
-	const auto EffectCauser = DamageEffectSpecHandle.Data.Get()->GetContext().GetEffectCauser();
+	DamageEffectParams.TargetAbilitySystemComponent =
+			UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
+	if (!DamageEffectParams.IsParamsValid())
+	{
+		Destroy();
+		return;
+	}
+	
+	const auto EffectCauser = DamageEffectParams.SourceAbilitySystemComponent->GetAvatarActor();
 
 	if (!EffectCauser || EffectCauser == OtherActor) { return; }
 
@@ -44,13 +49,7 @@ void ASlingshotProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedCompon
 
 	if (HasAuthority())
 	{
-		UAbilitySystemComponent* ActorAsc = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
-
-		if (ActorAsc)
-		{
-			// 应用GE到自身,这里的自身是OtherActor
-			ActorAsc->ApplyGameplayEffectSpecToTarget(*DamageEffectSpecHandle.Data, ActorAsc);
-		}
+		URPGAuraBlueprintFunctionLibrary::ApplyDamageGameplayEffectByParams(DamageEffectParams);
 
 		Destroy();
 	}

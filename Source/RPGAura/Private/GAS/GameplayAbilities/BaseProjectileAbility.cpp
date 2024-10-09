@@ -65,22 +65,10 @@ void UBaseProjectileAbility::SpawnProjectile(const FHitResult& HitResult,
 		GetCurrentActorInfo()->PlayerController.Get()->SetControlRotation(Transform.Rotator());
 	}
 
-	// 创建GE 上下文
-	FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
-	// 设置GE上下文,添加相关信息
-	EffectContextHandle.AddSourceObject(Projectile);
-
-
-	// 创建GE
-	const auto GameplayEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(
-		DamageEffectClass, GetAbilityLevel(), EffectContextHandle);
-
-	// 分配SetByCaller
-	AssignTagSetByCallerMagnitudeWithDamageType(GameplayEffectSpecHandle, GetAbilityLevel());
-
-	if (Projectile && IsValid(Projectile))
+	if (IsValid(Projectile))
 	{
-		Projectile->DamageEffectSpecHandle = GameplayEffectSpecHandle;
+		// 创建GE
+		MakeDamageEffectParamsFromAbilityDefaults(Projectile->DamageEffectParams);
 		// 完成飞弹生成
 		Projectile->FinishSpawning(Transform);
 	}

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayEffectTypes.h"
+#include "CoreTypes/RPGAuraCoreTypes.h"
 #include "GameFramework/Actor.h"
 #include "BaseProjectile.generated.h"
 
@@ -24,7 +24,7 @@ public:
 
 	/// 用于造成伤害的GeSpecHandle
 	UPROPERTY(BlueprintReadWrite, meta=(ExposeOnSpawn=true), Category="GameplayEffect")
-	FGameplayEffectSpecHandle DamageEffectSpecHandle;
+	FDamageEffectParams DamageEffectParams;
 
 	virtual void Destroyed() override;
 

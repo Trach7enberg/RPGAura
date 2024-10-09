@@ -20,10 +20,6 @@ public:
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Niagara")
 	TObjectPtr<UNiagaraComponent> FireBoltNiagaraComponent;
-
-	
-
-	
 	
 	virtual void BeginPlay() override;
 	virtual void Destroyed() override;

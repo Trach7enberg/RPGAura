@@ -5,11 +5,9 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
-#include "GameplayEffect.h"
 #include "NiagaraComponent.h"
 #include "Components/AudioComponent.h"
 #include "FunctionLibrary/RPGAuraBlueprintFunctionLibrary.h"
-#include "Kismet/GameplayStatics.h"
 
 DEFINE_LOG_CATEGORY_STATIC(ASpellProjectileLog, All, All);
 
@@ -20,29 +18,27 @@ ASpellProjectile::ASpellProjectile()
 	FireBoltNiagaraComponent->SetupAttachment(GetRootComponent());
 }
 
-void ASpellProjectile::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
+void ASpellProjectile::BeginPlay() { Super::BeginPlay(); }
 
 
-void ASpellProjectile::SpawnVfxAndSound() const
-{
-	Super::SpawnVfxAndSound();
-}
+void ASpellProjectile::SpawnVfxAndSound() const { Super::SpawnVfxAndSound(); }
 
 void ASpellProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                        UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
                                        const FHitResult& SweepResult)
 {
-	// 检查Ge上下文是否有效
-	if (!DamageEffectSpecHandle.IsValid() || !DamageEffectSpecHandle.Data.IsValid()) { return; }
-	
-	const auto EffectCauser = DamageEffectSpecHandle.Data.Get()->GetContext().GetEffectCauser();
+	DamageEffectParams.TargetAbilitySystemComponent =
+		UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
 
-	if(!EffectCauser || EffectCauser ==OtherActor){return;}
+	if (!DamageEffectParams.SourceAbilitySystemComponent)
+	{
+		Destroy();
+		return;
+	}
 	
+	const auto EffectCauser = DamageEffectParams.SourceAbilitySystemComponent->GetAvatarActor();
+	if (!EffectCauser || EffectCauser == OtherActor) { return; }
+
 	if (bIgnoreFriend && URPGAuraBlueprintFunctionLibrary::IsFriendly(EffectCauser, OtherActor)) { return; }
 	if (!BIsHit) { SpawnVfxAndSound(); }
 
@@ -50,13 +46,7 @@ void ASpellProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent,
 	// UE_LOG(ASpellProjectileLog, Warning, TEXT("OverLapActor:[%s]"), *OtherActor->GetName());
 	if (HasAuthority())
 	{
-		UAbilitySystemComponent* ActorAsc = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
-
-		if(ActorAsc)
-		{
-			// 应用GE到自身,这里的自身是OtherActor
-			ActorAsc->ApplyGameplayEffectSpecToTarget(*DamageEffectSpecHandle.Data, ActorAsc);
-		}
+		URPGAuraBlueprintFunctionLibrary::ApplyDamageGameplayEffectByParams(DamageEffectParams);
 
 		Destroy();
 	}
