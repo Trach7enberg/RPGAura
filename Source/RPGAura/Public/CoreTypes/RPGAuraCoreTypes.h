@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayEffect.h"
 #include "GameplayTagContainer.h"
 #include "ScalableFloat.h"
 #include "RPGAuraCoreTypes.generated.h"
@@ -11,7 +12,6 @@ class URPGAuraGameInstanceSubsystem;
 class USpellButtonWidgetController;
 struct FScalableFloat;
 class UGameplayAbility;
-class UGameplayEffect;
 class UBaseUserWidget;
 class UAttributeSet;
 class UAbilitySystemComponent;
@@ -223,7 +223,7 @@ struct FTagToAbilityInfo
 	// 当前技能的状态,是装备还是未解锁等等,由程序设置,手动设置暂无效果(通过能力查找)
 	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
 	FGameplayTag StatusTag = FGameplayTag();
-	
+
 	// 能力对应的冷却标签(如果能力使用了冷却的话)
 	UPROPERTY(EditDefauLtsOnLy, BLueprintReadOnLy)
 	FGameplayTag AbilityCoolDownTag = FGameplayTag();
@@ -323,12 +323,14 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnIntegerChangeSignature, int32, Va
 
 /// 法术菜单的按钮发生点击变化时的委托,用于限制法术菜单中只能选中一个法术按钮球
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnSpellButtonSelectedChange, const USpellButtonWidgetController*,
-                                               SpellButtonWidgetController, const FGameplayTag&, AbilityTag,
-                                               const FGameplayTag&, AbilityStatusTag, const FGameplayTag&, AbilityTypeTag);
+                                              SpellButtonWidgetController, const FGameplayTag&, AbilityTag,
+                                              const FGameplayTag&, AbilityStatusTag, const FGameplayTag&,
+                                              AbilityTypeTag);
 
 // 装备、切换法术菜单中的技能到技能栏时
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(FOnAbilityEquippedChange,const FGameplayTag&, AbilityTag,
-											   const FGameplayTag&, AbilityStatusTag, const FGameplayTag&, NewInputSlot,const FGameplayTag&, OldInputSlot,const bool, bIsSwapAbilitySlot);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(FOnAbilityEquippedChange, const FGameplayTag&, AbilityTag,
+                                              const FGameplayTag&, AbilityStatusTag, const FGameplayTag&, NewInputSlot,
+                                              const FGameplayTag&, OldInputSlot, const bool, bIsSwapAbilitySlot);
 
 /*---------------------------
 	UBaseGameplayAbility使用
@@ -369,3 +371,139 @@ struct FAbilityDescription
 		return DescriptionNormal.IsEmpty() && DescriptionLocked.IsEmpty() && DescriptionNextLevel.IsEmpty();
 	}
 };
+
+/*---------------------------
+	UBaseDamageAbility使用
+---------------------------*/
+
+/// 给伤害GE使用的参数结构
+USTRUCT(BlueprintType)
+struct FDamageEffectParams
+{
+	GENERATED_BODY()
+
+	FDamageEffectParams() {}
+
+	UPROPERTY()
+	float BaseDamage = 0.f;
+
+	UPROPERTY()
+	float DeBuffChance = 0.f;
+
+	UPROPERTY()
+	float DeBuffDamage = 0.f;
+
+	UPROPERTY()
+	float DeBuffDuration = 0.f;
+
+	UPROPERTY()
+	float DeBuffFrequency = 0.f;
+
+	UPROPERTY()
+	int32 AbilityLevel = 1;
+
+	UPROPERTY()
+	TMap<FGameplayTag, FScalableFloat> DamageTypesMap = TMap<FGameplayTag, FScalableFloat>();
+
+	/// 默认为发起GE的Asc的化身
+	UPROPERTY()
+	TObjectPtr<UObject> WorldContextObject = nullptr;
+
+	UPROPERTY()
+	TSubclassOf<UGameplayEffect> DamageGameplayEffectClass = nullptr;
+
+	/// 发起GE的Actor的ASC
+	UPROPERTY()
+	TObjectPtr<UAbilitySystemComponent> SourceAbilitySystemComponent = nullptr;
+
+	/// 被应用GE的Actor的ASC
+	UPROPERTY()
+	TObjectPtr<UAbilitySystemComponent> TargetAbilitySystemComponent = nullptr;
+
+	/// 该Params的(部分重要)参数是否有效
+	/// @return 
+	bool IsParamsValid() const
+	{
+		return SourceAbilitySystemComponent && TargetAbilitySystemComponent && DamageGameplayEffectClass &&
+			DamageTypesMap.Num() > 0;
+	}
+};
+
+
+/*------------------------------------------------------
+	ExecCalcDamage、FRPGAuraGameplayEffectContext使用
+------------------------------------------------------*/
+
+/// DeBuff信息结构体
+USTRUCT(BlueprintType)
+struct FDeBuffInfo
+{
+	GENERATED_BODY()
+
+	FDeBuffInfo() {}
+
+	FDeBuffInfo(const FGameplayTag& DamageType, const FGameplayTag& DeBuffType, const bool bIsSuccessfulDeBuff,
+	            const float DeBuffDamage, const float DeBuffDuration, const float DeBuffFrequency)
+		: DamageType(DamageType),
+		  DeBuffType(DeBuffType),
+		  bIsSuccessfulDeBuff(bIsSuccessfulDeBuff),
+		  DeBuffDamage(DeBuffDamage),
+		  DeBuffDuration(DeBuffDuration),
+		  DeBuffFrequency(DeBuffFrequency) {}
+
+	UPROPERTY()
+	FGameplayTag DamageType = FGameplayTag();
+
+	UPROPERTY()
+	FGameplayTag DeBuffType = FGameplayTag();
+
+	UPROPERTY()
+	bool bIsSuccessfulDeBuff = false;
+
+	UPROPERTY()
+	float DeBuffDamage = 0.f;
+
+	UPROPERTY()
+	float DeBuffDuration = 0.f;
+
+	UPROPERTY()
+	float DeBuffFrequency = 0.f;
+
+	/// 重写网络序列化
+	/// @param Ar 
+	/// @param Map 
+	/// @param bOutSuccess
+	/// @return 
+	bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess)
+	{
+		uint16 RepBits = 0;
+		if (Ar.IsSaving())
+		{
+			if (DamageType.IsValid()) { RepBits |= 1 << 0; }
+			if (DeBuffType.IsValid()) { RepBits |= 1 << 1; }
+			if (bIsSuccessfulDeBuff) { RepBits |= 1 << 2; }
+		}
+		Ar.SerializeBits(&RepBits, 6);
+
+		bool bOutSuccessLocal = true;
+		if (RepBits & (1 << 0))
+		{
+			DamageType.NetSerialize(Ar, Map, bOutSuccessLocal);
+			bOutSuccess &= bOutSuccessLocal;
+		}
+		if (RepBits & (1 << 1))
+		{
+			DeBuffType.NetSerialize(Ar, Map, bOutSuccessLocal);
+			bOutSuccess &= bOutSuccessLocal;
+		}
+		if (RepBits & (1 << 2))
+		{
+			Ar << bIsSuccessfulDeBuff;
+			Ar << DeBuffDamage;
+			Ar << DeBuffDuration;
+			Ar << DeBuffFrequency;
+		}
+		return bOutSuccessLocal;
+	}
+};
+
