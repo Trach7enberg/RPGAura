@@ -16,7 +16,7 @@ class RPGAURA_API UBaseDamageAbility : public UBaseGameplayAbility
 	GENERATED_BODY()
 
 public:
-	/// 造成伤害(给对象应用GE)
+	/// 近战造成伤害(给对象应用GE)
 	/// @param Suffer
 	UFUNCTION(BlueprintCallable, Category="GameplayEffect")
 	void CauseDamage(AActor* Suffer);
@@ -25,10 +25,22 @@ public:
 	/// 获取随机的攻击动画
 	/// @param MontageWithTags 
 	/// @return 
-	UFUNCTION(BlueprintCallable,Category="Combat")
+	UFUNCTION(BlueprintCallable, Category="Combat")
 	FMontageWithTag GetRandomAttackAnim(const TArray<FMontageWithTag> MontageWithTags);
-	
+
 protected:
+	UPROPERTY(EditDefauLtsOnLy, Category ="DamageDeBuff")
+	float DeBuffChance = 20.f;
+
+	UPROPERTY(EditDefauLtsOnLy, Category ="DamageDeBuff")
+	float DeBuffDamage = 5.f;
+
+	UPROPERTY(EditDefauLtsOnLy, Category ="DamageDeBuff")
+	float DeBuffFrequency = 1.f;
+
+	UPROPERTY(EditDefauLtsOnLy, Category ="DamageDeBuff")
+	float DeBuffDuration = 5.f;
+
 	// 伤害GE实体类
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GameplayEffect")
 	TSubclassOf<UGameplayEffect> DamageEffectClass;
@@ -45,5 +57,11 @@ protected:
 
 	/// 从DamageTypesMap里的伤害类型评估当前能力造成的基础伤害
 	/// @return 
-	float GetEstimatedDamageFromDamageTypesMap(int32 AbilityLevel);
+	float GetEstimatedDamageFromDamageTypesMap(int32 AbilityLevel) const; 
+
+	/// 在能力类中创建伤害GE所需要的默认参数,TargetActor需要设置否则无法生效GE(可以延迟设置)
+	/// @param Params
+	/// @param TargetActor 
+	/// @return 
+	void MakeDamageEffectParamsFromAbilityDefaults(FDamageEffectParams &Params,AActor* TargetActor = nullptr) const;
 };

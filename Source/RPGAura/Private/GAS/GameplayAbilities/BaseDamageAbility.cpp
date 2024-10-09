@@ -6,8 +6,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "CoreTypes/RPGAuraCoreTypes.h"
-#include "CoreTypes/RPGAuraGasCoreTypes.h"
-#include "GAS/Globals/GameAbilitySystemGlobals.h"
+#include "FunctionLibrary/RPGAuraBlueprintFunctionLibrary.h"
 
 DEFINE_LOG_CATEGORY_STATIC(UBaseDamageAbilityLog, All, All);
 
@@ -29,18 +28,10 @@ void UBaseDamageAbility::CauseDamage(AActor* Suffer)
 		return;
 	}
 
-	// 创建GE 上下文
-	FGameplayEffectContextHandle EffectContextHandle = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
-
-	// 创建GE
-	const auto GameplayEffectSpecHandle = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(
-		DamageEffectClass, GetAbilityLevel(), EffectContextHandle);
-
-	// 分配SetByCaller
-	AssignTagSetByCallerMagnitudeWithDamageType(GameplayEffectSpecHandle, GetAbilityLevel());
-
-	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToTarget(
-		*GameplayEffectSpecHandle.Data.Get(), TargetActorAsc);
+	FDamageEffectParams EffectParams;
+	MakeDamageEffectParamsFromAbilityDefaults(EffectParams,Suffer);
+	URPGAuraBlueprintFunctionLibrary::ApplyDamageGameplayEffectByParams(EffectParams);
+	
 }
 
 FMontageWithTag UBaseDamageAbility::GetRandomAttackAnim(const TArray<FMontageWithTag> MontageWithTags)
@@ -53,30 +44,30 @@ FMontageWithTag UBaseDamageAbility::GetRandomAttackAnim(const TArray<FMontageWit
 void UBaseDamageAbility::AssignTagSetByCallerMagnitudeWithDamageType(const FGameplayEffectSpecHandle& SpecHandle,
                                                                      const float AbilityLevel) const
 {
-	const auto Context = UGameAbilitySystemGlobals::GetCustomGeContext(SpecHandle.Data.Get()->GetContext().Get());
-	if (!Context || !DamageTypesMap.Num() || !SpecHandle.IsValid())
-	{
-		UE_LOG(UBaseDamageAbilityLog, Warning, TEXT("DamageTypesMap为空或者SepcHandle无效!"));
-		return;
-	}
-
-
-	for (const auto& Pair : DamageTypesMap)
-	{
-		// 分配一个键值对给SetByCaller,键是游戏标签,值是设定的Magnitude,到时候在GE蓝图中选择我们分配的标签,该GE就会应用我们这里设定的Magnitude值
-		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle,
-		                                                              Pair.Key,
-		                                                              Pair.Value.GetValueAtLevel(AbilityLevel));
-		Context->AddDamageType(Pair.Key);
-	}
+	URPGAuraBlueprintFunctionLibrary::AssignTagSetByCallerMagnitudeWithDamageTypes(
+		DamageTypesMap, SpecHandle, AbilityLevel);
 }
 
-float UBaseDamageAbility::GetEstimatedDamageFromDamageTypesMap(const int32 AbilityLevel)
+float UBaseDamageAbility::GetEstimatedDamageFromDamageTypesMap(const int32 AbilityLevel) const
 {
 	float Damage = 0.f;
-	for (auto& Pair : DamageTypesMap)
-	{
-		Damage += Pair.Value.GetValueAtLevel(AbilityLevel);
-	}
+	for (auto& Pair : DamageTypesMap) { Damage += Pair.Value.GetValueAtLevel(AbilityLevel); }
 	return Damage;
 }
+
+void UBaseDamageAbility::MakeDamageEffectParamsFromAbilityDefaults(FDamageEffectParams &Params,AActor* TargetActor) const
+{
+	Params.BaseDamage = GetEstimatedDamageFromDamageTypesMap(GetAbilityLevel());
+	Params.DeBuffChance = DeBuffChance;
+	Params.DeBuffDamage = DeBuffDamage;
+	Params.DeBuffDuration = DeBuffDuration;
+	Params.DeBuffFrequency = DeBuffFrequency;
+	Params.AbilityLevel = GetAbilityLevel();
+
+	Params.DamageTypesMap = DamageTypesMap;
+	Params.WorldContextObject = GetAvatarActorFromActorInfo();
+	Params.DamageGameplayEffectClass = DamageEffectClass;
+	Params.TargetAbilitySystemComponent = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
+	Params.SourceAbilitySystemComponent = GetAbilitySystemComponentFromActorInfo();
+}
+ 
