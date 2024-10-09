@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameplayEffectTypes.h"
+#include "RPGAuraCoreTypes.h"
 #include "RPGAuraGasCoreTypes.generated.h"
 
 /**
@@ -49,6 +50,19 @@ public:
 	/// 获取伤害类型容器
 	/// @return 
 	FGameplayTagContainer GetDamageTypes() const { return DamageTypes; }
+
+	/// 
+	/// @param DeBuffInfo 
+	FORCEINLINE void AddDeBuffInfo(const FDeBuffInfo& DeBuffInfo)
+	{
+		DeBuffInfos.Add(DeBuffInfo);
+	}
+
+	FORCEINLINE TArray<FDeBuffInfo> GetDeBuffInfos()
+	{
+		return DeBuffInfos;
+	}
+
 protected:
 	
 	// 攻击是否被格挡
@@ -59,6 +73,11 @@ protected:
 	UPROPERTY()
 	bool bIsCriticalHit  = false;
 
+	// TODO 结构体需要换成弱指针包裹?
+	// 当前GE拥有的DeBuff
+	UPROPERTY()
+	TArray<FDeBuffInfo> DeBuffInfos = TArray<FDeBuffInfo>();
+	
 	// 当前GE拥有的伤害类型
 	UPROPERTY()
 	FGameplayTagContainer DamageTypes ;

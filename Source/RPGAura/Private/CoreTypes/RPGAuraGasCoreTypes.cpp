@@ -1,5 +1,7 @@
 #include "CoreTypes/RPGAuraGasCoreTypes.h"
 
+#include "CoreTypes/RPGAuraGameplayTags.h"
+
 
 bool FRPGAuraGameplayEffectContext::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess)
 {
@@ -16,9 +18,10 @@ bool FRPGAuraGameplayEffectContext::NetSerialize(FArchive& Ar, UPackageMap* Map,
 		if (bIsBlockedHit) { RepBits |= 1 << 7; }
 		if (bIsCriticalHit) { RepBits |= 1 << 8; }
 		if (DamageTypes.Num() > 0) { RepBits |= 1 << 9; }
+		if(DeBuffInfos.Num() > 0){RepBits |= 1 << 10;}
 	}
 
-	Ar.SerializeBits(&RepBits, 10);
+	Ar.SerializeBits(&RepBits, 11);
 
 	if (RepBits & (1 << 0)) { Ar << Instigator; }
 	if (RepBits & (1 << 1)) { Ar << EffectCauser; }
@@ -39,8 +42,15 @@ bool FRPGAuraGameplayEffectContext::NetSerialize(FArchive& Ar, UPackageMap* Map,
 
 	if (RepBits & (1 << 7)) { Ar << bIsBlockedHit; }
 	if (RepBits & (1 << 8)) { Ar << bIsCriticalHit; }
-	if (RepBits & (1 << 9)) { DamageTypes.NetSerialize(Ar, Map, bOutSuccess); }
-
+	if (RepBits & (1 << 9))
+	{
+		DamageTypes.NetSerialize(Ar, Map, bOutSuccess);
+	}
+	if (RepBits & (1 << 10))
+	{
+		// 网络序列化DeBuff信息数组
+		SafeNetSerializeTArray_WithNetSerialize<31>(Ar,DeBuffInfos,Map);
+	}
 	if (Ar.IsLoading())
 	{
 		AddInstigator(Instigator.Get(), EffectCauser.Get()); // Just to initialize InstigatorAbilitySystemComponent
