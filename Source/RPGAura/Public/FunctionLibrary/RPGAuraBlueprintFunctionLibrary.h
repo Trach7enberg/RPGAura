@@ -73,7 +73,7 @@ public:
 	/// @param SpecHandle 
 	/// @param Tags 
 	/// @param Magnitudes 
-	static void AssignTagSetByCallerMagnitude(const FGameplayEffectSpecHandle& SpecHandle,
+	static void AssignTagSetByCallerMagnitudeByGeSpecHandle(const FGameplayEffectSpecHandle& SpecHandle,
 	                                          const FGameplayTagContainer& Tags,
 	                                          const TArray<float>& Magnitudes);
 

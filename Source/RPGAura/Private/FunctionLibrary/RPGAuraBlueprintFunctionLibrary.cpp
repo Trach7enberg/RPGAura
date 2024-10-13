@@ -114,9 +114,10 @@ void URPGAuraBlueprintFunctionLibrary::AssignTagSetByCallerMagnitudeWithDamageTy
 	}
 }
 
-void URPGAuraBlueprintFunctionLibrary::AssignTagSetByCallerMagnitude(const FGameplayEffectSpecHandle& SpecHandle,
-                                                                     const FGameplayTagContainer& Tags,
-                                                                     const TArray<float>& Magnitudes)
+void URPGAuraBlueprintFunctionLibrary::AssignTagSetByCallerMagnitudeByGeSpecHandle(
+	const FGameplayEffectSpecHandle& SpecHandle,
+	const FGameplayTagContainer& Tags,
+	const TArray<float>& Magnitudes)
 {
 	if (!SpecHandle.IsValid() || !SpecHandle.Data) { return; }
 
@@ -138,42 +139,53 @@ FActiveGameplayEffectHandle URPGAuraBlueprintFunctionLibrary::ApplyDamageGamepla
 {
 	if (!Params.IsParamsValid())
 	{
-		UE_LOG(URPGAuraBlueprintFunctionLibraryLog,Warning,TEXT("Params无效,无法应用伤害GE!"));
+		UE_LOG(URPGAuraBlueprintFunctionLibraryLog, Warning, TEXT("Params无效,无法应用伤害GE!"));
 		return FActiveGameplayEffectHandle();
 	}
 	const auto SourceAvatar = Params.SourceAbilitySystemComponent->GetAvatarActor();
 	if (!SourceAvatar) { return FActiveGameplayEffectHandle(); }
 
-	auto EffectContext = Params.SourceAbilitySystemComponent->MakeEffectContext();
+	auto EffectContextHandle = Params.SourceAbilitySystemComponent->MakeEffectContext();
 	const auto GeSpecHandle = Params.SourceAbilitySystemComponent->MakeOutgoingSpec(
-		Params.DamageGameplayEffectClass, Params.AbilityLevel, EffectContext);
-	EffectContext.AddSourceObject(SourceAvatar);
+		Params.DamageGameplayEffectClass, Params.AbilityLevel, EffectContextHandle);
+	EffectContextHandle.AddSourceObject(SourceAvatar);
 
+	/// 传输设置冲击点的前向向量
+	if (const auto MyGeContext = UGameAbilitySystemGlobals::GetCustomGeContext(EffectContextHandle.Get()))
+	{
+		MyGeContext->SetImpulse(Params.ImpulseVector);
+	}
 	AssignTagSetByCallerMagnitudeWithDamageTypes(Params.DamageTypesMap, GeSpecHandle, Params.AbilityLevel);
-	AssignTagSetByCallerMagnitude(GeSpecHandle, FRPGAuraGameplayTags::Get().DeBuffEffectsTagsContainer, TArray{
-		                              Params.DeBuffChance, Params.DeBuffDamage, Params.DeBuffDuration,
-		                              Params.DeBuffFrequency
-	                              });
+	AssignTagSetByCallerMagnitudeByGeSpecHandle(GeSpecHandle, FRPGAuraGameplayTags::Get().DeBuffEffectsTagsContainer,
+	                                            TArray{
+		                                            Params.DeBuffChance, Params.DeBuffDamage, Params.DeBuffDuration,
+		                                            Params.DeBuffFrequency
+	                                            });
 
+	// 分配击退几率
+	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(GeSpecHandle,
+	                                                              FRPGAuraGameplayTags::Get().
+	                                                              Abilities_SideEffect_KnockBack_Chance,
+	                                                              Params.KnockBackChance);
 	return Params.TargetAbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*GeSpecHandle.Data);
 }
 
 void URPGAuraBlueprintFunctionLibrary::FillDeBuffInfoFromGeSpec(const FGameplayTag& DamageTag,
-	const FGameplayTag& DeBuffTag,  FDeBuffInfo& DeBuffInfo, const FGameplayEffectSpec& GeSpec)
+                                                                const FGameplayTag& DeBuffTag, FDeBuffInfo& DeBuffInfo,
+                                                                const FGameplayEffectSpec& GeSpec)
 {
-	if(!DamageTag.IsValid() || !DeBuffTag.IsValid()){return;}
-	
+	if (!DamageTag.IsValid() || !DeBuffTag.IsValid()) { return; }
+
 	DeBuffInfo.DamageType = DamageTag;
 	DeBuffInfo.DeBuffType = DeBuffTag;
 	DeBuffInfo.bIsSuccessfulDeBuff = true;
-	
+
 	DeBuffInfo.DeBuffDamage = GeSpec.GetSetByCallerMagnitude(
-				FRPGAuraGameplayTags::Get().Abilities_DeBuff_Effects_Damage);
+		FRPGAuraGameplayTags::Get().Abilities_DeBuff_Effects_Damage);
 	DeBuffInfo.DeBuffDuration = GeSpec.GetSetByCallerMagnitude(
 		FRPGAuraGameplayTags::Get().Abilities_DeBuff_Effects_Duration);
 	DeBuffInfo.DeBuffFrequency = GeSpec.GetSetByCallerMagnitude(
 		FRPGAuraGameplayTags::Get().Abilities_DeBuff_Effects_Frequency);
-	
 }
 
 
