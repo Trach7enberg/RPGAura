@@ -5,6 +5,7 @@
 
 #include "CoreTypes/RPGAuraGameplayTags.h"
 #include "CoreTypes/RPGAuraGasCoreTypes.h"
+#include "FunctionLibrary/RPGAuraBlueprintFunctionLibrary.h"
 #include "GAS/AttributeSet/BaseAttributeSet.h"
 #include "GAS/Data/CharacterClassInfo.h"
 #include "GAS/Globals/GameAbilitySystemGlobals.h"
@@ -83,7 +84,7 @@ UExecCalcDamage::UExecCalcDamage()
 void UExecCalcDamage::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams,
                                              FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const
 {
-	if(!ExecutionParams.GetSourceAbilitySystemComponent() || !ExecutionParams.GetTargetAbilitySystemComponent())
+	if (!ExecutionParams.GetSourceAbilitySystemComponent() || !ExecutionParams.GetTargetAbilitySystemComponent())
 	{
 		return;
 	}
@@ -180,7 +181,6 @@ void UExecCalcDamage::Execute_Implementation(const FGameplayEffectCustomExecutio
 	// 是游戏标签为键分配给SetByCaller的伤害值 (注意,我们在发射火球的能力的cpp里用能力系统分配设置了这个键值对,所以能获取到)
 	float Damage = 0.f;
 
-
 	for (const auto& DamageType : MyGeContext->GetDamageTypes())
 	{
 		float ResistanceValue = 0;
@@ -203,7 +203,7 @@ void UExecCalcDamage::Execute_Implementation(const FGameplayEffectCustomExecutio
 				ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(CaptureAttributes.PhysicalResistanceDef,
 				                                                           EvaluateParameters,
 				                                                           ResistanceValue);
-				
+
 				break;
 			case EGameplayTagNum::LightningResistance:
 				ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(CaptureAttributes.LightingResistanceDef,
@@ -225,6 +225,21 @@ void UExecCalcDamage::Execute_Implementation(const FGameplayEffectCustomExecutio
 		// 有多种伤害类型,那么伤害会叠加
 		Damage += ((GeSpec.GetSetByCallerMagnitude(DamageType) + SourceIntelligence * .25f) * ((100.f - ResistanceValue)
 			/ 100.f));
+
+		// 计算触发DeBuff的几率
+		float DeBuffChance = GeSpec.GetSetByCallerMagnitude(
+			FRPGAuraGameplayTags::Get().Abilities_DeBuff_Effects_Chance);
+		DeBuffChance = DeBuffChance * FMath::Max(0.f, FMath::Abs((100.f - ResistanceValue))) / 100.f;
+		if (DeBuffChance == 0.f) { continue; }
+		const auto SuccessfulDeBuff = FMath::RandRange(1, 100) < DeBuffChance;
+		if (const auto FindDeBuffTag = FRPGAuraGameplayTags::Get().DamageTypesToDeBuffMap.Find(DamageType);
+			SuccessfulDeBuff && FindDeBuffTag)
+		{
+			FDeBuffInfo TmpDeBuffInfo = FDeBuffInfo();
+			URPGAuraBlueprintFunctionLibrary::FillDeBuffInfoFromGeSpec(
+				DamageType, *FindDeBuffTag, TmpDeBuffInfo, GeSpec);
+			MyGeContext->AddDeBuffInfo(TmpDeBuffInfo);
+		}
 	}
 
 
@@ -277,8 +292,12 @@ void UExecCalcDamage::Execute_Implementation(const FGameplayEffectCustomExecutio
 	const auto bIsBlock = (FMath::RandRange(1, 100) <= TargetBlockChance);
 	Damage = bIsBlock ? Damage * (0.5f) : Damage;
 
+	const auto bIsKnockBack = (FMath::RandRange(1, 100) <= GeSpec.GetSetByCallerMagnitude(
+		FRPGAuraGameplayTags::Get().Abilities_SideEffect_KnockBack_Chance));
+
 	MyGeContext->SetBIsBlockedHit(bIsBlock);
 	MyGeContext->SetBIsCriticalHit(bIsCriticalHit);
+	MyGeContext->SetIsKnockBackHit(bIsKnockBack);
 
 	// UE_LOG(UExecCalcDamageLog, Warning,
 	//        TEXT(
