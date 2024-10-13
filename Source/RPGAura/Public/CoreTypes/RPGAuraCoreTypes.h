@@ -376,7 +376,7 @@ struct FAbilityDescription
 	UBaseDamageAbility使用
 ---------------------------*/
 
-/// 给伤害GE使用的参数结构
+/// 给伤害能力类创建GE时所使用的参数结构
 USTRUCT(BlueprintType)
 struct FDamageEffectParams
 {
@@ -400,7 +400,14 @@ struct FDamageEffectParams
 	float DeBuffFrequency = 0.f;
 
 	UPROPERTY()
+	float KnockBackChance = 0.f;
+
+	UPROPERTY()
 	int32 AbilityLevel = 1;
+
+	/// 角色被击杀死亡时候的冲击点方向(一般为归一化)
+	UPROPERTY()
+	FVector ImpulseVector = FVector::Zero();
 
 	UPROPERTY()
 	TMap<FGameplayTag, FScalableFloat> DamageTypesMap = TMap<FGameplayTag, FScalableFloat>();
