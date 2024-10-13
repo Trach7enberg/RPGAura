@@ -32,6 +32,14 @@ UAnimInstance* UWeaponLogicBaseComponent::GetCurrentWeaponAnimInstanceClass() co
 	return CurrentWeapon->GetWeaponAnimInstance();
 }
 
+void UWeaponLogicBaseComponent::AddWeaponImpulse(const FVector& Impulse, const FName BoneName, const bool bVelChange) const
+{
+	if(CurrentWeapon)
+	{
+		CurrentWeapon->AddImpulse(Impulse,BoneName,bVelChange);
+	}
+}
+
 void UWeaponLogicBaseComponent::BeginPlay()
 {
 	Super::BeginPlay();

@@ -83,3 +83,11 @@ UAnimInstance* ABaseWeapon::GetWeaponAnimInstance() const
 	if (!WeaponMesh) { return nullptr; }
 	return WeaponMesh->GetAnimInstance();
 }
+
+void ABaseWeapon::AddImpulse(const FVector& Impulse, const FName BoneName, const bool bVelChange) const
+{
+	if(WeaponMesh)
+	{
+		WeaponMesh->AddImpulse(Impulse, BoneName, bVelChange);
+	}
+}

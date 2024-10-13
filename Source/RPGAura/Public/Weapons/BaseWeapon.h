@@ -42,7 +42,11 @@ public:
 	/// @return 
 	UAnimInstance* GetWeaponAnimInstance() const;
 
-
+	/// 给武器添加冲量
+	/// @param Impulse 
+	/// @param BoneName 
+	/// @param bVelChange 
+	void AddImpulse(const FVector& Impulse, FName BoneName = NAME_None, bool bVelChange = false) const;
 protected:
 	virtual void BeginPlay() override;
 

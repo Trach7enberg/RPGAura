@@ -72,6 +72,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Weapon")
 	UAnimInstance* GetCurrentWeaponAnimInstanceClass() const;
 
+	/// 给武器添加冲量
+	/// @param Impulse 
+	/// @param BoneName 
+	/// @param bVelChange 
+	void AddWeaponImpulse(const FVector& Impulse, FName BoneName = NAME_None, bool bVelChange = false) const;
 protected:
 	virtual void BeginPlay() override;
 
