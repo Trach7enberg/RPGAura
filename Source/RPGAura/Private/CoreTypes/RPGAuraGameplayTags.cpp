@@ -168,11 +168,11 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 			GameplayTags.Abilities_DeBuff_Burn = UGameplayTagsManager::Get().AddNativeGameplayTag(
 				"Abilities.DeBuff.Burn", FString(""));
 			GameplayTags.Abilities_DeBuff_Stun = UGameplayTagsManager::Get().AddNativeGameplayTag(
-				"Abilities.DeBuff_Stun", FString(""));
+				"Abilities.DeBuff.Stun", FString(""));
 			GameplayTags.Abilities_DeBuff_Arcane = UGameplayTagsManager::Get().AddNativeGameplayTag(
-				"Abilities.DeBuff_Arcane", FString(""));
+				"Abilities.DeBuff.Arcane", FString(""));
 			GameplayTags.Abilities_DeBuff_Physical = UGameplayTagsManager::Get().AddNativeGameplayTag(
-				"Abilities.DeBuff_Physical", FString(""));
+				"Abilities.DeBuff.Physical", FString(""));
 		}
 
 		// DeBuff Effect
@@ -188,7 +188,14 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 			GameplayTags.Abilities_DeBuff_Effects_Frequency = UGameplayTagsManager::Get().AddNativeGameplayTag(
 				"Abilities.DeBuff.Effects.Frequency", FString(""));
 		}
-		
+
+		{
+			GameplayTags.Abilities_SideEffect = UGameplayTagsManager::Get().
+				AddNativeGameplayTag("Abilities.SideEffect");
+			GameplayTags.Abilities_SideEffect_KnockBack_Chance = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.SideEffect.KnockBack.Chance");
+		}
+
 		// 被动能力标识
 		{
 			GameplayTags.Abilities_Passive = UGameplayTagsManager::Get().AddNativeGameplayTag(
@@ -407,13 +414,13 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 
 	{
 		GameplayTags.DamageTypesToDeBuffMap.Add(GameplayTags.Abilities_DamageType_Fire,
-													 GameplayTags.Abilities_DeBuff_Burn);
+		                                        GameplayTags.Abilities_DeBuff_Burn);
 		GameplayTags.DamageTypesToDeBuffMap.Add(GameplayTags.Abilities_DamageType_Lightning,
-													 GameplayTags.Abilities_DeBuff_Stun);
+		                                        GameplayTags.Abilities_DeBuff_Stun);
 		GameplayTags.DamageTypesToDeBuffMap.Add(GameplayTags.Abilities_DamageType_Arcane,
-													 GameplayTags.Abilities_DeBuff_Arcane);
+		                                        GameplayTags.Abilities_DeBuff_Arcane);
 		GameplayTags.DamageTypesToDeBuffMap.Add(GameplayTags.Abilities_DamageType_Physical,
-													 GameplayTags.Abilities_DeBuff_Physical);
+		                                        GameplayTags.Abilities_DeBuff_Physical);
 	}
 
 	// 主动输入技能的输入键添加到对应容器
@@ -425,7 +432,7 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 		GameplayTags.InputOffensiveTagsContainer.AddTag(GameplayTags.InputTag_3);
 		GameplayTags.InputOffensiveTagsContainer.AddTag(GameplayTags.InputTag_4);
 	}
-	
+
 	// 添加被动标识标签添加到对应容器
 	{
 		GameplayTags.InputPassiveTagsContainer.AddTag(GameplayTags.InputTag_Passive_1);

@@ -150,6 +150,10 @@ struct FRPGAuraGameplayTags
 	FGameplayTag Abilities_DeBuff_Effects_Duration;					// DeBuff的持续时间
 	FGameplayTag Abilities_DeBuff_Effects_Frequency;				// GE 中的 "period",在持续时间内的触发周期
 
+	// 能力的"副作用"
+	FGameplayTag Abilities_SideEffect;
+	FGameplayTag Abilities_SideEffect_KnockBack_Chance;				// 能力触发击退的概率 
+
 	// 用于标识法术装备菜单的当前能力技能的状态,一个能力同一时间只能有一种状态标签
 	FGameplayTag Abilities_Status;									// 能力状态父标签
 	FGameplayTag Abilities_Status_Locked;
