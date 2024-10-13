@@ -29,6 +29,8 @@ void UBaseDamageAbility::CauseDamage(AActor* Suffer)
 	}
 
 	FDamageEffectParams EffectParams;
+	EffectParams.ImpulseVector = GetOwningActorFromActorInfo()->GetActorForwardVector().RotateAngleAxis(
+			45.f, GetOwningActorFromActorInfo()->GetActorRightVector());
 	MakeDamageEffectParamsFromAbilityDefaults(EffectParams,Suffer);
 	URPGAuraBlueprintFunctionLibrary::ApplyDamageGameplayEffectByParams(EffectParams);
 	
@@ -59,6 +61,7 @@ void UBaseDamageAbility::MakeDamageEffectParamsFromAbilityDefaults(FDamageEffect
 {
 	Params.BaseDamage = GetEstimatedDamageFromDamageTypesMap(GetAbilityLevel());
 	Params.DeBuffChance = DeBuffChance;
+	Params.KnockBackChance = KnockBackChance;
 	Params.DeBuffDamage = DeBuffDamage;
 	Params.DeBuffDuration = DeBuffDuration;
 	Params.DeBuffFrequency = DeBuffFrequency;

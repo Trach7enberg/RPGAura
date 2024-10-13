@@ -29,15 +29,23 @@ public:
 	FMontageWithTag GetRandomAttackAnim(const TArray<FMontageWithTag> MontageWithTags);
 
 protected:
-	UPROPERTY(EditDefauLtsOnLy, Category ="DamageDeBuff")
+	// 当前能力造成DeBuff的几率
+	UPROPERTY(EditDefauLtsOnLy, Category ="DamageDeBuff", meta=(ClampMin="0", ClampMax="100"))
 	float DeBuffChance = 20.f;
 
+	// 当前能力造成击退的几率
+	UPROPERTY(EditDefauLtsOnLy, Category ="DamageDeBuff", meta=(ClampMin="0", ClampMax="100"))
+	float KnockBackChance = 0.f;
+
+	// 当前能力触发DeBuff时造成的伤害
 	UPROPERTY(EditDefauLtsOnLy, Category ="DamageDeBuff")
 	float DeBuffDamage = 5.f;
 
+	// 当前能力触发DeBuff时,每秒伤害的间隔
 	UPROPERTY(EditDefauLtsOnLy, Category ="DamageDeBuff")
 	float DeBuffFrequency = 1.f;
 
+	// DeBuff持续时间
 	UPROPERTY(EditDefauLtsOnLy, Category ="DamageDeBuff")
 	float DeBuffDuration = 5.f;
 
@@ -57,11 +65,11 @@ protected:
 
 	/// 从DamageTypesMap里的伤害类型评估当前能力造成的基础伤害
 	/// @return 
-	float GetEstimatedDamageFromDamageTypesMap(int32 AbilityLevel) const; 
+	float GetEstimatedDamageFromDamageTypesMap(int32 AbilityLevel) const;
 
 	/// 在能力类中创建伤害GE所需要的默认参数,TargetActor需要设置否则无法生效GE(可以延迟设置)
 	/// @param Params
 	/// @param TargetActor 
 	/// @return 
-	void MakeDamageEffectParamsFromAbilityDefaults(FDamageEffectParams &Params,AActor* TargetActor = nullptr) const;
+	void MakeDamageEffectParamsFromAbilityDefaults(FDamageEffectParams& Params, AActor* TargetActor = nullptr) const;
 };
