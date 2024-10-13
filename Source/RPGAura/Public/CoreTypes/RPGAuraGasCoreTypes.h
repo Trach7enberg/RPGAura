@@ -37,59 +37,78 @@ public:
 		}
 		return NewContext;
 	}
-	
+
 	bool IsBlockedHit() const { return bIsBlockedHit; }
 	void SetBIsBlockedHit(const bool NewBIsBlockedHit) { this->bIsBlockedHit = NewBIsBlockedHit; }
 	bool IsCriticalHit() const { return bIsCriticalHit; }
 	void SetBIsCriticalHit(const bool NewBIsCriticalHit) { this->bIsCriticalHit = NewBIsCriticalHit; }
 
+	void SetImpulse(const FVector& NewImpulse) { Impulse = NewImpulse; }
+	FVector GetImpulse() const { return Impulse; }
+
 	/// 添加伤害类型
 	/// @param DamageTag 
-	void AddDamageType(const FGameplayTag& DamageTag){DamageTypes.AddTag(DamageTag);}
-	
+	void AddDamageType(const FGameplayTag& DamageTag) { DamageTypes.AddTag(DamageTag); }
+
 	/// 获取伤害类型容器
 	/// @return 
 	FGameplayTagContainer GetDamageTypes() const { return DamageTypes; }
 
 	/// 
 	/// @param DeBuffInfo 
-	FORCEINLINE void AddDeBuffInfo(const FDeBuffInfo& DeBuffInfo)
-	{
-		DeBuffInfos.Add(DeBuffInfo);
-	}
+	FORCEINLINE void AddDeBuffInfo(const FDeBuffInfo& DeBuffInfo) { DeBuffInfos.Add(DeBuffInfo); }
 
-	FORCEINLINE TArray<FDeBuffInfo> GetDeBuffInfos()
-	{
-		return DeBuffInfos;
-	}
+	FORCEINLINE TArray<FDeBuffInfo> GetDeBuffInfos() { return DeBuffInfos; }
+
+	/// 当前的GE是否是DeBuff引起的
+	/// @return 
+	bool IsDeBuffSideEffect() const { return bIsDeBuffSideEffect; }
+	void SetIsDeBuffSideEffect(const bool IsDeBuffSideEffect) { this->bIsDeBuffSideEffect = IsDeBuffSideEffect; }
+
+	/// 当前GE的能力是否触发击退
+	/// @return 
+	bool IsKnockBackHit() const { return bIsKnockBackHit; }
+	void SetIsKnockBackHit(const bool IsKnockBackHit) { this->bIsKnockBackHit = IsKnockBackHit; }
 
 protected:
-	
 	// 攻击是否被格挡
 	UPROPERTY()
-	bool bIsBlockedHit  = false;
+	bool bIsBlockedHit = false;
 
 	// 攻击是否暴击
 	UPROPERTY()
-	bool bIsCriticalHit  = false;
+	bool bIsCriticalHit = false;
+
+	// 当前的GE是否是DeBuff引起的
+	UPROPERTY()
+	bool bIsDeBuffSideEffect = false;
+
+	// 当前GE的能力是否触发击退
+	UPROPERTY()
+	bool bIsKnockBackHit = false;
 
 	// TODO 结构体需要换成弱指针包裹?
 	// 当前GE拥有的DeBuff
 	UPROPERTY()
 	TArray<FDeBuffInfo> DeBuffInfos = TArray<FDeBuffInfo>();
-	
+
 	// 当前GE拥有的伤害类型
 	UPROPERTY()
-	FGameplayTagContainer DamageTypes ;
+	FGameplayTagContainer DamageTypes;
+
+	// 冲击向量
+	UPROPERTY()
+	FVector Impulse = FVector::ZeroVector;
 };
 
 // 结构体特征选项结构
-template<>
-struct TStructOpsTypeTraits< FRPGAuraGameplayEffectContext > : public TStructOpsTypeTraitsBase2< FRPGAuraGameplayEffectContext >
+template <>
+struct TStructOpsTypeTraits<
+		FRPGAuraGameplayEffectContext> : public TStructOpsTypeTraitsBase2<FRPGAuraGameplayEffectContext>
 {
 	enum
 	{
 		WithNetSerializer = true,
-		WithCopy = true		 
+		WithCopy = true
 	};
 };

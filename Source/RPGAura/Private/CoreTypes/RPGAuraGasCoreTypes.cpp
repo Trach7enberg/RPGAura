@@ -5,7 +5,7 @@
 
 bool FRPGAuraGameplayEffectContext::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess)
 {
-	uint16 RepBits = 0;
+	uint32 RepBits = 0;
 	if (Ar.IsSaving())
 	{
 		if (bReplicateInstigator && Instigator.IsValid()) { RepBits |= 1 << 0; }
@@ -18,10 +18,13 @@ bool FRPGAuraGameplayEffectContext::NetSerialize(FArchive& Ar, UPackageMap* Map,
 		if (bIsBlockedHit) { RepBits |= 1 << 7; }
 		if (bIsCriticalHit) { RepBits |= 1 << 8; }
 		if (DamageTypes.Num() > 0) { RepBits |= 1 << 9; }
-		if(DeBuffInfos.Num() > 0){RepBits |= 1 << 10;}
+		if (DeBuffInfos.Num() > 0) { RepBits |= 1 << 10; }
+		if (!Impulse.IsZero()) { RepBits |= 1 << 11; }
+		if(bIsDeBuffSideEffect){ RepBits |= 1 << 12; }
+		if(bIsKnockBackHit){ RepBits |= 1 << 13; }
 	}
 
-	Ar.SerializeBits(&RepBits, 11);
+	Ar.SerializeBits(&RepBits, 14);
 
 	if (RepBits & (1 << 0)) { Ar << Instigator; }
 	if (RepBits & (1 << 1)) { Ar << EffectCauser; }
@@ -42,15 +45,25 @@ bool FRPGAuraGameplayEffectContext::NetSerialize(FArchive& Ar, UPackageMap* Map,
 
 	if (RepBits & (1 << 7)) { Ar << bIsBlockedHit; }
 	if (RepBits & (1 << 8)) { Ar << bIsCriticalHit; }
-	if (RepBits & (1 << 9))
-	{
-		DamageTypes.NetSerialize(Ar, Map, bOutSuccess);
-	}
+	if (RepBits & (1 << 9)) { DamageTypes.NetSerialize(Ar, Map, bOutSuccess); }
 	if (RepBits & (1 << 10))
 	{
 		// 网络序列化DeBuff信息数组
-		SafeNetSerializeTArray_WithNetSerialize<31>(Ar,DeBuffInfos,Map);
+		SafeNetSerializeTArray_WithNetSerialize<31>(Ar, DeBuffInfos, Map);
 	}
+	if(RepBits & (1 << 11))
+	{
+		Impulse.NetSerialize(Ar,Map,bOutSuccess);
+	}
+	if(RepBits & (1 << 12))
+	{
+		Ar << bIsDeBuffSideEffect;
+	}
+	if(RepBits & (1 << 13))
+	{
+		Ar << bIsKnockBackHit;
+	}
+
 	if (Ar.IsLoading())
 	{
 		AddInstigator(Instigator.Get(), EffectCauser.Get()); // Just to initialize InstigatorAbilitySystemComponent
