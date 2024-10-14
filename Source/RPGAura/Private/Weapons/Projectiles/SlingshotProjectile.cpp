@@ -50,7 +50,6 @@ void ASlingshotProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedCompon
 	if (HasAuthority())
 	{
 		URPGAuraBlueprintFunctionLibrary::ApplyDamageGameplayEffectByParams(DamageEffectParams);
-
 		Destroy();
 	}
 	else

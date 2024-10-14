@@ -47,7 +47,7 @@ void ASpellProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent,
 	if (HasAuthority())
 	{
 		URPGAuraBlueprintFunctionLibrary::ApplyDamageGameplayEffectByParams(DamageEffectParams);
-
+		
 		Destroy();
 	}
 	else
