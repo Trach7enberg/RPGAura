@@ -84,17 +84,6 @@ void AAuraCharacter::InitAbilityActorInfo()
 	AddCharacterAbilities();
 }
 
-void AAuraCharacter::MultiCastLevelVfx_Implementation()
-{
-	if (!NiagaraComponent.Get() || !CameraComponent || !LevelUpEffect) { return; }
-	
-	NiagaraComponent->SetAsset(LevelUpEffect);
-	NiagaraComponent->SetWorldRotation(FRotator(90, 0, 180));
-	NiagaraComponent->SetRelativeLocation(GetActorLocation());
-	NiagaraComponent->Activate(true);
-}
-
-
 void AAuraCharacter::InitHUD()
 {
 	const auto Pc = Cast<APlayerController>(GetController());
@@ -164,7 +153,7 @@ void AAuraCharacter::LevelUp()
 	AddToSpellPoints(GetMyPlayerState()->GetSpellPointsReward(GetCharacterLevel(), 1));
 	MyAsc->UpdateAbilityStatusWhenLevelUp(GetCharacterLevel());
 
-	MultiCastLevelVfx();
+	MulticastVfx(LevelUpEffect, FTransform{FRotator(90, 0, 180), GetActorLocation()}, false);
 }
 
 int32 AAuraCharacter::GetAttributePointsReward(const int32 InCharacterLevel)

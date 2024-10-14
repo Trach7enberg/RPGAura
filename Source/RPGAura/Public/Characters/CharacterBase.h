@@ -49,9 +49,11 @@ public:
 	virtual void MulticastHandleDeath();
 
 	/// 多播RPC,用于处理服务器和客户端的特效
-	/// @param Vfx 
+	/// @param Vfx
+	/// @param VfxTransform
+	/// @param RelativePosition 
 	UFUNCTION(NetMulticast, Reliable)
-	virtual void MulticastVfx(UNiagaraSystem* Vfx);
+	virtual void MulticastVfx(UNiagaraSystem* Vfx, FTransform VfxTransform, bool RelativePosition);
 
 	/// 获取当前角色的属性集 (该属性集在InitAbilityActorInfo中初始化)
 	virtual UAttributeSet* GetAttributeSet() const { return AttributeSet; }

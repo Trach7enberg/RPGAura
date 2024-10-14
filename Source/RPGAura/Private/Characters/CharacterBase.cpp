@@ -176,7 +176,7 @@ void ACharacterBase::ShowDeBuffVfx(const FGameplayTag DeBuffType)
 	if (const auto Vfx = DeBuffVfxMap.Find(DeBuffType))
 	{
 		UE_LOG(ACharacterBaseLog, Error, TEXT("[DeBuffVfx]: %s"), *DeBuffType.GetTagName().ToString());
-		MulticastVfx(Vfx->Get());
+		MulticastVfx(Vfx->Get(), {FRotator{}, FVector{},FVector(DeBuffVfxScale)}, true);
 	}
 }
 
@@ -271,11 +271,18 @@ void ACharacterBase::LifeSpanExpired()
 	Super::LifeSpanExpired();
 }
 
-void ACharacterBase::MulticastVfx_Implementation( UNiagaraSystem* Vfx)
+void ACharacterBase::MulticastVfx_Implementation(UNiagaraSystem* Vfx, const FTransform VfxTransform, const bool RelativePosition)
 {
 	if(!Vfx){return;}
 	NiagaraComponent->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
-	NiagaraComponent->SetRelativeScale3D(DeBuffVfxScale);
+	
+	if(RelativePosition)
+	{
+		NiagaraComponent->SetRelativeTransform(VfxTransform);
+	}else
+	{
+		NiagaraComponent->SetWorldTransform(VfxTransform);
+	}
 	NiagaraComponent.Get()->SetAsset(Vfx);
 	NiagaraComponent.Get()->Activate();
 }
@@ -305,7 +312,7 @@ void ACharacterBase::OnGrantedTag_DeBuff(const FGameplayTag Tag, int32 NewTagCou
 
 	if (!DeBuffing)
 	{
-		// TODO 需要判断是DeBuff特效,然后再停用DeBuff特效 
+		// TODO 需要判断是DeBuff特效,然后再停用DeBuff特效? 
 		NiagaraComponent->Deactivate();
 	}
 	UE_LOG(ACharacterBaseLog, Error, TEXT("获得DeBuff!,Actor: [%s] , DeBuff: [%s] , NewTagCount: [%d]"),
