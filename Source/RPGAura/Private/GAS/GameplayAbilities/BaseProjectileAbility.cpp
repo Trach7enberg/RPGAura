@@ -11,13 +11,13 @@
 DEFINE_LOG_CATEGORY_STATIC(UBaseProjectileAbilityLog, All, All);
 
 
-UBaseProjectileAbility::UBaseProjectileAbility() {}
+UBaseProjectileAbility::UBaseProjectileAbility() { KnockBackChance = 10.f; }
 
 void UBaseProjectileAbility::SpawnProjectile(const FHitResult& HitResult,
                                              const FGameplayTag SocketAssociatedWithMontageTag)
 {
 	// 飞弹能力(投射物)仅在服务器上生成 , 世界正在摧毁也不能生成
-	if (!GetAvatarActorFromActorInfo()->HasAuthority() || !GetWorld()) { return; }
+	if (!GetAvatarActorFromActorInfo() || !GetAvatarActorFromActorInfo()->HasAuthority() || !GetWorld()) { return; }
 
 	if (!ProjectileClass || !DamageEffectClass)
 	{
@@ -67,7 +67,10 @@ void UBaseProjectileAbility::SpawnProjectile(const FHitResult& HitResult,
 
 	if (IsValid(Projectile))
 	{
-		// 创建GE
+		// 在GE context中传输当前冲击法线向量,以便属性集能获取进行相应操作
+		// 冲击向量是以Projectile的前向向量为基础,再以右向量为基础旋转45度,即Pitch Rotation -45度
+		Projectile->DamageEffectParams.ImpulseVector = Projectile->GetActorForwardVector().RotateAngleAxis(
+			45.f, Projectile->GetActorRightVector());
 		MakeDamageEffectParamsFromAbilityDefaults(Projectile->DamageEffectParams);
 		// 完成飞弹生成
 		Projectile->FinishSpawning(Transform);
