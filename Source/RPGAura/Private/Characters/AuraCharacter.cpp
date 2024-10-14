@@ -86,8 +86,9 @@ void AAuraCharacter::InitAbilityActorInfo()
 
 void AAuraCharacter::MultiCastLevelVfx_Implementation()
 {
-	if (!NiagaraComponent.Get() || !CameraComponent) { return; }
-
+	if (!NiagaraComponent.Get() || !CameraComponent || !LevelUpEffect) { return; }
+	
+	NiagaraComponent->SetAsset(LevelUpEffect);
 	NiagaraComponent->SetWorldRotation(FRotator(90, 0, 180));
 	NiagaraComponent->SetRelativeLocation(GetActorLocation());
 	NiagaraComponent->Activate(true);
@@ -201,7 +202,6 @@ int32 AAuraCharacter::GetCurrentAssignableSpellPoints()
 	if (!GetMyPlayerState()) { return 0; }
 	return GetMyPlayerState()->GetAssignableSpellPoints();
 }
-
 
 void AAuraCharacter::PossessedBy(AController* NewController)
 {
