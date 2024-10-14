@@ -48,6 +48,11 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void MulticastHandleDeath();
 
+	/// 多播RPC,用于处理服务器和客户端的特效
+	/// @param Vfx 
+	UFUNCTION(NetMulticast, Reliable)
+	virtual void MulticastVfx(UNiagaraSystem* Vfx);
+
 	/// 获取当前角色的属性集 (该属性集在InitAbilityActorInfo中初始化)
 	virtual UAttributeSet* GetAttributeSet() const { return AttributeSet; }
 
@@ -83,6 +88,9 @@ public:
 	virtual void ShowDamageNumber(const float Damage, bool bBlockedHit = false, bool bCriticalHit = false) override;
 	virtual UNiagaraSystem* GetBloodEffect() override;
 	virtual void StartSummonAnim() override;
+	virtual void ShowDeBuffVfx(FGameplayTag DeBuffType) override;
+	virtual void AddDeathImpulse(const FVector& Impulse) override;
+	virtual void AddKnockBack(const FVector& Direction) override;
 	// ~ ICombatInterface
 
 
@@ -105,9 +113,21 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category="Combat")
 	float CharacterLevel;
 
+	/// DeBuff特效的大小
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="VFX", meta=(AllowPreserveRatio))
+	FVector DeBuffVfxScale = FVector(1.0f);
+
 	// 当前角色能拥有召唤物的最大数量
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
 	int32 MaxSummonsCount;
+
+	/// 角色添加冲击时,Mesh的冲击系数
+	UPROPERTY()
+	int32 ImpulseFactorMesh = 6000 ;
+
+	/// 角色添加冲击时,武器Mesh的冲击系数
+	UPROPERTY()
+	int32 ImpulseFactorWeaponMesh = ImpulseFactorMesh / 5;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
 	FName AttackSocketName_BodyTip = "TipSocket";
@@ -126,8 +146,13 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Animation")
 	FName WarpTargetName = "FacingTarget";
 
+	// 播放特效的Niagara组件,(目前用于LevelUp、DeBuff)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="VFX")
 	TObjectPtr<UNiagaraComponent> NiagaraComponent;
+
+	/// DeBuff类型到对应的VFX
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="VFX")
+	TMap<FGameplayTag, TObjectPtr<UNiagaraSystem>> DeBuffVfxMap;
 
 	/// 标签到对应的攻击动画蒙太奇数组
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
@@ -181,8 +206,12 @@ protected:
 	UMotionWarpingComponent* MotionWarpingComponent;
 
 	/// 当前人物被东西击中时的血液效果
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Combat")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "VFX")
 	TObjectPtr<UNiagaraSystem> BloodEffect;
+
+	/// 升级时的特效
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "VFX")
+	TObjectPtr<UNiagaraSystem> LevelUpEffect;
 
 	/// 角色死亡时的声音
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Combat")
@@ -257,6 +286,12 @@ private:
 	/// @param NewTagCount 当前标签被移除或者被添加 多个同样的签标的计数时 (可以同时有相同类型的标签)
 	UFUNCTION()
 	virtual void OnGrantedTag_HitReact(const FGameplayTag Tag, int32 NewTagCount);
+
+	/// 当ASC 被授予或者被完全移除DeBuff相关标签时的回调函数
+	/// @param Tag 
+	/// @param NewTagCount 
+	UFUNCTION()
+	virtual void OnGrantedTag_DeBuff(const FGameplayTag Tag, int32 NewTagCount);
 
 	/*----------------
 		溶解时间线

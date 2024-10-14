@@ -7,6 +7,7 @@
 #include "GameplayEffect.h"
 #include "MotionWarpingComponent.h"
 #include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WeaponLogicBaseComponent.h"
 #include "CoreTypes/RPGAuraGameplayTags.h"
@@ -121,18 +122,26 @@ void ACharacterBase::InitAbilityActorInfo() {}
 
 void ACharacterBase::RegisterGameplayTagEvent()
 {
+	if (!GetAbilitySystemComponent())
+	{
+		UE_LOG(ACharacterBaseLog, Error, TEXT("无法向能力组件注册标签事件回调!"));
+		return;
+	}
 	// 绑定(注册)当ASC被授予Effects_HitReact标签或者(被完全)移除标签时触发的Event
 	// ( EGameplayTagEventType::AnyCountChange 意味着任何改变都会触发,如果有多个相同的标签只移除一个也会被触发)
 	GetAbilitySystemComponent()->RegisterGameplayTagEvent(FRPGAuraGameplayTags::Get().Abilities_Effects_HitReact).
 	                             AddUObject(
 		                             this, &ACharacterBase::OnGrantedTag_HitReact);
+
+	GetAbilitySystemComponent()->RegisterGameplayTagEvent(FRPGAuraGameplayTags::Get().Abilities_DeBuff).AddUObject(
+		this, &ACharacterBase::OnGrantedTag_DeBuff);
 }
 
 ABasePlayerState* ACharacterBase::GetMyPlayerState()
 {
-	if(!BasePlayerState)
+	if (!BasePlayerState)
 	{
-		if(!GetPlayerState()){return nullptr;}
+		if (!GetPlayerState()) { return nullptr; }
 
 		BasePlayerState = Cast<ABasePlayerState>(GetPlayerState());
 	}
@@ -141,9 +150,9 @@ ABasePlayerState* ACharacterBase::GetMyPlayerState()
 
 URPGAuraGameInstanceSubsystem* ACharacterBase::GetMyGiSubSystem()
 {
-	if(!RPGAuraGameInstanceSubsystem)
+	if (!RPGAuraGameInstanceSubsystem)
 	{
-		if(!GetGameInstance()){return nullptr;}
+		if (!GetGameInstance()) { return nullptr; }
 
 		RPGAuraGameInstanceSubsystem = GetGameInstance()->GetSubsystem<URPGAuraGameInstanceSubsystem>();
 	}
@@ -161,10 +170,38 @@ bool ACharacterBase::CanHighLight()
 UNiagaraSystem* ACharacterBase::GetBloodEffect() { return BloodEffect; }
 void ACharacterBase::StartSummonAnim() { StartSummonTimeline(); }
 
-ECharacterClass ACharacterBase::GetCharacterClass()
+void ACharacterBase::ShowDeBuffVfx(const FGameplayTag DeBuffType)
 {
-	return CharacterClass;
+	// TODO 暂未处理多重DeBuff的特效
+	if (const auto Vfx = DeBuffVfxMap.Find(DeBuffType))
+	{
+		UE_LOG(ACharacterBaseLog, Error, TEXT("[DeBuffVfx]: %s"), *DeBuffType.GetTagName().ToString());
+		MulticastVfx(Vfx->Get());
+	}
 }
+
+
+
+void ACharacterBase::AddDeathImpulse(const FVector& Impulse)
+{
+	if (!bIsDie) { return; }
+	UE_LOG(ACharacterBaseLog, Error, TEXT("%d"), ImpulseFactorMesh);
+	if (GetMesh()) { GetMesh()->AddImpulse(Impulse * ImpulseFactorMesh, NAME_None, true); }
+	if (WeaponLogicBaseComponent)
+	{
+		WeaponLogicBaseComponent->AddWeaponImpulse(Impulse * ImpulseFactorWeaponMesh, NAME_None, true);
+	}
+}
+
+void ACharacterBase::AddKnockBack(const FVector& Direction)
+{
+	auto KnockBackVector = Direction;
+	// TODO 角色移动时添加的击退效果会减弱待修复,以及将"魔法向量"移动到相应位置   
+	KnockBackVector *= 1000;
+	LaunchCharacter(FVector((KnockBackVector.X), (KnockBackVector.Y), 300), true, true);
+}
+
+ECharacterClass ACharacterBase::GetCharacterClass() { return CharacterClass; }
 
 FVector ACharacterBase::GetCombatSocketLocation(const FGameplayTag& GameplayTag)
 {
@@ -234,6 +271,15 @@ void ACharacterBase::LifeSpanExpired()
 	Super::LifeSpanExpired();
 }
 
+void ACharacterBase::MulticastVfx_Implementation( UNiagaraSystem* Vfx)
+{
+	if(!Vfx){return;}
+	NiagaraComponent->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+	NiagaraComponent->SetRelativeScale3D(DeBuffVfxScale);
+	NiagaraComponent.Get()->SetAsset(Vfx);
+	NiagaraComponent.Get()->Activate();
+}
+
 FORCEINLINE UAbilitySystemComponent* ACharacterBase::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
@@ -251,6 +297,19 @@ void ACharacterBase::OnGrantedTag_HitReact(const FGameplayTag Tag, int32 NewTagC
 	GEngine->AddOnScreenDebugMessage(1, 2, FColor::Red,
 	                                 FString::Printf(
 		                                 TEXT("TagName: [%s] , NewTagCount: [%d]"), *Tag.ToString(), NewTagCount));
+}
+
+void ACharacterBase::OnGrantedTag_DeBuff(const FGameplayTag Tag, int32 NewTagCount)
+{
+	const auto DeBuffing = NewTagCount > 0;
+
+	if (!DeBuffing)
+	{
+		// TODO 需要判断是DeBuff特效,然后再停用DeBuff特效 
+		NiagaraComponent->Deactivate();
+	}
+	UE_LOG(ACharacterBaseLog, Error, TEXT("获得DeBuff!,Actor: [%s] , DeBuff: [%s] , NewTagCount: [%d]"),
+	       *GetNameSafe(this), *Tag.ToString(), NewTagCount);
 }
 
 void ACharacterBase::SetDissolveMaterial()
@@ -405,6 +464,11 @@ void ACharacterBase::ShowDamageNumber_Implementation(const float Damage, bool bB
 void ACharacterBase::MulticastHandleDeath_Implementation()
 {
 	bIsDie = true;
+	// 启用布娃娃
+	NiagaraComponent->Deactivate();
+	GetMesh()->SetEnableGravity(true);
+	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::Type::PhysicsOnly);
 
 	if (DeathSound) { UGameplayStatics::PlaySoundAtLocation(this, DeathSound, GetActorLocation()); }
 
@@ -413,13 +477,8 @@ void ACharacterBase::MulticastHandleDeath_Implementation()
 
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
 
-	// 启用布娃娃
-	GetMesh()->SetEnableGravity(true);
-	GetMesh()->SetSimulatePhysics(true);
-	GetMesh()->SetCollisionEnabled(ECollisionEnabled::Type::PhysicsOnly);
 	// Pawn还可以进行物理互动
 	// GetMesh()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
-
 
 	// 播放溶解时间线动画,动画完成之后才死亡
 	StartDissolveTimeline();
