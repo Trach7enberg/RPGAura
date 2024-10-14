@@ -10,14 +10,15 @@
 
 AEnemyGhoul::AEnemyGhoul()
 {
+	ImpulseFactorMesh /= 2;
 	MaxWalkingSpeed = 125.0;
 	AttackSocketName_LeftHand = "LeftHandAttackSocket";
 	AttackSocketName_RightHand = "RightHandAttackSocket";
-	EnemyHealthBar->SetRelativeLocation(FVector(0.0f, 0.0f, 74.0f));
+	EnemyHealthBar->SetRelativeLocation(FVector(0.0f, 0.0f, 85.0f));
 
-	GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -106.0f));
-	GetCapsuleComponent()->SetCapsuleHalfHeight(105.0f);
-	GetCapsuleComponent()->SetCapsuleRadius(73.646233f);
+	GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -88.0f));
+	GetCapsuleComponent()->SetCapsuleHalfHeight(85.0f);
+	GetCapsuleComponent()->SetCapsuleRadius(57.76897f);
 	GetCharacterMovement()->RotationRate = FRotator(0, 150, 0);
 
 	WeaponLogicBaseComponent->SetBDoesNeedWeapon(false) ;
