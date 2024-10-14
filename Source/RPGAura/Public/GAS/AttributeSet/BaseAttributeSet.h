@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "AbilitySystemComponent.h"
 #include "AttributeSet.h"
+#include "CoreTypes/RPGAuraGasCoreTypes.h"
 #include "BaseAttributeSet.generated.h"
 
 
@@ -31,14 +32,19 @@ struct FEffectProp
 {
 	GENERATED_BODY()
 
+	/// GE上下文的Handle
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Effect")
-	FGameplayEffectContextHandle EffectContextHandle;
+	FGameplayEffectContextHandle EffectContextHandle{};
+
+	/// 本工程自定义的GE上下文, 从EffectContextHandle获取
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Effect")
+	FRPGAuraGameplayEffectContext MyGeContext{};
 
 	// 发起GE的源Asc
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Effect")
 	UAbilitySystemComponent* SourceAsc = nullptr;
 
-	// 发起GE的源Avatar
+	// 发起GE的源Avatar,即Instigator
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Effect")
 	AActor* SourceAvatar = nullptr;
 
@@ -54,7 +60,7 @@ struct FEffectProp
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Effect")
 	UAbilitySystemComponent* TargetAsc = nullptr;
 
-	// 接收GE的那个目标Avatar
+	// 接收GE的那个目标Avatar,即Suffer
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Effect")
 	AActor* TargetAvatar = nullptr;
 
@@ -65,6 +71,18 @@ struct FEffectProp
 	// 接收GE的那个目标角色 (如果有的话)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Effect")
 	ACharacter* TargetCharacter = nullptr;
+
+	/// 判断所有化身是否有效
+	/// @return 
+	bool IsAvatarValid() const { return SourceAvatar && TargetAvatar; }
+	
+	bool IsCharacterValid() const { return SourceCharacter && TargetCharacter; }
+
+	/// 判断所有的Asc是否有效
+	/// @return 
+	bool IsAscValid() const { return SourceAsc && TargetAsc; }
+
+	bool IsGeContextValid() { return EffectContextHandle.Get() != nullptr; }
 };
 
 /**
@@ -177,7 +195,7 @@ public:
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentMana, BlueprintReadOnly, Category = "Vital Attributes")
 	FGameplayAttributeData CurrentMana;
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, CurrentMana);
- 
+
 	// Meta属性
 	UPROPERTY(BlueprintReadOnly, Category="Meta Attributes")
 	FGameplayAttributeData InComingDamage;
@@ -263,12 +281,11 @@ public:
 	/// @param Data
 	/// @param EffectProp 要设置的FEffectProp结构
 	void UpdateCurrentGeProp(const FGameplayEffectModCallbackData& Data, FEffectProp& EffectProp);
-	
 
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual void PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const override;
-	virtual  void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
-	
+	virtual void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
+
 	/// 这个函数在游戏效果改变一个属性之后被执行
 	/// @param Data 
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
@@ -279,6 +296,7 @@ public:
 
 private:
 	/// 用于存前某个GE影响当前角色属性集的相关上下文数据
+	UPROPERTY()
 	FEffectProp EffectProperties{};
 
 	/// 是否在升级 , 用于修复当角色升级时不会满血满蓝还剩一点才满的问题
@@ -298,5 +316,15 @@ private:
 	/// @param Sufferer 
 	/// @param Instigator 玩家
 	/// @return 
-	bool SendXpGamePlayEvent( AActor* Sufferer, AActor* Instigator);
+	bool SendXpGamePlayEvent(AActor* Sufferer, AActor* Instigator);
+
+	/// DeBuff处理,使用动态GE(Dynamic GameplayEffects) 
+	/// 注意:动态GE不支持Replication,因此只能在服务器上进行这样任何更改都将会复制到客户端
+	void HandleDeBuff();
+
+	/// 对生命值在不同的值时进行一系列反应的处理     
+	/// @param TempValue 
+	/// @param TempHealth 
+	void HandleHealthReact(
+		float TempValue, float TempHealth);
 };

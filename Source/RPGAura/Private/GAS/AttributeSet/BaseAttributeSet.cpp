@@ -7,7 +7,10 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "GameplayEffectExtension.h"
 #include "CoreTypes/RPGAuraGameplayTags.h"
+#include "CoreTypes/RPGAuraGasCoreTypes.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "GameplayEffectComponents/TargetTagsGameplayEffectComponent.h"
 #include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
 #include "GAS/Globals/GameAbilitySystemGlobals.h"
 #include "Interfaces/CombatInterface.h"
@@ -206,97 +209,35 @@ void UBaseAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute,
 	{
 		SetCurrentHealth(NewValue);
 		bIsLevelingUpHealth = false;
-	}else if(bIsLevelingUpMana && Attribute == GetMaxManaAttribute())
+	}
+	else if (bIsLevelingUpMana && Attribute == GetMaxManaAttribute())
 	{
 		SetCurrentMana(NewValue);
 		bIsLevelingUpMana = false;
 	}
 }
 
-
-
-
-void UBaseAttributeSet::UpdateCurrentGeProp(const FGameplayEffectModCallbackData& Data, FEffectProp& EffectProp)
-{
-	const auto Context = Data.EffectSpec.GetContext().Get();
-	if (!Context) { return; }
-
-	// Context里的Source是 发起GE的Actor , Target则是被GE影响的Actor
-	const auto TargetAsc = Context->GetOriginalInstigatorAbilitySystemComponent();
-	EffectProp.EffectContextHandle = Data.EffectSpec.GetEffectContext();
-	if (TargetAsc && TargetAsc->AbilityActorInfo.IsValid() && TargetAsc->AbilityActorInfo.Get()->AvatarActor.IsValid())
-	{
-		EffectProp.TargetAsc = TargetAsc;
-		EffectProp.TargetAvatar = TargetAsc->AbilityActorInfo.Get()->AvatarActor.Get();
-		EffectProp.TargetController = Cast<AController>(TargetAsc->AbilityActorInfo.Get()->PlayerController);
-		EffectProp.TargetCharacter = Cast<ACharacter>(EffectProp.TargetAvatar);
-	}
-
-	const auto SourceAsc = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(
-		Cast<AActor>(Context->GetSourceObject()));
-
-	EffectProp.SourceAsc = SourceAsc;
-	if (SourceAsc && SourceAsc->AbilityActorInfo.Get()->PlayerController.IsValid())
-	{
-		EffectProp.SourceController = Cast<AController>(SourceAsc->AbilityActorInfo.Get()->PlayerController.Get());
-		EffectProp.SourceAvatar = EffectProp.SourceController->GetPawn();
-		EffectProp.SourceCharacter = Cast<ACharacter>(EffectProp.SourceAvatar);
-	}
-	else { EffectProp.SourceAvatar = Cast<AActor>(Context->GetSourceObject()); }
-}
-
 void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
 	Super::PostGameplayEffectExecute(Data);
 
-	if (!GetMyCurrentAbilitySystem())
-	{
-		UE_LOG(UBaseAttributeSetLog, Error, TEXT("能力系统组件为空!"));
-		return;
-	}
-
-	const auto Instigator = Data.EffectSpec.GetContext().GetEffectCauser();
-	const auto Sufferer = GetMyCurrentAbilitySystem()->GetAvatarActor();
-	const auto InstigatorCharacter = Cast<ACharacter>(Instigator);
+	UpdateCurrentGeProp(Data, EffectProperties);
+	if (!EffectProperties.IsAvatarValid()) { return; }
 
 	// 检查是否等于 InComingDamage 元属性
 	if (Data.EvaluatedData.Attribute == GetInComingDamageAttribute() && GetInComingDamage() != 0)
 	{
-		const auto TempValue = GetInComingDamage();
+		const auto TempInComingDamage = GetInComingDamage();
 		SetInComingDamage(0);
 
-
-		const auto TempHealth = GetCurrentHealth() - TempValue;
+		const auto TempHealth = GetCurrentHealth() - TempInComingDamage;
 
 		SetCurrentHealth(FMath::Clamp(TempHealth, 0.f, GetMaxHealth()));
 
-		// 转换成Combat接口获取相应函数
-		const auto CbInterface = Cast<ICombatInterface>(Sufferer);
-		const auto IsBlockHit = UGameAbilitySystemGlobals::IsBlockedHit(Data.EffectSpec.GetContext());
-		const auto IsCriticalHit = UGameAbilitySystemGlobals::IsCriticalHit(Data.EffectSpec.GetContext());
+		if (const auto CbInterface = Cast<ICombatInterface>(EffectProperties.TargetAvatar); CbInterface && CbInterface->
+			IsCharacterDie()) { return; }
 
-		CbInterface->ShowDamageNumber(TempValue, IsBlockHit, IsCriticalHit);
-
-		// 是否是致命伤
-		const bool BIsFatal = TempHealth <= 0.f;
-
-		// 非致命伤,给击中的敌人 激活含有标签HitReact的能力
-		if (!BIsFatal)
-		{
-			// 使用该函数需要确保能力蓝图类中的AbilityTags容器里有Effects_HitReact标签
-			GetMyCurrentAbilitySystem()->TryActivateAbilitiesByTag(
-				FGameplayTagContainer(FRPGAuraGameplayTags::Get().Abilities_Effects_HitReact));
-			// UE_LOG(UBaseAttributeSetLog, Error, TEXT("是否暴击[%d] 是否格挡[%d]"), IsCriticalHit, IsBlockHit);
-		}
-		else // 是致命伤的话
-		{
-			if (CbInterface)
-			{
-				CbInterface->Die();
-				// 发送经验游戏事件
-				SendXpGamePlayEvent(Sufferer, Instigator);
-			}
-		}
+		HandleHealthReact(TempInComingDamage, TempHealth);
 	}
 	if (Data.EvaluatedData.Attribute == GetBlockChanceAttribute())
 	{
@@ -310,8 +251,8 @@ void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 		       Data.EvaluatedData.Attribute.GetNumericValue(this));
 
 		if (!GetGiSubSystem()) { return; }
-		const auto PlayerInterface = Cast<IPlayerInterface>(Instigator);
-		const auto PlayerCombInterface = Cast<ICombatInterface>(Instigator);
+		const auto PlayerInterface = Cast<IPlayerInterface>(EffectProperties.SourceAvatar);
+		const auto PlayerCombInterface = Cast<ICombatInterface>(EffectProperties.SourceAvatar);
 		if (!PlayerInterface || !PlayerCombInterface) { return; }
 
 		const auto OldLevel = PlayerCombInterface->GetCharacterLevel();
@@ -357,6 +298,34 @@ URPGAuraGameInstanceSubsystem* UBaseAttributeSet::GetGiSubSystem()
 	return GiSubSystem;
 }
 
+void UBaseAttributeSet::UpdateCurrentGeProp(const FGameplayEffectModCallbackData& Data, FEffectProp& EffectProp)
+{
+	// TODO 成员内容一样的时候就不需要每次重新更新赋值了 
+	FGameplayEffectContextHandle GeContextHandle = Data.EffectSpec.GetContext();
+	FGameplayEffectContext* GeContext = GeContextHandle.Get();
+
+	if (!GeContext) { return; }
+
+	const auto MyGeContext = UGameAbilitySystemGlobals::GetCustomGeContext(GeContext);
+
+	EffectProp.EffectContextHandle = GeContextHandle;
+	EffectProp.MyGeContext = (MyGeContext) ? *MyGeContext : EffectProp.MyGeContext;
+
+	// Context里的Source是 发起GE的Actor , Target则是被GE影响的Actor(也就是当前属性集的Owner)
+	const auto Instigator = Data.EffectSpec.GetContext().GetEffectCauser();
+	const auto Sufferer = GetMyCurrentAbilitySystem()->GetAvatarActor();
+
+	EffectProp.SourceAsc = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Instigator);
+	EffectProp.SourceAvatar = (EffectProp.SourceAsc) ? EffectProp.SourceAsc->GetAvatarActor() : nullptr;
+	EffectProp.SourceCharacter = Cast<ACharacter>(EffectProp.SourceAvatar);
+	EffectProp.SourceController = EffectProp.SourceCharacter ? EffectProp.SourceCharacter->GetController() : nullptr;
+
+	EffectProp.TargetAsc = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Sufferer);
+	EffectProp.TargetAvatar = (EffectProp.TargetAsc) ? EffectProp.TargetAsc->GetAvatarActor() : nullptr;
+	EffectProp.TargetCharacter = Cast<ACharacter>(EffectProp.TargetAvatar);
+	EffectProp.TargetController = EffectProp.TargetCharacter ? EffectProp.TargetCharacter->GetController() : nullptr;
+}
+
 bool UBaseAttributeSet::SendXpGamePlayEvent(AActor* Sufferer, AActor* Instigator)
 {
 	const auto SufferCombatInt = Cast<ICombatInterface>(Sufferer);
@@ -380,4 +349,131 @@ bool UBaseAttributeSet::SendXpGamePlayEvent(AActor* Sufferer, AActor* Instigator
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(
 		Instigator, FRPGAuraGameplayTags::Get().Attributes_Meta_InComingXP, PayLoad);
 	return true;
+}
+
+void UBaseAttributeSet::HandleHealthReact(
+	const float TempValue, const float TempHealth)
+{
+	if (!EffectProperties.IsAvatarValid() || !EffectProperties.IsCharacterValid()) { return; }
+
+	if (!GetMyCurrentAbilitySystem())
+	{
+		UE_LOG(UBaseAttributeSetLog, Error, TEXT("能力系统组件为空!"));
+		return;
+	}
+	// 转换成Combat接口获取相应函数
+	const auto CbInterface = Cast<ICombatInterface>(EffectProperties.TargetAvatar);
+
+	const auto IsBlockHit = UGameAbilitySystemGlobals::IsBlockedHit(EffectProperties.EffectContextHandle);
+	const auto IsCriticalHit = UGameAbilitySystemGlobals::IsCriticalHit(EffectProperties.EffectContextHandle);
+	CbInterface->ShowDamageNumber(TempValue, IsBlockHit, IsCriticalHit); // TODO 触发DeBuff时候的显示数字会与正常显示重合待修 
+
+	HandleDeBuff();
+
+	// 是否是致命伤
+	const bool BIsFatal = TempHealth <= 0.f;
+
+	// const auto TmpDeBuffArray = EffectProperties.MyGeContext.GetDeBuffInfos();
+	// if (TmpDeBuffArray.Num() > 0)
+	// {
+	// 	const auto OffName = GetNameSafe(EffectProperties.SourceAvatar);
+	// 	const auto SufferName = GetNameSafe(EffectProperties.TargetAvatar);
+	// 	UE_LOG(UBaseAttributeSetLog, Error, TEXT("攻击者[%s] -> 受击[%s],DeBuff数组大小:%d"), *OffName, *SufferName,
+	// 	       TmpDeBuffArray.Num());
+	// 	UE_LOG(UBaseAttributeSetLog, Error, TEXT("攻击者[%s] -> 受击[%s],Debuff[0]是否触发Debuff?: %d , DeBuff名字: %s"), *OffName,
+	// 	       *SufferName, TmpDeBuffArray[0].bIsSuccessfulDeBuff, *TmpDeBuffArray[0].DeBuffType.ToString());
+	// }
+
+	// 非致命伤,给击中的敌人 激活含有标签HitReact的能力
+	if (!BIsFatal)
+	{
+		// 使用该函数需要确保能力蓝图类中的AbilityTags容器里有Effects_HitReact标签
+		GetMyCurrentAbilitySystem()->TryActivateAbilitiesByTag(
+			FGameplayTagContainer(FRPGAuraGameplayTags::Get().Abilities_Effects_HitReact));
+		// UE_LOG(UBaseAttributeSetLog, Error, TEXT("是否暴击[%d] 是否格挡[%d]"), IsCriticalHit, IsBlockHit);
+		if (!EffectProperties.MyGeContext.IsDeBuffSideEffect() && EffectProperties.MyGeContext.IsKnockBackHit())
+		{
+			CbInterface->AddKnockBack(EffectProperties.MyGeContext.GetImpulse());
+		}
+	}
+	else // 是致命伤的话
+	{
+		if (CbInterface)
+		{
+			CbInterface->Die();
+			// 发送经验游戏事件
+			SendXpGamePlayEvent(EffectProperties.TargetAvatar, EffectProperties.SourceAvatar);
+			CbInterface->AddDeathImpulse(EffectProperties.MyGeContext.GetImpulse());
+		}
+	}
+}
+
+
+void UBaseAttributeSet::HandleDeBuff()
+{
+	if (!EffectProperties.IsAscValid() || !EffectProperties.IsAvatarValid() || !EffectProperties.IsGeContextValid())
+	{
+		return;
+	}
+
+	const auto TargetCombInt = Cast<ICombatInterface>(EffectProperties.TargetAvatar);
+	if (!TargetCombInt) { return; }
+
+	// 创建动态GE
+	for (auto& DeBuffInfo : EffectProperties.MyGeContext.GetDeBuffInfos())
+	{
+		if (!DeBuffInfo.bIsSuccessfulDeBuff) { continue; }
+
+		// 通过Instigator的ASC创建新的 FGameplayEffectContextHandle
+		auto GeContextHandle = EffectProperties.SourceAsc->MakeEffectContext();
+		GeContextHandle.AddSourceObject(EffectProperties.SourceAvatar);
+
+		// 动态GE的名字
+		FString DeBuffName = FString::Printf(TEXT("DynamicDeBuff_%s"), *DeBuffInfo.DeBuffType.ToString());
+
+		// 在UE中,包Package是对资源进行组织和管理的方式
+		// GetTransientPackage() 返回的临时包对象用于在运行时动态创建对象和资源，而无需将其永久保存到磁盘上的包文件中
+		// 当代码需要在运行时创建临时资源（如动态创建GE、蓝图或其他对象）时
+		// 可以使用 GetTransientPackage() 函数来获取一个临时的包对象,并将新创建的对象分配给该包
+		// 这样做可以方便地管理这些临时资源，而无需创建和维护额外的包文件
+		// 即临时包对象在游戏运行期间存在,并且不会被保存到磁盘上的包文件中一旦游戏结束或重新编译项目,这里new的GE将被清理并释放内存
+		UGameplayEffect* GameplayEffect = NewObject<UGameplayEffect>(GetTransientPackage(), FName(DeBuffName));
+		if (!GameplayEffect) { continue; }
+
+		GameplayEffect->DurationPolicy = EGameplayEffectDurationType::HasDuration;
+		GameplayEffect->Period = DeBuffInfo.DeBuffFrequency;
+		GameplayEffect->DurationMagnitude = FScalableFloat(DeBuffInfo.DeBuffDuration);
+		// 按施法者设置堆叠策略
+		GameplayEffect->StackingType = EGameplayEffectStackingType::AggregateBySource;
+		GameplayEffect->StackLimitCount = 1;
+
+		// 添加GE组件,用于添加授予目标的标签 TODO 待修改const_cast 
+		UTargetTagsGameplayEffectComponent& GeComp = GameplayEffect->AddComponent<UTargetTagsGameplayEffectComponent>();
+		auto& TagContainer = const_cast<FInheritedTagContainer&>(GeComp.GetConfiguredTargetTagChanges());
+		TagContainer.Added.AddTag(DeBuffInfo.DeBuffType);
+		GeComp.SetAndApplyTargetTagChanges(TagContainer);
+
+		// 新建Modifier并且配置Modifier信息
+		GameplayEffect->Modifiers.Add(FGameplayModifierInfo());
+		auto& GameplayModifierInfo = GameplayEffect->Modifiers.Last();
+		GameplayModifierInfo.ModifierMagnitude = FScalableFloat(DeBuffInfo.DeBuffDamage);
+		GameplayModifierInfo.ModifierOp = EGameplayModOp::Additive;
+		GameplayModifierInfo.Attribute = UBaseAttributeSet::GetInComingDamageAttribute();
+
+		const auto Level = EffectProperties.MyGeContext.GetAbilityLevel();
+		const auto Str = EffectProperties.MyGeContext.GetImpulse().ToString();
+		UE_LOG(UBaseAttributeSetLog, Warning, TEXT("[前向向量: , %s]"), *Str);
+		if (const FGameplayEffectSpec* MutableSpec = new FGameplayEffectSpec(GameplayEffect, GeContextHandle, Level))
+		{
+			if (const auto TmpGeContext =
+				UGameAbilitySystemGlobals::GetCustomGeContext(MutableSpec->GetContext().Get()))
+			{
+				TmpGeContext->AddDamageType(DeBuffInfo.DamageType);
+				TmpGeContext->SetIsDeBuffSideEffect(true);
+				// 注意DeBuff所产生的负面GE上下文里携带的所有DeBuffInfo信息里的bIsSuccessfulDeBuff一定要为false,或者没有,否则会产生无限循环
+				EffectProperties.TargetAsc->ApplyGameplayEffectSpecToSelf(*MutableSpec);
+				TargetCombInt->ShowDeBuffVfx(DeBuffInfo.DeBuffType);
+			}
+		}
+	}
 }
