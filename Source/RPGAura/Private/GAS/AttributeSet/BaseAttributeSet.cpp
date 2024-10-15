@@ -424,7 +424,7 @@ void UBaseAttributeSet::HandleDeBuff()
 	{
 		if (!DeBuffInfo.bIsSuccessfulDeBuff) { continue; }
 
-		// 通过Instigator的ASC创建新的 FGameplayEffectContextHandle
+		// 通过Instigator	的ASC创建新的 FGameplayEffectContextHandle
 		auto GeContextHandle = EffectProperties.SourceAsc->MakeEffectContext();
 		GeContextHandle.AddSourceObject(EffectProperties.SourceAvatar);
 
@@ -463,14 +463,17 @@ void UBaseAttributeSet::HandleDeBuff()
 		const auto Level = EffectProperties.MyGeContext.GetAbilityLevel();
 		const auto Str = EffectProperties.MyGeContext.GetImpulse().ToString();
 		UE_LOG(UBaseAttributeSetLog, Warning, TEXT("[前向向量: , %s]"), *Str);
+
+		// 通过GE上下文句柄和创建的GE new 一个GE Spec,以便我们Apply
 		if (const FGameplayEffectSpec* MutableSpec = new FGameplayEffectSpec(GameplayEffect, GeContextHandle, Level))
 		{
+			// 我的蓝图函数库,用于从GE上下文转换为我自己的GE自定义上下文
 			if (const auto TmpGeContext =
 				UGameAbilitySystemGlobals::GetCustomGeContext(MutableSpec->GetContext().Get()))
 			{
 				TmpGeContext->AddDamageType(DeBuffInfo.DamageType);
-				TmpGeContext->SetIsDeBuffSideEffect(true);
 				// 注意DeBuff所产生的负面GE上下文里携带的所有DeBuffInfo信息里的bIsSuccessfulDeBuff一定要为false,或者没有,否则会产生无限循环
+				TmpGeContext->SetIsDeBuffSideEffect(true);
 				EffectProperties.TargetAsc->ApplyGameplayEffectSpecToSelf(*MutableSpec);
 				TargetCombInt->ShowDeBuffVfx(DeBuffInfo.DeBuffType);
 			}
