@@ -86,39 +86,51 @@ void UBaseProjectileAbility::UpdateAbilityDescription(const FGameplayTag& Abilit
 	const auto DescStrNextLevel = CurrentAbilityDescription.DescriptionNextLevel.ToString();
 
 	const auto FormatNormalStr = FString::Format(*DescStrNormal, {
-		                                             // 多少枚投射物
+		                                             // 当前技能等级{0}
 		                                             AbilityLevel,
-		                                             // 预计伤害
+		                                             // 能力冷却时间{1}
+		                                             FString::Printf(TEXT("%.1f"), GetCoolDown(AbilityLevel)),
+		                                             // 多少枚投射物{2}
+		                                             AbilityLevel,
+		                                             // 预计伤害{3}
 		                                             FString::Printf(
 			                                             TEXT("%.1f"),
 			                                             GetEstimatedDamageFromDamageTypesMap(AbilityLevel)),
-		                                             // 能力蓝耗值
+		                                             // DeBuff几率{4}
+		                                             FString::Printf(TEXT("%.1f"), DeBuffChance),
+		                                             // DeBuff持续时间{5}
+		                                             FString::Printf(TEXT("%.1f"), DeBuffDuration),
+		                                             // DeBuff伤害{6}
+		                                             FString::Printf(TEXT("%.1f"), DeBuffDamage),
+		                                             // 能力蓝耗值{7}
 		                                             FString::Printf(
 			                                             TEXT("%.1f"),
 			                                             FMath::Abs(GetManaCost(AbilityLevel))),
-		                                             // 能力冷却时间
-		                                             FString::Printf(TEXT("%.1f"), GetCoolDown(AbilityLevel)),
-		                                             // 当前技能等级
-		                                             AbilityLevel
 	                                             });
 
 	const auto NextLevel = AbilityLevel + 1;
 	const auto FormatNextLevelStr = FString::Format(*DescStrNextLevel, {
-		                                                // 多少枚投射物
-		                                                NextLevel,
-		                                                // 预计伤害
-		                                                FString::Printf(
-			                                                TEXT("%.1f"),
-			                                                GetEstimatedDamageFromDamageTypesMap(NextLevel)),
-		                                                // 能力蓝耗值
-		                                                FString::Printf(
-			                                                TEXT("%.1f"),
-			                                                FMath::Abs(GetManaCost(NextLevel))),
-		                                                // 能力冷却时间
-		                                                FString::Printf(TEXT("%.1f"), GetCoolDown(NextLevel)),
-		                                                // 当前技能等级
-		                                                NextLevel
-	                                                });
+													 // 当前技能等级{0}
+													 NextLevel,
+													 // 能力冷却时间{1}
+													 FString::Printf(TEXT("%.1f"), GetCoolDown(NextLevel)),
+													 // 多少枚投射物{2}
+													 NextLevel,
+													 // 预计伤害{3}
+													 FString::Printf(
+														 TEXT("%.1f"),
+														 GetEstimatedDamageFromDamageTypesMap(NextLevel)),
+													 // DeBuff几率{4}
+													 FString::Printf(TEXT("%.1f"), DeBuffChance),
+													 // DeBuff持续时间{5}
+													 FString::Printf(TEXT("%.1f"), DeBuffDuration),
+													 // DeBuff伤害{6}
+													 FString::Printf(TEXT("%.1f"), DeBuffDamage),
+													 // 能力蓝耗值{7}
+													 FString::Printf(
+														 TEXT("%.1f"),
+														 FMath::Abs(GetManaCost(NextLevel))),
+												 });
 	CurrentAbilityDescription.DescriptionNormal = FText::FromString(FormatNormalStr);
 	CurrentAbilityDescription.DescriptionNextLevel = FText::FromString(FormatNextLevelStr);
 }
