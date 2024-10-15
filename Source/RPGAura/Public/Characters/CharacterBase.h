@@ -44,17 +44,6 @@ public:
 
 	virtual void LifeSpanExpired() override;
 
-	/// 多播RPC,服务器和客户端都会调用,用于处理角色死亡
-	UFUNCTION(NetMulticast, Reliable)
-	virtual void MulticastHandleDeath();
-
-	/// 多播RPC,用于处理服务器和客户端的特效
-	/// @param Vfx
-	/// @param VfxTransform
-	/// @param RelativePosition 
-	UFUNCTION(NetMulticast, Reliable)
-	virtual void MulticastVfx(UNiagaraSystem* Vfx, FTransform VfxTransform, bool RelativePosition);
-
 	/// 获取当前角色的属性集 (该属性集在InitAbilityActorInfo中初始化)
 	virtual UAttributeSet* GetAttributeSet() const { return AttributeSet; }
 
@@ -125,7 +114,7 @@ protected:
 
 	/// 角色添加冲击时,Mesh的冲击系数
 	UPROPERTY()
-	int32 ImpulseFactorMesh = 6000 ;
+	int32 ImpulseFactorMesh = 6000;
 
 	/// 角色添加冲击时,武器Mesh的冲击系数
 	UPROPERTY()
@@ -255,6 +244,23 @@ protected:
 	/// @return 
 	virtual URPGAuraGameInstanceSubsystem* GetMyGiSubSystem();
 
+	/// 多播RPC,服务器和客户端都会调用,用于处理角色死亡
+	UFUNCTION(NetMulticast, Reliable)
+	virtual void MulticastHandleDeath();
+	
+	/// 多播RPC,用于处理服务器和客户端的特效,当同时播放多个特效时可以使用单次使用选项
+	/// @param Vfx
+	/// @param VfxTransform
+	/// @param LocationType
+	/// @param SingleUse 
+	UFUNCTION(NetMulticast, Reliable)
+	virtual void MulticastVfx(UNiagaraSystem* Vfx, FTransform VfxTransform,
+							  EAttachLocation::Type LocationType = EAttachLocation::Type::KeepRelativeOffset,
+							  bool SingleUse = false);
+
+	/// 多播进行停止特效的播放
+	UFUNCTION(NetMulticast,Reliable)
+	virtual void MulticastStopVfx();
 private:
 	/// 当前角色是否死亡
 	bool bIsDie;
@@ -341,4 +347,5 @@ private:
 	// 召唤时间线完成时调用的函数
 	UFUNCTION()
 	void SummonTimelineFinishedFunc();
+	
 };

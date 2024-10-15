@@ -153,7 +153,9 @@ void AAuraCharacter::LevelUp()
 	AddToSpellPoints(GetMyPlayerState()->GetSpellPointsReward(GetCharacterLevel(), 1));
 	MyAsc->UpdateAbilityStatusWhenLevelUp(GetCharacterLevel());
 
-	MulticastVfx(LevelUpEffect, FTransform{FRotator(90, 0, 180), GetActorLocation()}, false);
+	// 升级特效的位置是世界位置
+	MulticastVfx(LevelUpEffect, FTransform{FRotator(90, 0, 180), GetActorLocation()},
+	             EAttachLocation::Type::KeepWorldPosition, true);
 }
 
 int32 AAuraCharacter::GetAttributePointsReward(const int32 InCharacterLevel)

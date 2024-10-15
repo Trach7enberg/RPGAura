@@ -159,6 +159,12 @@ URPGAuraGameInstanceSubsystem* ACharacterBase::GetMyGiSubSystem()
 	return RPGAuraGameInstanceSubsystem;
 }
 
+void ACharacterBase::MulticastStopVfx_Implementation()
+{
+	if(!NiagaraComponent){return;}
+	NiagaraComponent->Deactivate();
+}
+
 bool ACharacterBase::CanHighLight()
 {
 	const auto Can = Cast<IHighLightInterface>(this);
@@ -176,10 +182,10 @@ void ACharacterBase::ShowDeBuffVfx(const FGameplayTag DeBuffType)
 	if (const auto Vfx = DeBuffVfxMap.Find(DeBuffType))
 	{
 		UE_LOG(ACharacterBaseLog, Error, TEXT("[DeBuffVfx]: %s"), *DeBuffType.GetTagName().ToString());
-		MulticastVfx(Vfx->Get(), {FRotator{}, FVector{},FVector(DeBuffVfxScale)}, true);
+		// DeBuff特效是持续性的,不是一次性并且坐标是相对的不是世界系
+		MulticastVfx(Vfx->Get(), {FRotator{}, FVector{}, FVector(DeBuffVfxScale)});
 	}
 }
-
 
 
 void ACharacterBase::AddDeathImpulse(const FVector& Impulse)
@@ -271,18 +277,39 @@ void ACharacterBase::LifeSpanExpired()
 	Super::LifeSpanExpired();
 }
 
-void ACharacterBase::MulticastVfx_Implementation(UNiagaraSystem* Vfx, const FTransform VfxTransform, const bool RelativePosition)
+void ACharacterBase::MulticastVfx_Implementation(UNiagaraSystem* Vfx, const FTransform VfxTransform,
+                                                 const EAttachLocation::Type LocationType, const bool SingleUse)
 {
-	if(!Vfx){return;}
-	NiagaraComponent->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
-	
-	if(RelativePosition)
+	if (!Vfx || !NiagaraComponent) { return; }
+
+	if (NiagaraComponent->IsActive() && SingleUse)
 	{
-		NiagaraComponent->SetRelativeTransform(VfxTransform);
-	}else
-	{
-		NiagaraComponent->SetWorldTransform(VfxTransform);
+		UNiagaraFunctionLibrary::SpawnSystemAttached(Vfx, GetRootComponent(), NAME_None, VfxTransform.GetLocation(),
+		                                             VfxTransform.Rotator(), LocationType,
+		                                             true);
+		return;
 	}
+
+	auto AttachmentTransformRules = FAttachmentTransformRules::KeepRelativeTransform;
+	switch (LocationType)
+	{
+	case EAttachLocation::KeepRelativeOffset:
+		NiagaraComponent->SetRelativeTransform(VfxTransform);
+		break;
+	case EAttachLocation::KeepWorldPosition:
+		NiagaraComponent->SetWorldTransform(VfxTransform);
+		AttachmentTransformRules = FAttachmentTransformRules::KeepWorldTransform;
+		break;
+	case EAttachLocation::SnapToTarget:
+		AttachmentTransformRules = FAttachmentTransformRules::SnapToTargetNotIncludingScale;
+		break;
+	case EAttachLocation::SnapToTargetIncludingScale:
+		AttachmentTransformRules = FAttachmentTransformRules::SnapToTargetIncludingScale;
+		break;
+	default: return;
+	}
+
+	NiagaraComponent->AttachToComponent(GetRootComponent(), AttachmentTransformRules);
 	NiagaraComponent.Get()->SetAsset(Vfx);
 	NiagaraComponent.Get()->Activate();
 }
@@ -313,7 +340,7 @@ void ACharacterBase::OnGrantedTag_DeBuff(const FGameplayTag Tag, int32 NewTagCou
 	if (!DeBuffing)
 	{
 		// TODO 需要判断是DeBuff特效,然后再停用DeBuff特效? 
-		NiagaraComponent->Deactivate();
+		MulticastStopVfx();
 	}
 	UE_LOG(ACharacterBaseLog, Error, TEXT("获得DeBuff!,Actor: [%s] , DeBuff: [%s] , NewTagCount: [%d]"),
 	       *GetNameSafe(this), *Tag.ToString(), NewTagCount);
@@ -471,8 +498,10 @@ void ACharacterBase::ShowDamageNumber_Implementation(const float Damage, bool bB
 void ACharacterBase::MulticastHandleDeath_Implementation()
 {
 	bIsDie = true;
+
+	// TODO 已在多播函数内,待决定是否需要使用多播进行停止 
+	MulticastStopVfx();
 	// 启用布娃娃
-	NiagaraComponent->Deactivate();
 	GetMesh()->SetEnableGravity(true);
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::Type::PhysicsOnly);
