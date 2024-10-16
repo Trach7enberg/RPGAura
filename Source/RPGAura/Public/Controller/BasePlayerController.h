@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "BasePlayerController.generated.h"
 
+class UNiagaraSystem;
 class USplineComponent;
 class UBaseAbilitySystemComponent;
 struct FGameplayTag;
@@ -27,6 +28,10 @@ public:
 	virtual void PlayerTick(float DeltaTime) override;
 
 protected:
+	/// 玩家点击地面时显示的特效
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="VFX")
+	TObjectPtr<UNiagaraSystem> ClickVfx;
+	
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
 	virtual void OnPossess(APawn* aPawn) override;

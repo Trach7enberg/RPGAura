@@ -7,6 +7,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "NavigationPath.h"
 #include "NavigationSystem.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Characters/EnemyCharacter.h"
 #include "Components/SplineComponent.h"
 #include "CoreTypes/RPGAuraGameplayTags.h"
@@ -160,7 +161,10 @@ void ABasePlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 				BIsAutoWalking = false;
 				GetAbilitySystemComponent()->AbilityInputTagPressed(InputTag);
 			}
-			else { BIsTargeting = false; }
+			else
+			{
+				BIsTargeting = false;
+			}
 		}
 
 		break;
@@ -241,6 +245,7 @@ void ABasePlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 
 		if (!BIsTargeting && !BIsShiftDown)
 		{
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(this,ClickVfx,CurseHitResult.ImpactPoint);
 			CachedDestination = CurseHitResult.ImpactPoint;
 			// 人物跟随鼠标的时间 小于短按阈值,则进行点按鼠标左键人物自动行走
 			if (FollowCursorTime <= ShortPressThreshold && GetPawn())
