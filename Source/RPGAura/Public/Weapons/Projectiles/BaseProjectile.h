@@ -25,7 +25,12 @@ public:
 	/// 用于造成伤害的GeSpecHandle
 	UPROPERTY(BlueprintReadWrite, meta=(ExposeOnSpawn=true), Category="GameplayEffect")
 	FDamageEffectParams DamageEffectParams;
-
+	
+	UProjectileMovementComponent* GetProjectileMovementComponent() const
+	{
+		return ProjectileMovementComponent.Get();
+	}
+	
 	virtual void Destroyed() override;
 
 protected:

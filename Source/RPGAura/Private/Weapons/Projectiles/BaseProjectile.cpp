@@ -46,8 +46,10 @@ ABaseProjectile::ABaseProjectile()
 void ABaseProjectile::BeginPlay()
 {
 	Super::BeginPlay();
+	// 让射弹的运动可以被复制
+	SetReplicateMovement(true);
 	SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &ABaseProjectile::OnSphereOverlap);
-
+	
 	SetLifeSpan(ProjectileLifeSpawn);
 	if (LoopingSound)
 	{
