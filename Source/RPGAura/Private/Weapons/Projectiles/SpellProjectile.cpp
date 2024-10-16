@@ -16,9 +16,13 @@ ASpellProjectile::ASpellProjectile()
 	FireBoltNiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>("NiagaraComponent");
 
 	FireBoltNiagaraComponent->SetupAttachment(GetRootComponent());
+	
 }
 
-void ASpellProjectile::BeginPlay() { Super::BeginPlay(); }
+void ASpellProjectile::BeginPlay()
+{
+	Super::BeginPlay();
+}
 
 
 void ASpellProjectile::SpawnVfxAndSound() const { Super::SpawnVfxAndSound(); }
@@ -27,6 +31,8 @@ void ASpellProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent,
                                        UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
                                        const FHitResult& SweepResult)
 {
+	if(!OtherActor){return;}
+	
 	DamageEffectParams.TargetAbilitySystemComponent =
 		UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
 
@@ -38,6 +44,9 @@ void ASpellProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent,
 	
 	const auto EffectCauser = DamageEffectParams.SourceAbilitySystemComponent->GetAvatarActor();
 	if (!EffectCauser || EffectCauser == OtherActor) { return; }
+
+	
+	if(OtherActor->GetOwner() && OtherActor->GetOwner() == GetOwner()){return;}
 
 	if (bIgnoreFriend && URPGAuraBlueprintFunctionLibrary::IsFriendly(EffectCauser, OtherActor)) { return; }
 	if (!BIsHit) { SpawnVfxAndSound(); }

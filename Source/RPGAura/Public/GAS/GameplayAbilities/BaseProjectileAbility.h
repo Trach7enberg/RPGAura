@@ -23,17 +23,63 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Spawn")
 	void SpawnProjectile(const FHitResult& HitResult, const FGameplayTag SocketAssociatedWithMontageTag);
 
+	/// 生成多重投射物,(投射物有追踪效果)
+	/// @param HitResult 
+	/// @param SocketAssociatedWithMontageTag
+	/// @param HomingActor
+	/// @param bOverridePitch
+	/// @param OverridePitch 
+	UFUNCTION(BlueprintCallable, Category="Spawn")
+	void SpawnProjectiles(const FHitResult& HitResult, const FGameplayTag SocketAssociatedWithMontageTag,
+	                      AActor* HomingActor, bool bOverridePitch, float OverridePitch);
+
 protected:
-	
+	// 生成多重射弹时的散射度
+	UPROPERTY(EditDefaultsOnly, Category="Spawn", meta=(ClampMin="0", ClampMax="360"))
+	float SpawnSpread = 90.f;
+
+	// 当前能力能够生成的最大射弹数
+	UPROPERTY(EditDefaultsOnly, Category="Spawn")
+	int32 MaxProjectileNum = 5;
+
+	// 射弹是否追踪
+	UPROPERTY(EditDefaultsOnly, Category="Spawn")
+	bool bIsHomingProjectile = false;
+
+	// 射弹是否启用重力
+	UPROPERTY(EditDefaultsOnly, Category="Spawn", meta=(ClampMin="0", ClampMax="10"))
+	float ProjectileGravity = 0.f;
+
+	// 追踪射弹的最小加速度
+	UPROPERTY(EditDefaultsOnly, Category="Spawn")
+	float HomingMinAcceleration = 1600.f;
+
+	// 追踪射弹的最大加速度
+	UPROPERTY(EditDefaultsOnly, Category="Spawn")
+	float HomingMaxAcceleration = 3200.f;
+
 	// 飞弹实体类
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Class")
 	TSubclassOf<ABaseProjectile> ProjectileClass;
-	
+
 
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
-								 const FGameplayAbilityActivationInfo ActivationInfo,
-								 const FGameplayEventData* TriggerEventData) override;
+	                             const FGameplayAbilityActivationInfo ActivationInfo,
+	                             const FGameplayEventData* TriggerEventData) override;
 
 	virtual void UpdateAbilityDescription(const FGameplayTag& AbilityTag, int32 AbilityLevel) override;
-	
+
+	/// 获取当前有效射弹数
+	/// @return 
+	virtual int32 GetValidProjectileNum(int32 AbilityLevel);
+private:
+
+	/// 创建生成飞弹实例
+	/// @param Transform 
+	/// @param Instigator 
+	/// @return 
+	ABaseProjectile* CreateProjectile(const FTransform& Transform, APawn* Instigator) const;
+
+	UPROPERTY()
+	TObjectPtr<USceneComponent> NonHomingTarget;
 };
