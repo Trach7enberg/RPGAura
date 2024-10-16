@@ -49,9 +49,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 	static bool IsFriendly(const AActor* Actor1, AActor* Actor2);
 
-	/// 获取描述技能信息的数据资产
-	static UAbilityDescriptionAsset* GetAbilityDescriptionAsset();
 
+	// static UAbilityDescriptionAsset* GetAbilityDescriptionAsset();
+
+	/// 获取描述技能信息的数据资产
+	/// @param Outer 
+	/// @return 
 	static UAbilityDescriptionAsset* GetAbilityDescriptionAsset(UObject* Outer);
 
 	/// 从Actor身上获取给定技能标签的详细技能描述
@@ -74,8 +77,8 @@ public:
 	/// @param Tags 
 	/// @param Magnitudes 
 	static void AssignTagSetByCallerMagnitudeByGeSpecHandle(const FGameplayEffectSpecHandle& SpecHandle,
-	                                          const FGameplayTagContainer& Tags,
-	                                          const TArray<float>& Magnitudes);
+	                                                        const FGameplayTagContainer& Tags,
+	                                                        const TArray<float>& Magnitudes);
 
 	/// 通过DamageEffectParams结构体里的参数来应用伤害GE(Params里的TargetASC变量如果为nullptr则无法应用GE)
 	/// 包括SetByCaller(DamageTypes、DeBuff)
@@ -90,6 +93,15 @@ public:
 	/// @param GeSpec 
 	static void FillDeBuffInfoFromGeSpec(const FGameplayTag& DamageTag, const FGameplayTag& DeBuffTag,
 	                                     FDeBuffInfo& DeBuffInfo, const FGameplayEffectSpec& GeSpec);
+
+	/// 根据散射角度按照给定轴旋转轴生成(均衡的)向量数组
+	/// @param BaseSpread 
+	/// @param NumVector 
+	/// @param ForwardVector 
+	/// @param OutArray 
+	/// @param RotateAxis 
+	static void GetVectorBySpread(const float BaseSpread, const float NumVector, const FVector& ForwardVector,
+	                              TArray<FVector>& OutArray, const FVector& RotateAxis = FVector::UpVector);
 
 protected:
 	/// 技能描述的静态数据资产

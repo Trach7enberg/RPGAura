@@ -4,6 +4,7 @@
 #include "GAS/GameplayAbilities/BaseSummonAbility.h"
 
 #include "Components/CapsuleComponent.h"
+#include "FunctionLibrary/RPGAuraBlueprintFunctionLibrary.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/CombatInterface.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -32,33 +33,24 @@ TArray<FVector> UBaseSummonAbility::GetSpawnLocation()
 	TArray<FVector> Result;
 	const auto ForwardVector = GetAvatarActorFromActorInfo()->GetActorForwardVector();
 	const auto Location = GetAvatarActorFromActorInfo()->GetActorLocation();
-
-	// 扇形区域内的一个个小角度,用于生成召唤物
-	const auto DeltaSpread = SpawnSpread / SpawnNum;
-
-
-	const auto LeftOfSpread = ForwardVector.RotateAngleAxis(-SpawnSpread / 2.f, FVector::UpVector);
-
-	const auto RightOfSpread = ForwardVector.RotateAngleAxis(SpawnSpread / 2.f, FVector::UpVector);
-
-	for (int i = 0; i < SpawnNum; ++i)
+	
+	TArray<FVector> TmpDir;
+	URPGAuraBlueprintFunctionLibrary::GetVectorBySpread(SpawnSpread, SpawnNum, ForwardVector, TmpDir);
+	for (auto& Dir : TmpDir)
 	{
-		const auto TmpDeltaSpread = LeftOfSpread.RotateAngleAxis(i * DeltaSpread, FVector::UpVector);
-		const FVector RandomLocOnLine = Location + TmpDeltaSpread * FMath::RandRange(
+		const FVector RandomLocOnLine = Location + Dir * FMath::RandRange(
 			AcceptableMinRadius, AcceptableMaxRadius);
 
 		FHitResult HitResult;
 		// 射线检测,使得召唤物始终在地面
 		GetWorld()->LineTraceSingleByChannel(HitResult, RandomLocOnLine + FVector(0, 0, 400),
-		                                     RandomLocOnLine - FVector(0, 0, 400), ECC_Visibility);
+											 RandomLocOnLine - FVector(0, 0, 400), ECC_Visibility);
 
 		if (!HitResult.bBlockingHit) { continue; }
 
-		// DrawDebug(Location, TmpDeltaSpread, HitResult.ImpactPoint, 8, 10);
+		DrawDebug(Location, Dir, HitResult.ImpactPoint, 8, 10);
 		Result.Add(HitResult.ImpactPoint);
 	}
-	
-
 	return Result;
 }
 
@@ -79,13 +71,15 @@ const AActor* UBaseSummonAbility::SpawnSummon(const FVector& Location, const boo
 	const int32 Index = (bRandomChoseSummonClass)
 		                    ? FMath::RandRange(0, SummonClasses.Num() - 1)
 		                    : CurrentSpawnSummonIndex++ % SummonClasses.Num();
-	const auto SpawnActor =  GetWorld()->SpawnActor<APawn>(SummonClasses[Index],
-	                              Location + FVector(
-		                              0, 0, AvatarPawn->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 2.f),
-	                              GetAvatarActorFromActorInfo()->GetActorForwardVector().Rotation(),
-	                              SpawnParameters);
-	SpawnActor->OnDestroyed.AddDynamic(this,&UBaseSummonAbility::SpawnActorOnDestroy);
-	
+	const auto SpawnActor = GetWorld()->SpawnActor<APawn>(SummonClasses[Index],
+	                                                      Location + FVector(
+		                                                      0, 0, AvatarPawn->GetCapsuleComponent()->
+		                                                      GetScaledCapsuleHalfHeight() * 2.f),
+	                                                      GetAvatarActorFromActorInfo()->GetActorForwardVector().
+	                                                      Rotation(),
+	                                                      SpawnParameters);
+	SpawnActor->OnDestroyed.AddDynamic(this, &UBaseSummonAbility::SpawnActorOnDestroy);
+
 	return SpawnActor;
 }
 
@@ -112,8 +106,5 @@ void UBaseSummonAbility::DrawDebug(const FVector& Location, const FVector& TmpDe
 void UBaseSummonAbility::SpawnActorOnDestroy(AActor* DestroyedActor)
 {
 	const auto CombatInt = Cast<ICombatInterface>(GetAvatarActorFromActorInfo());
-	if(CombatInt)
-	{
-		CombatInt->UpdateCurrentSummonsCount(-1);
-	}
+	if (CombatInt) { CombatInt->UpdateCurrentSummonsCount(-1); }
 }

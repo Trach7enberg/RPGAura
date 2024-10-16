@@ -15,7 +15,7 @@ DEFINE_LOG_CATEGORY_STATIC(URPGAuraBlueprintFunctionLibraryLog, All, All);
 
 TObjectPtr<UAbilityDescriptionAsset> URPGAuraBlueprintFunctionLibrary::AbilityDescriptionAsset;
 
-URPGAuraBlueprintFunctionLibrary::URPGAuraBlueprintFunctionLibrary() { LoadAbilityDescriptionAsset(this); }
+URPGAuraBlueprintFunctionLibrary::URPGAuraBlueprintFunctionLibrary() {}
 
 void URPGAuraBlueprintFunctionLibrary::FindLivePlayersWithinRadius(const AActor* Causer,
                                                                    TArray<AActor*>& OutOverlappingActors,
@@ -68,14 +68,14 @@ bool URPGAuraBlueprintFunctionLibrary::IsFriendly(const AActor* Actor1, AActor* 
 	return bBothPlayers || bBothEnemies;
 }
 
-UAbilityDescriptionAsset* URPGAuraBlueprintFunctionLibrary::GetAbilityDescriptionAsset()
-{
-	return AbilityDescriptionAsset.Get();
-}
+// UAbilityDescriptionAsset* URPGAuraBlueprintFunctionLibrary::GetAbilityDescriptionAsset()
+// {
+// 	return AbilityDescriptionAsset.Get();
+// }
 
 UAbilityDescriptionAsset* URPGAuraBlueprintFunctionLibrary::GetAbilityDescriptionAsset(UObject* Outer)
 {
-	LoadAbilityDescriptionAsset(Outer);
+	if (!AbilityDescriptionAsset) { LoadAbilityDescriptionAsset(Outer); }
 	return AbilityDescriptionAsset.Get();
 }
 
@@ -186,6 +186,26 @@ void URPGAuraBlueprintFunctionLibrary::FillDeBuffInfoFromGeSpec(const FGameplayT
 		FRPGAuraGameplayTags::Get().Abilities_DeBuff_Effects_Duration);
 	DeBuffInfo.DeBuffFrequency = GeSpec.GetSetByCallerMagnitude(
 		FRPGAuraGameplayTags::Get().Abilities_DeBuff_Effects_Frequency);
+}
+
+void URPGAuraBlueprintFunctionLibrary::GetVectorBySpread(const float BaseSpread, const float NumVector,
+                                                         const FVector& ForwardVector, TArray<FVector>& OutArray,
+                                                         const FVector& RotateAxis)
+{
+	if (NumVector <= 0) { return; }
+	// const auto Tmp = (NumVector + 1);
+	// 细分角度
+	const auto DeltaSpread = (NumVector > 1) ? BaseSpread / (NumVector - 1) : 0;
+	// 初始向量的角度(以UpVector为轴)
+	const auto InitSpread = (NumVector > 1) ? -((BaseSpread / 2.f)) : 0;
+	// 左分散的向量
+	const auto LeftOfSpread = ForwardVector.RotateAngleAxis(InitSpread, RotateAxis);
+	for (int i = 0; i < NumVector; ++i)
+	{
+		const auto Dir = LeftOfSpread.RotateAngleAxis((DeltaSpread) * i,
+		                                              RotateAxis);
+		OutArray.Add(Dir);
+	}
 }
 
 
