@@ -45,10 +45,10 @@ FAbilityDescription UBaseGameplayAbility::GetAbilityDescription(const FGameplayT
                                                                 const int32 AbilityLevel)
 {
 	// TODO 可以进行优化 需要时才查找数据资产,要立即响应蓝图更改就每次都查找
-	CurrentAbilityDescription = URPGAuraBlueprintFunctionLibrary::GetAbilityDescriptionAsset()->
+	CurrentAbilityDescription = URPGAuraBlueprintFunctionLibrary::GetAbilityDescriptionAsset(this)->
 		FindDescriptionByAbilityTag(AbilityTag);
 
-	// TODO 可以进行优化 只有第一次和能力升级时才更新技能描述
+	// TODO 可以进行优化 只有第一次和能力升级时才更新技能描述 
 	UpdateAbilityDescription(AbilityTag, AbilityLevel);
 	return CurrentAbilityDescription;
 }
