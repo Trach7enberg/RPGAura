@@ -237,6 +237,23 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 			GameplayTags.Abilities_CoolDown_Fire_FireBolt = UGameplayTagsManager::Get().AddNativeGameplayTag(
 				"Abilities.CoolDown.Fire.FireBolt", FString(""));
 		}
+
+		{
+			GameplayTags.Abilities_Block = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Block", FString(""));
+			GameplayTags.Abilities_Block_Input = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Block.Input", FString(""));
+			GameplayTags.Abilities_Block_Misc = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Block.Misc", FString(""));
+			GameplayTags.Abilities_Block_Input_Held = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Block.Input.Held", FString(""));
+			GameplayTags.Abilities_Block_Input_Pressed = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Block.Input.Pressed", FString(""));
+			GameplayTags.Abilities_Block_Input_Released = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Block.Input.Released", FString(""));
+			GameplayTags.Abilities_Block_Misc_CursorTrace = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Block.Misc.CursorTrace", FString(""));
+		}
 	}
 
 	// 添加到Vital 标签容器

@@ -173,6 +173,15 @@ struct FRPGAuraGameplayTags
 
 	// 能力冷却的标签
 	FGameplayTag Abilities_CoolDown_Fire_FireBolt; // 火球技能冷却时间标签
+
+	// 能力的Block标签
+	FGameplayTag Abilities_Block;
+	FGameplayTag Abilities_Block_Misc;						// 杂项Block
+	FGameplayTag Abilities_Block_Input;						// 输入Block
+	FGameplayTag Abilities_Block_Input_Pressed;
+	FGameplayTag Abilities_Block_Input_Held;
+	FGameplayTag Abilities_Block_Input_Released;
+	FGameplayTag Abilities_Block_Misc_CursorTrace;
 	
 	// 简单的Actor标签
 	FName Player = "Player";
