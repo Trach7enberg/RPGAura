@@ -117,4 +117,19 @@ public:
 	/// 给角色添加击退
 	/// @param Direction 击退的方向
 	virtual void AddKnockBack(const FVector& Direction) = 0;
+
+	/// 设置当前角色是否正在释放电击技能
+	/// @param Enabled
+	UFUNCTION(BlueprintCallable)
+	virtual void SetCastShockAnimState(const bool Enabled) = 0;
+
+	/// 获取当前角色是否正在释放电击技能的状态值
+	/// @return
+	UFUNCTION(BlueprintCallable)
+	virtual bool GetCastShockAnimState() = 0;
+
+	/// 获取当前角色的武器,可能为nullptr
+	/// @return 
+	UFUNCTION(BlueprintCallable)
+	virtual USkeletalMeshComponent* GetWeaponMesh() = 0;
 };
