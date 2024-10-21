@@ -15,7 +15,7 @@ UWeaponLogicBaseComponent::UWeaponLogicBaseComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 	BShouldDestroyWeapon = true;
 	BDoesNeedWeapon = true;
-	
+	WeaponBp = nullptr;
 }
 
 
@@ -32,29 +32,19 @@ UAnimInstance* UWeaponLogicBaseComponent::GetCurrentWeaponAnimInstanceClass() co
 	return CurrentWeapon->GetWeaponAnimInstance();
 }
 
-void UWeaponLogicBaseComponent::AddWeaponImpulse(const FVector& Impulse, const FName BoneName, const bool bVelChange) const
+void UWeaponLogicBaseComponent::AddWeaponImpulse(const FVector& Impulse, const FName BoneName,
+                                                 const bool bVelChange) const
 {
-	if(CurrentWeapon)
-	{
-		CurrentWeapon->AddImpulse(Impulse,BoneName,bVelChange);
-	}
+	if (CurrentWeapon) { CurrentWeapon->AddImpulse(Impulse, BoneName, bVelChange); }
 }
 
-void UWeaponLogicBaseComponent::BeginPlay()
+USkeletalMeshComponent* UWeaponLogicBaseComponent::GetWeaponMesh() const
 {
-	Super::BeginPlay();
-	if (BDoesNeedWeapon)
-	{
-		if (!GetOwner() || !WeaponBp)
-		{
-			UE_LOG(MyWeaponLogicBaseComponentLog, Error, TEXT("Owner Error"));
-			return;
-		}
-
-		AttachWeaponToSocket(Cast<ACharacterBase>(GetOwner()), WeaponAttachSocketName);
-		
-	}
+	if (!CurrentWeapon) { return nullptr; }
+	return CurrentWeapon->GetWeaponMesh();
 }
+
+void UWeaponLogicBaseComponent::BeginPlay() { Super::BeginPlay(); }
 
 void UWeaponLogicBaseComponent::HighLight() const
 {
@@ -94,21 +84,27 @@ void UWeaponLogicBaseComponent::SetWeaponMaterial(const int I, UMaterialInstance
 }
 
 
-void UWeaponLogicBaseComponent::AttachWeaponToSocket(ACharacterBase* Character, FName& SocketName)
+void UWeaponLogicBaseComponent::AttachWeaponToSocket(ACharacterBase* Owner, FName SocketName)
 {
-	const auto Mesh = Character->GetMesh();
-	if (!Character || !Mesh || !BDoesNeedWeapon) { return; }
+	const auto Mesh = Owner->GetMesh();
 
-	CurrentWeapon = Cast<ABaseWeapon>(GetWorld()->SpawnActor(WeaponBp));
+	if (!Mesh || !BDoesNeedWeapon || !WeaponBp) { return; }
 
-	if (CurrentWeapon)
+	if (!Owner)
 	{
-		CurrentWeapon->AttachToComponent(Mesh,
-		                                 FAttachmentTransformRules::SnapToTargetIncludingScale,
-		                                 WeaponAttachSocketName);
-		CurrentWeapon->SetOwner(Character);
-		CurrentWeapon->SetWeaponMeshCollision(false);
+		UE_LOG(MyWeaponLogicBaseComponentLog, Error, TEXT("Owner Error"));
+		return;
 	}
+	
+	CurrentWeapon = Cast<ABaseWeapon>(GetWorld()->SpawnActor(WeaponBp));
+	
+	if(!CurrentWeapon){return;}
+
+	CurrentWeapon->AttachToComponent(Mesh,
+									 FAttachmentTransformRules::SnapToTargetIncludingScale,
+									 WeaponAttachSocketName);
+	CurrentWeapon->SetOwner(Owner);
+	CurrentWeapon->SetWeaponMeshCollision(false);
 }
 
 void UWeaponLogicBaseComponent::DestroyComponent(bool bPromoteChildren)

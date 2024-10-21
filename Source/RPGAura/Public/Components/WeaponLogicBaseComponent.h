@@ -40,6 +40,7 @@ public:
 	/// @param SocketName 武器插槽名字
 	/// @return 武器插槽的位置
 	FVector GetWeaponSocketLocByName(const FName& SocketName) const;
+	void AttachWeaponToSocket(ACharacterBase* Owner, FName SocketName);
 
 	/// 解除武器 (该操作是复制的,服务器上做了客户端就不需要再执行)
 	void DetachWeapon() const;
@@ -77,9 +78,12 @@ public:
 	/// @param BoneName 
 	/// @param bVelChange 
 	void AddWeaponImpulse(const FVector& Impulse, FName BoneName = NAME_None, bool bVelChange = false) const;
+
+	/// 获取武器网格
+	/// @return 
+	USkeletalMeshComponent* GetWeaponMesh() const;
 protected:
 	virtual void BeginPlay() override;
-
 	// 武器逻辑组件销毁时是否要 销毁武器
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Weapon")
 	bool BShouldDestroyWeapon;
@@ -104,6 +108,4 @@ private:
 	/// 当前持有的武器
 	UPROPERTY()
 	TObjectPtr<ABaseWeapon> CurrentWeapon;
-
-	void AttachWeaponToSocket(ACharacterBase* Character, FName& SocketName);
 };
