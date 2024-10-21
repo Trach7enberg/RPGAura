@@ -82,6 +82,9 @@ public:
 	virtual void ShowDeBuffVfx(FGameplayTag DeBuffType) override;
 	virtual void AddDeathImpulse(const FVector& Impulse) override;
 	virtual void AddKnockBack(const FVector& Direction) override;
+	virtual void SetCastShockAnimState(const bool Enabled) override;
+	virtual bool GetCastShockAnimState() override;
+	virtual USkeletalMeshComponent* GetWeaponMesh() override;
 	// ~ ICombatInterface
 
 

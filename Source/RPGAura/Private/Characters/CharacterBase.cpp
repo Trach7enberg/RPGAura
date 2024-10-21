@@ -52,7 +52,7 @@ void ACharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
 	check(WeaponLogicBaseComponent);
-
+	WeaponLogicBaseComponent->AttachWeaponToSocket(this,WeaponLogicBaseComponent->GetWeaponAttachSocketName());
 	GetCharacterMovement()->MaxWalkSpeed = MaxWalkingSpeed;
 
 	InitDissolveTimeLine();
@@ -118,7 +118,10 @@ void ACharacterBase::InitAllAttributes(bool BIsPlayer)
 	                                         BIsPlayer);
 }
 
-void ACharacterBase::InitAbilityActorInfo() {}
+void ACharacterBase::InitAbilityActorInfo()
+{
+	
+}
 
 void ACharacterBase::RegisterGameplayTagEvent()
 {
@@ -161,7 +164,7 @@ URPGAuraGameInstanceSubsystem* ACharacterBase::GetMyGiSubSystem()
 
 void ACharacterBase::MulticastStopVfx_Implementation()
 {
-	if(!NiagaraComponent){return;}
+	if (!NiagaraComponent) { return; }
 	NiagaraComponent->Deactivate();
 }
 
@@ -205,6 +208,15 @@ void ACharacterBase::AddKnockBack(const FVector& Direction)
 	// TODO 角色移动时添加的击退效果会减弱待修复,以及将"魔法向量"移动到相应位置   
 	KnockBackVector *= 1000;
 	LaunchCharacter(FVector((KnockBackVector.X), (KnockBackVector.Y), 300), true, true);
+}
+
+void ACharacterBase::SetCastShockAnimState(const bool Enabled) {}
+bool ACharacterBase::GetCastShockAnimState() { return false; }
+
+USkeletalMeshComponent* ACharacterBase::GetWeaponMesh()
+{
+	if (!WeaponLogicBaseComponent) { return nullptr; }
+	return WeaponLogicBaseComponent->GetWeaponMesh();
 }
 
 ECharacterClass ACharacterBase::GetCharacterClass() { return CharacterClass; }
@@ -260,6 +272,8 @@ void ACharacterBase::SetCombatTarget(AActor* CombatTarget) {}
 void ACharacterBase::HighLight()
 {
 	if (!CanHighLight()) { return; }
+	// TODO 角色身上有Block标签也不会高亮
+
 	Cast<IHighLightInterface>(this)->HighLightActor();
 }
 
@@ -272,7 +286,7 @@ void ACharacterBase::UnHighLight()
 void ACharacterBase::LifeSpanExpired()
 {
 	// 销毁武器,再销毁角色
-	// UE_LOG(ACharacterBaseLog, Warning, TEXT("销毁"));
+	UE_LOG(ACharacterBaseLog, Warning, TEXT("角色销毁"));
 	WeaponLogicBaseComponent->DestroyComponent(true);
 	Super::LifeSpanExpired();
 }
@@ -412,8 +426,7 @@ void ACharacterBase::DissolveTimelineFinishedFunc()
 {
 	GEngine->AddOnScreenDebugMessage(1, 2, FColor::Red, FString::Printf(TEXT("TimelineFinished")));
 	// 溶解动画完成,角色销毁
-	// SetLifeSpan(SelfLifeSpan);
-	Destroy();
+	SetLifeSpan(SelfLifeSpan);
 }
 
 void ACharacterBase::InitSummonTimeLine()
@@ -446,7 +459,6 @@ void ACharacterBase::SummonTimelineFinishedFunc() {}
 
 void ACharacterBase::Die()
 {
-	WeaponLogicBaseComponent->DetachWeapon();
 	MulticastHandleDeath();
 }
 
@@ -498,7 +510,8 @@ void ACharacterBase::ShowDamageNumber_Implementation(const float Damage, bool bB
 void ACharacterBase::MulticastHandleDeath_Implementation()
 {
 	bIsDie = true;
-
+	WeaponLogicBaseComponent->DetachWeapon();
+	
 	// TODO 已在多播函数内,待决定是否需要使用多播进行停止 
 	MulticastStopVfx();
 	// 启用布娃娃
