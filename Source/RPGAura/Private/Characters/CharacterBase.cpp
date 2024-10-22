@@ -190,18 +190,6 @@ void ACharacterBase::ShowDeBuffVfx(const FGameplayTag DeBuffType)
 	}
 }
 
-
-void ACharacterBase::AddDeathImpulse(const FVector& Impulse)
-{
-	if (!bIsDie) { return; }
-	UE_LOG(ACharacterBaseLog, Error, TEXT("%d"), ImpulseFactorMesh);
-	if (GetMesh()) { GetMesh()->AddImpulse(Impulse * ImpulseFactorMesh, NAME_None, true); }
-	if (WeaponLogicBaseComponent)
-	{
-		WeaponLogicBaseComponent->AddWeaponImpulse(Impulse * ImpulseFactorWeaponMesh, NAME_None, true);
-	}
-}
-
 void ACharacterBase::AddKnockBack(const FVector& Direction)
 {
 	auto KnockBackVector = Direction;
@@ -531,4 +519,18 @@ void ACharacterBase::MulticastHandleDeath_Implementation()
 
 	// 播放溶解时间线动画,动画完成之后才死亡
 	StartDissolveTimeline();
+}
+
+void ACharacterBase::AddDeathImpulse_Implementation(const FVector& Impulse)
+{
+	if (!bIsDie) { return; }
+	UE_LOG(ACharacterBaseLog, Error, TEXT("%d"), ImpulseFactorMesh);
+	if (GetMesh())
+	{
+		GetMesh()->AddImpulse(Impulse * ImpulseFactorMesh, NAME_None, true);
+	}
+	if (WeaponLogicBaseComponent)
+	{
+		WeaponLogicBaseComponent->AddWeaponImpulse(Impulse * ImpulseFactorWeaponMesh, NAME_None, true);
+	}
 }

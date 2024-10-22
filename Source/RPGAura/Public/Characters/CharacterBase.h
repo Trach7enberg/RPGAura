@@ -80,6 +80,7 @@ public:
 	virtual UNiagaraSystem* GetBloodEffect() override;
 	virtual void StartSummonAnim() override;
 	virtual void ShowDeBuffVfx(FGameplayTag DeBuffType) override;
+	UFUNCTION(NetMulticast, Reliable)
 	virtual void AddDeathImpulse(const FVector& Impulse) override;
 	virtual void AddKnockBack(const FVector& Direction) override;
 	virtual void SetCastShockAnimState(const bool Enabled) override;

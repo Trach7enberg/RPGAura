@@ -111,7 +111,8 @@ public:
 	virtual void ShowDeBuffVfx(FGameplayTag DeBuffType) = 0;
 
 	/// 添加冲击力(当死亡时)
-	/// @param Impulse 
+	/// @param Impulse
+	UFUNCTION(NetMulticast, Reliable)
 	virtual void AddDeathImpulse(const FVector& Impulse) = 0;
 
 	/// 给角色添加击退

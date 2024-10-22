@@ -15,9 +15,8 @@ ABaseWeapon::ABaseWeapon()
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>("WeaponMesh");
 	SetRootComponent(WeaponMesh);
 
-	// 武器启用网络复制
+	// 武器启用网络复制, 
 	bReplicates = true;
-	WeaponMesh->SetIsReplicated(true);
 	SetReplicatingMovement(true);
 }
 
