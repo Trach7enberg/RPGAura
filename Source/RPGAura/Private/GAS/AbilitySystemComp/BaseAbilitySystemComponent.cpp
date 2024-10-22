@@ -156,7 +156,6 @@ void UBaseAbilitySystemComponent::AddCharacterDefaultAbility(const TSubclassOf<U
 void UBaseAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& InputTag)
 {
 	if (!InputTag.IsValid()) { return; }
-
 	// 获取可以激活的能力数组
 	for (auto& AbilitySpec : GetActivatableAbilities())
 	{
@@ -168,9 +167,10 @@ void UBaseAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& Inp
 			AbilitySpecInputPressed(AbilitySpec);
 			if (!AbilitySpec.IsActive())
 			{
-				// 尝试激活能力而不是直接调用激活能力函数,是因为有时候能力可能有一些tag,不允许被激活
 				TryActivateAbility(AbilitySpec.Handle);
 			}
+			InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputPressed, AbilitySpec.Handle,
+								  AbilitySpec.ActivationInfo.GetActivationPredictionKey());
 		}
 	}
 }
@@ -178,7 +178,6 @@ void UBaseAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& Inp
 void UBaseAbilitySystemComponent::AbilityInputTagHeld(const FGameplayTag& InputTag)
 {
 	if (!InputTag.IsValid()) { return; }
-
 	// 获取可以激活的能力数组
 	for (auto& AbilitySpec : GetActivatableAbilities())
 	{
@@ -187,7 +186,7 @@ void UBaseAbilitySystemComponent::AbilityInputTagHeld(const FGameplayTag& InputT
 		if (AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag))
 		{
 			// 通知能力系统,输入已经按下,该函数内部会调用虚函数InputPressed,如果你想干别的事情,可以在虚函数InputPressed中实现
-			AbilitySpecInputPressed(AbilitySpec);
+			// AbilitySpecInputPressed(AbilitySpec);
 			if (!AbilitySpec.IsActive())
 			{
 				// 尝试激活能力,因为有时候能力可能有一些tag,不允许被激活
@@ -200,17 +199,18 @@ void UBaseAbilitySystemComponent::AbilityInputTagHeld(const FGameplayTag& InputT
 void UBaseAbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& InputTag)
 {
 	if (!InputTag.IsValid()) { return; }
-
+	
 	// 获取可以激活的能力数组
 	for (auto& AbilitySpec : GetActivatableAbilities())
 	{
-		if (AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag))
+		if (AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag) && AbilitySpec.IsActive())
 		{
-			if (AbilitySpec.IsActive())
-			{
-				// 通知能力系统,输入已经释放 , 并没有终止能力!
-				AbilitySpecInputReleased(AbilitySpec);
-			}
+			// 通知能力系统,输入已经释放,并没有终止能力!
+			AbilitySpecInputReleased(AbilitySpec);
+			// 向服务器发送数据,告诉它我们正在做某事中
+			InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputReleased, AbilitySpec.Handle,
+			                      AbilitySpec.ActivationInfo.GetActivationPredictionKey());
+			break;
 		}
 	}
 }
