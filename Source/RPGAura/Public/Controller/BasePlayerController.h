@@ -35,6 +35,7 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
 	virtual void OnPossess(APawn* aPawn) override;
+	virtual void CursorTrace();
 
 private:
 	// 当前鼠标击中的Actor

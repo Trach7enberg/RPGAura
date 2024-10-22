@@ -105,15 +105,10 @@ void ABasePlayerController::OnPossess(APawn* aPawn)
 	// UE_LOG(ABasePlayerControllerLog, Warning, TEXT("控制器: [%s] , 以控制 : [%s] 角色"),*GetName(),*aPawn->GetName());
 }
 
-void ABasePlayerController::Move(const FInputActionValue& InputActionValue)
+void ABasePlayerController::CursorTrace()
 {
-	BIsAutoWalking = false;
-	const auto InputAxisValue = InputActionValue.Get<FVector2D>();
-	if (GetPawn())
-	{
-		GetPawn()->AddMovementInput(GetControlRotation().Euler().ForwardVector, InputAxisValue.Y);
-		GetPawn()->AddMovementInput(GetControlRotation().Euler().RightVector, InputAxisValue.X);
-	}
+	GetHitResultUnderCursor(ECC_Visibility, false, CurseHitResult);
+	
 }
 
 UBaseAbilitySystemComponent* ABasePlayerController::GetAbilitySystemComponent()
@@ -134,12 +129,17 @@ UBaseAbilitySystemComponent* ABasePlayerController::GetAbilitySystemComponent()
 void ABasePlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 {
 	if (!GetAbilitySystemComponent()) { return; }
+	// TODO 待把HasMatchingGameplayTag录入笔记..  
+	if (GetAbilitySystemComponent()->HasMatchingGameplayTag(FRPGAuraGameplayTags::Get().Abilities_Block_Input_Pressed))
+	{
+		return;
+	}
 
 
 	const auto GameplayEnum = FRPGAuraGameplayTags::FindEnumByTag(InputTag);
 	if (!GameplayEnum) { return; }
 
-	GetHitResultUnderCursor(ECC_Visibility, false, CurseHitResult);
+	CursorTrace();
 
 	// GEngine->AddOnScreenDebugMessage(1, 0.5f, FColor::Red, *InputTag.ToString());
 	switch (*GameplayEnum)
@@ -161,10 +161,7 @@ void ABasePlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 				BIsAutoWalking = false;
 				GetAbilitySystemComponent()->AbilityInputTagPressed(InputTag);
 			}
-			else
-			{
-				BIsTargeting = false;
-			}
+			else { BIsTargeting = false; }
 		}
 
 		break;
@@ -178,11 +175,15 @@ void ABasePlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 void ABasePlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 {
 	if (!GetAbilitySystemComponent() || !GetWorld()) { return; }
+	if (GetAbilitySystemComponent()->HasMatchingGameplayTag(FRPGAuraGameplayTags::Get().Abilities_Block_Input_Held))
+	{
+		return;
+	}
 
 	const auto GameplayEnum = FRPGAuraGameplayTags::FindEnumByTag(InputTag);
 	if (!GameplayEnum) { return; }
 
-	GetHitResultUnderCursor(ECC_Visibility, false, CurseHitResult);
+	CursorTrace();
 
 
 	switch (*GameplayEnum)
@@ -207,7 +208,7 @@ void ABasePlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 			}
 			else
 			{
-				// 按住鼠标左键则移动 TODO 当点击走路的时候该分支最好一次都不执行,现在的情况是会执行一次然后进行点击移动的逻辑
+				// 按住鼠标左键则移动 TODO 当点击走路的时候该分支最好一次都不执行,现在的情况是会执行一次然后进行点击移动的逻辑?  
 				BIsTargeting = false;
 				FollowCursorTime += GetWorld()->GetDeltaSeconds();
 				CachedDestination = CurseHitResult.ImpactPoint;
@@ -222,7 +223,11 @@ void ABasePlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 		}
 
 		break;
-	default:GetAbilitySystemComponent()->AbilityInputTagHeld(InputTag);
+	case EGameplayTagNum::InputRMB: BIsAutoWalking = false;
+		GetAbilitySystemComponent()->AbilityInputTagHeld(InputTag);
+		break;
+
+	default: GetAbilitySystemComponent()->AbilityInputTagHeld(InputTag);
 		break;
 	}
 }
@@ -231,13 +236,17 @@ void ABasePlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 void ABasePlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 {
 	if (!GetAbilitySystemComponent() || !GetWorld()) { return; }
+	if (GetAbilitySystemComponent()->HasMatchingGameplayTag(FRPGAuraGameplayTags::Get().Abilities_Block_Input_Released))
+	{
+		return;
+	}
 
 	const auto GameplayEnum = FRPGAuraGameplayTags::FindEnumByTag(InputTag);
 	if (!GameplayEnum) { return; }
 
 	GetAbilitySystemComponent()->AbilityInputTagReleased(InputTag);
 
-	GetHitResultUnderCursor(ECC_Visibility, false, CurseHitResult);
+	CursorTrace();
 	switch (*GameplayEnum)
 	{
 	// LMB释放
@@ -245,7 +254,12 @@ void ABasePlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 
 		if (!BIsTargeting && !BIsShiftDown)
 		{
-			UNiagaraFunctionLibrary::SpawnSystemAtLocation(this,ClickVfx,CurseHitResult.ImpactPoint);
+			// TODO 该判断有重复,应该用变量存储起来,不至于重复循环判断(能力的Activation Required Tags)..    
+			if (!GetAbilitySystemComponent()->HasMatchingGameplayTag(FRPGAuraGameplayTags::Get().Abilities_Block_Input_Pressed))
+			{
+				UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ClickVfx, CurseHitResult.ImpactPoint);
+			}
+			
 			CachedDestination = CurseHitResult.ImpactPoint;
 			// 人物跟随鼠标的时间 小于短按阈值,则进行点按鼠标左键人物自动行走
 			if (FollowCursorTime <= ShortPressThreshold && GetPawn())
@@ -286,6 +300,18 @@ void ABasePlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 	}
 }
 
+
+void ABasePlayerController::Move(const FInputActionValue& InputActionValue)
+{
+	BIsAutoWalking = false;
+	const auto InputAxisValue = InputActionValue.Get<FVector2D>();
+	if (GetPawn())
+	{
+		GetPawn()->AddMovementInput(GetControlRotation().Euler().ForwardVector, InputAxisValue.Y);
+		GetPawn()->AddMovementInput(GetControlRotation().Euler().RightVector, InputAxisValue.X);
+	}
+}
+
 void ABasePlayerController::AutoWalking()
 {
 	if (BIsAutoWalking && GetPawn())
@@ -298,11 +324,14 @@ void ABasePlayerController::AutoWalking()
 		const auto Dir = SplineComponent->FindDirectionClosestToWorldLocation(Loc, ESplineCoordinateSpace::World);
 		GetPawn()->AddMovementInput(Dir);
 
-		const auto DisToDes = (Loc - CachedDestination).Length();
+		const auto DisToDes = (Loc - CachedDestination).Length();	
 		if (DisToDes <= StopDistance) { BIsAutoWalking = false; }
 	}
 }
 
-void ABasePlayerController::ShiftPressed() { BIsShiftDown = true; }
+void ABasePlayerController::ShiftPressed()
+{
+	BIsShiftDown = true;
+}
 
 void ABasePlayerController::ShiftReleased() { BIsShiftDown = false; }
