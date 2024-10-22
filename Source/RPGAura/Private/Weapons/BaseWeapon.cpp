@@ -5,11 +5,10 @@
 
 #include "Interfaces/HighLightInterface.h"
 
-DEFINE_LOG_CATEGORY_STATIC(ABaseWeaponLog,All,All);
+DEFINE_LOG_CATEGORY_STATIC(ABaseWeaponLog, All, All);
 
 ABaseWeapon::ABaseWeapon()
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>("WeaponMesh");
@@ -23,6 +22,15 @@ void ABaseWeapon::BeginPlay()
 	Super::BeginPlay();
 
 	
+}
+
+void ABaseWeapon::Destroyed()
+{
+	if(WeaponMesh)
+	{
+		WeaponMesh->DestroyComponent();
+	}
+	Super::Destroyed();
 }
 
 bool ABaseWeapon::CanHighLight()
@@ -90,4 +98,9 @@ void ABaseWeapon::AddImpulse(const FVector& Impulse, const FName BoneName, const
 	{
 		WeaponMesh->AddImpulse(Impulse, BoneName, bVelChange);
 	}
+}
+
+USkeletalMeshComponent* ABaseWeapon::GetWeaponMesh() const
+{
+	return WeaponMesh.Get();
 }
