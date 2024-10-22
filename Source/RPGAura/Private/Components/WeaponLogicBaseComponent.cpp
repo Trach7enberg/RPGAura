@@ -5,6 +5,7 @@
 
 #include "Characters/CharacterBase.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 #include "Weapons/BaseWeapon.h"
 
 
@@ -16,6 +17,9 @@ UWeaponLogicBaseComponent::UWeaponLogicBaseComponent()
 	BShouldDestroyWeapon = true;
 	BDoesNeedWeapon = true;
 	WeaponBp = nullptr;
+
+	// 组件启用网络复制
+	SetIsReplicatedByDefault(true);	
 }
 
 
@@ -87,7 +91,7 @@ void UWeaponLogicBaseComponent::SetWeaponMaterial(const int I, UMaterialInstance
 void UWeaponLogicBaseComponent::AttachWeaponToSocket(ACharacterBase* Owner, FName SocketName)
 {
 	const auto Mesh = Owner->GetMesh();
-
+	
 	if (!Mesh || !BDoesNeedWeapon || !WeaponBp) { return; }
 
 	if (!Owner)
@@ -95,6 +99,8 @@ void UWeaponLogicBaseComponent::AttachWeaponToSocket(ACharacterBase* Owner, FNam
 		UE_LOG(MyWeaponLogicBaseComponentLog, Error, TEXT("Owner Error"));
 		return;
 	}
+
+	if(!Owner->HasAuthority()){return;}
 	
 	CurrentWeapon = Cast<ABaseWeapon>(GetWorld()->SpawnActor(WeaponBp));
 	
@@ -111,4 +117,16 @@ void UWeaponLogicBaseComponent::DestroyComponent(bool bPromoteChildren)
 {
 	if (CurrentWeapon && BShouldDestroyWeapon && BDoesNeedWeapon) { CurrentWeapon->Destroy(); }
 	Super::DestroyComponent(bPromoteChildren);
+}
+
+
+void UWeaponLogicBaseComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(UWeaponLogicBaseComponent, CurrentWeapon);
+}
+
+void UWeaponLogicBaseComponent::OnRep_CurrentWeapon(ABaseWeapon* OldWeapon)
+{
+	
 }

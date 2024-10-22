@@ -49,15 +49,18 @@ public:
 	void AddImpulse(const FVector& Impulse, FName BoneName = NAME_None, bool bVelChange = false) const;
 
 	USkeletalMeshComponent* GetWeaponMesh() const;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 protected:
 	virtual void BeginPlay() override;
 	virtual void Destroyed() override;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Weapon")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite,ReplicatedUsing=OnRep_WeaponMesh, Category="Weapon")
 	TObjectPtr<USkeletalMeshComponent> WeaponMesh;
 
 	/// 当前武器能否被高亮
 	/// @return 可以则是true
 	virtual bool CanHighLight();
 
+	UFUNCTION()
+	void OnRep_WeaponMesh();
 };

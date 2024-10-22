@@ -82,6 +82,9 @@ public:
 	/// 获取武器网格
 	/// @return 
 	USkeletalMeshComponent* GetWeaponMesh() const;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 protected:
 	virtual void BeginPlay() override;
 	// 武器逻辑组件销毁时是否要 销毁武器
@@ -106,6 +109,9 @@ protected:
 
 private:
 	/// 当前持有的武器
-	UPROPERTY()
+	UPROPERTY(ReplicatedUsing=OnRep_CurrentWeapon)
 	TObjectPtr<ABaseWeapon> CurrentWeapon;
+
+	UFUNCTION()
+	void OnRep_CurrentWeapon(ABaseWeapon* OldWeapon);
 };

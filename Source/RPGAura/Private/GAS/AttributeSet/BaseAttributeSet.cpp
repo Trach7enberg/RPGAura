@@ -400,9 +400,9 @@ void UBaseAttributeSet::HandleHealthReact(
 	{
 		if (CbInterface)
 		{
-			CbInterface->Die();
 			// 发送经验游戏事件
 			SendXpGamePlayEvent(EffectProperties.TargetAvatar, EffectProperties.SourceAvatar);
+			CbInterface->Die();
 			CbInterface->AddDeathImpulse(EffectProperties.MyGeContext.GetImpulse());
 		}
 	}

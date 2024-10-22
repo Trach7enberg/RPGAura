@@ -4,6 +4,7 @@
 #include "Weapons/BaseWeapon.h"
 
 #include "Interfaces/HighLightInterface.h"
+#include "Net/UnrealNetwork.h"
 
 DEFINE_LOG_CATEGORY_STATIC(ABaseWeaponLog, All, All);
 
@@ -13,8 +14,11 @@ ABaseWeapon::ABaseWeapon()
 
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>("WeaponMesh");
 	SetRootComponent(WeaponMesh);
-	
-	
+
+	// 武器启用网络复制
+	bReplicates = true;
+	WeaponMesh->SetIsReplicated(true);
+	SetReplicatingMovement(true);
 }
 
 void ABaseWeapon::BeginPlay()
@@ -38,6 +42,11 @@ bool ABaseWeapon::CanHighLight()
 	const auto Can = Cast<IHighLightInterface>(this);
 
 	return (Can) ? true : false;
+}
+
+void ABaseWeapon::OnRep_WeaponMesh()
+{
+	
 }
 
 void ABaseWeapon::SetWeaponMeshCollision(bool Enabled) const
@@ -103,4 +112,10 @@ void ABaseWeapon::AddImpulse(const FVector& Impulse, const FName BoneName, const
 USkeletalMeshComponent* ABaseWeapon::GetWeaponMesh() const
 {
 	return WeaponMesh.Get();
+}
+
+void ABaseWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ABaseWeapon, WeaponMesh);
 }
