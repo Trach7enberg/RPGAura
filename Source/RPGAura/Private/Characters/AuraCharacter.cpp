@@ -59,6 +59,7 @@ UAbilitySystemComponent* AAuraCharacter::GetAbilitySystemComponent() const { ret
 
 void AAuraCharacter::InitAbilityActorInfo()
 {
+	Super::InitAbilityActorInfo();
 	const auto MyPlayerState = GetPlayerState<ABasePlayerState>();
 	if (!MyPlayerState)
 	{
@@ -109,6 +110,10 @@ int32 AAuraCharacter::GetCharacterLevel()
 	CharacterLevel = MyPlayerState->GetPlayerLevel();
 	return CharacterLevel;
 }
+
+void AAuraCharacter::SetCastShockAnimState(const bool Enabled) { bIsCastShockAnimLoop = Enabled; }
+
+bool AAuraCharacter::GetCastShockAnimState() { return bIsCastShockAnimLoop; }
 
 void AAuraCharacter::AddToPlayerXP(const int32 AddedXp)
 {

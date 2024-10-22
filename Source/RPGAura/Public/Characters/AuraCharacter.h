@@ -37,7 +37,8 @@ public:
 
 	// ~ ICombatInterface
 	virtual int32 GetCharacterLevel() override;
-
+	virtual void SetCastShockAnimState(const bool Enabled) override;
+	virtual bool GetCastShockAnimState() override;
 	// ~ ICombatInterface
 
 	// ~ IPlayerInterface
@@ -66,6 +67,10 @@ protected:
 
 	/// 初始化当前ACS的能力组件、属性集和ACS的AbilityActorInfo
 	virtual void InitAbilityActorInfo() override;
+
+	/// 角色是否处于释放电击法术动画状态
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Animation")
+	bool bIsCastShockAnimLoop = false;
 
 private :
 	FString GetNetModeStr() const;
