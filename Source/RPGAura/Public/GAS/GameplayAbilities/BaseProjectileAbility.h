@@ -23,7 +23,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Spawn")
 	void SpawnProjectile(const FHitResult& HitResult, const FGameplayTag SocketAssociatedWithMontageTag);
 
-	/// 生成多重投射物,(投射物有追踪效果)
+	/// 生成多重投射物,(投射物有追踪效果) TODO 待修改生成多个投射物的击退次数应该只会触发一次 
 	/// @param HitResult 
 	/// @param SocketAssociatedWithMontageTag
 	/// @param HomingActor

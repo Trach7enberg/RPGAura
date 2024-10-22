@@ -155,16 +155,11 @@ void AEnemyCharacter::UnHighLightActor()
 
 void AEnemyCharacter::Die()
 {
-	if(CurrentAiController)
-	{
-		CurrentAiController->GetBlackboardComponent()->SetValueAsBool("IsDead",true);
-	}
+	if(CurrentAiController) { CurrentAiController->GetBlackboardComponent()->SetValueAsBool("IsDead", true); }
 	Super::Die();
 }
 AActor* AEnemyCharacter::GetCombatTarget() { return CombatTarget.Get(); }
-void AEnemyCharacter::SetCombatTarget(AActor* NewCombatTarget) { 
-	CombatTarget = NewCombatTarget;
-}
+void AEnemyCharacter::SetCombatTarget(AActor* NewCombatTarget){CombatTarget = NewCombatTarget;}
 
 void AEnemyCharacter::PossessedBy(AController* NewController)
 {
