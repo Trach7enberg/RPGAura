@@ -202,6 +202,10 @@ struct FMontageWithTag
 	TObjectPtr<USoundBase> ImpactSound = nullptr;
 };
 
+/// 角色死亡的委托(死亡动画之前)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDeathSignature, AActor*, DeadActor);
+
+
 /*--------------------------------
 	UTagToAbilityInfoAsset使用
 --------------------------------*/
@@ -401,6 +405,9 @@ struct FDamageEffectParams
 
 	UPROPERTY()
 	float KnockBackChance = 0.f;
+	
+	UPROPERTY()
+	float KnockBackFactor = 0.f;
 
 	UPROPERTY()
 	int32 AbilityLevel = 1;
