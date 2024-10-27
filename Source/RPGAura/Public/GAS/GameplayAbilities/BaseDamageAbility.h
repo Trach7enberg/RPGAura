@@ -37,6 +37,10 @@ protected:
 	UPROPERTY(EditDefauLtsOnLy, Category ="DamageDeBuff", meta=(ClampMin="0", ClampMax="100"))
 	float KnockBackChance = 0.f;
 
+	// 击退的力度
+	UPROPERTY(EditDefauLtsOnLy, Category ="DamageDeBuff", meta=(ClampMin="100", ClampMax="9000"))
+	float KnockBackFactor = 300.f;
+
 	// 当前能力触发DeBuff时造成的伤害
 	UPROPERTY(EditDefauLtsOnLy, Category ="DamageDeBuff")
 	float DeBuffDamage = 5.f;

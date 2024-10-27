@@ -30,10 +30,9 @@ void UBaseDamageAbility::CauseDamage(AActor* Suffer)
 
 	FDamageEffectParams EffectParams;
 	EffectParams.ImpulseVector = GetOwningActorFromActorInfo()->GetActorForwardVector().RotateAngleAxis(
-			45.f, GetOwningActorFromActorInfo()->GetActorRightVector());
-	MakeDamageEffectParamsFromAbilityDefaults(EffectParams,Suffer);
+		45.f, GetOwningActorFromActorInfo()->GetActorRightVector()) * KnockBackFactor;
+	MakeDamageEffectParamsFromAbilityDefaults(EffectParams, Suffer);
 	URPGAuraBlueprintFunctionLibrary::ApplyDamageGameplayEffectByParams(EffectParams);
-	
 }
 
 FMontageWithTag UBaseDamageAbility::GetRandomAttackAnim(const TArray<FMontageWithTag> MontageWithTags)
@@ -57,13 +56,15 @@ float UBaseDamageAbility::GetEstimatedDamageFromDamageTypesMap(const int32 Abili
 	return Damage;
 }
 
-void UBaseDamageAbility::MakeDamageEffectParamsFromAbilityDefaults(FDamageEffectParams &Params,AActor* TargetActor) const
+void UBaseDamageAbility::MakeDamageEffectParamsFromAbilityDefaults(FDamageEffectParams& Params,
+                                                                   AActor* TargetActor) const
 {
 	Params.BaseDamage = GetEstimatedDamageFromDamageTypesMap(GetAbilityLevel());
 	Params.DeBuffChance = DeBuffChance;
 	Params.KnockBackChance = KnockBackChance;
+	Params.KnockBackFactor = KnockBackFactor;
 	Params.DeBuffDamage = DeBuffDamage;
-	Params.DeBuffDuration = DeBuffDuration;
+	Params.DeBuffDuration = FMath::Max(1, DeBuffDuration - 1);
 	Params.DeBuffFrequency = DeBuffFrequency;
 	Params.AbilityLevel = GetAbilityLevel();
 
@@ -73,4 +74,3 @@ void UBaseDamageAbility::MakeDamageEffectParamsFromAbilityDefaults(FDamageEffect
 	Params.TargetAbilitySystemComponent = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
 	Params.SourceAbilitySystemComponent = GetAbilitySystemComponentFromActorInfo();
 }
- 
