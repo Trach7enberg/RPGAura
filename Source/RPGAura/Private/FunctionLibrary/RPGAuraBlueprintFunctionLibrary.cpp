@@ -19,14 +19,16 @@ URPGAuraBlueprintFunctionLibrary::URPGAuraBlueprintFunctionLibrary() {}
 
 void URPGAuraBlueprintFunctionLibrary::FindLivePlayersWithinRadius(const AActor* Causer,
                                                                    TArray<AActor*>& OutOverlappingActors,
-                                                                   const TArray<AActor*>& IgnoreActors, float Radius,
-                                                                   const FVector& SphereOrigin, bool IgnoreSelf)
+                                                                   const TArray<AActor*>& IgnoreActors, const float Radius,
+                                                                   const FVector& SphereOrigin, const bool IgnoreSelf,
+                                                                   const FName IgnoreTag, const int LimitedNum)
 {
 	if (!Causer || !IsValid(Causer))
 	{
 		UE_LOG(URPGAuraBlueprintFunctionLibraryLog, Warning, TEXT("Causer无效"));
 		return;
 	}
+	if (LimitedNum <= 0) { return; }
 
 	FCollisionQueryParams SphereParams;
 	if (IgnoreSelf) { SphereParams.AddIgnoredActor(Causer); }
@@ -41,10 +43,12 @@ void URPGAuraBlueprintFunctionLibrary::FindLivePlayersWithinRadius(const AActor*
 		                                FCollisionShape::MakeSphere(Radius), SphereParams);
 	}
 
+	// int LocalCount = LimitedNum;
 	for (auto& OverlapResult : Overlaps)
 	{
-		// 忽视友军(敌人)
-		if (OverlapResult.GetActor()->ActorHasTag(FRPGAuraGameplayTags::Get().Enemy)) { continue; }
+		// if(LocalCount < 0) { break; }
+		// 忽视友军或敌人?
+		if (OverlapResult.GetActor()->ActorHasTag(IgnoreTag)) { continue; }
 
 		const auto DoseImplement = OverlapResult.GetActor()->Implements<UCombatInterface>();
 		if (!DoseImplement) { continue; }
@@ -53,7 +57,15 @@ void URPGAuraBlueprintFunctionLibrary::FindLivePlayersWithinRadius(const AActor*
 		if (!CombatInterface) { continue; }
 
 		const auto IsCharacterDie = CombatInterface->IsCharacterDie();
-		if (!IsCharacterDie) { OutOverlappingActors.AddUnique(OverlapResult.GetActor()); }
+		if (!IsCharacterDie)
+		{
+			OutOverlappingActors.AddUnique(OverlapResult.GetActor());
+			// const auto IsAdd = OutOverlappingActors.AddUnique(OverlapResult.GetActor());
+			// if(IsAdd)
+			// {
+			// 	--LocalCount;
+			// }
+		}
 	}
 }
 

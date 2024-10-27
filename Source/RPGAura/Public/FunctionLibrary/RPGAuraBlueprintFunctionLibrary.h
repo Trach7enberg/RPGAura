@@ -4,10 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "ActiveGameplayEffectHandle.h"
+#include "CoreTypes/RPGAuraGameplayTags.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "RPGAuraBlueprintFunctionLibrary.generated.h"
 
 
+struct FRPGAuraGameplayTags;
 struct FDeBuffInfo;
 struct FGameplayEffectSpec;
 struct FGameplayTagContainer;
@@ -36,11 +38,13 @@ public:
 	/// @param Radius 球体半径
 	/// @param SphereOrigin 球体中心点位
 	/// @param IgnoreSelf 是否忽略自己
+	/// @param IgnoreTag 是否忽略带有当前标签名字的角色
+	/// @param LimitedNum 最多返回多少个
 	UFUNCTION(BlueprintCallable, Category="Overlap")
 	static void FindLivePlayersWithinRadius(const AActor* Causer,
 	                                        TArray<AActor*>& OutOverlappingActors,
 	                                        const TArray<AActor*>& IgnoreActors, float Radius,
-	                                        const FVector& SphereOrigin, bool IgnoreSelf);
+	                                        const FVector& SphereOrigin, bool IgnoreSelf, const FName IgnoreTag, int LimitedNum = 5);
 
 	/// 检查两个Actor是否是友军
 	/// @param Actor1 
