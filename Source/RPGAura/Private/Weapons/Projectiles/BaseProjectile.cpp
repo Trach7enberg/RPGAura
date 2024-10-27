@@ -6,6 +6,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Interfaces/CombatInterface.h"
 #include "Kismet/GameplayStatics.h"
 #include "RPGAura/RPGAura.h"
 
@@ -15,7 +16,7 @@ ABaseProjectile::ABaseProjectile()
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
-
+	
 	bIgnoreFriend = true;
 	SphereComponent = CreateDefaultSubobject<USphereComponent>("SphereComponent");
 	SetRootComponent(SphereComponent);
@@ -66,13 +67,30 @@ void ABaseProjectile::SpawnVfxAndSound() const
 	
 }
 
-
 void ABaseProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                       UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
                                       const FHitResult& SweepResult)
 {
 	
 	
+}
+
+void ABaseProjectile::EnableHomingActorOnDestroyedEvent()
+{
+	if(!GetProjectileMovementComponent() || !GetProjectileMovementComponent()->HomingTargetComponent.Get()){return;}
+
+	const auto HomingCompOwner = GetProjectileMovementComponent()->HomingTargetComponent.Get()->GetOwner();
+	const auto CombatInt = Cast<ICombatInterface>(HomingCompOwner);
+	if(!CombatInt){return;}
+
+	if(CombatInt->GetPreOnDeathDelegate().IsAlreadyBound(this,&ABaseProjectile::HomingActorOnPreDestroyed)){return;}
+
+	CombatInt->GetPreOnDeathDelegate().AddDynamic(this,&ABaseProjectile::HomingActorOnPreDestroyed);
+}
+
+void ABaseProjectile::HomingActorOnPreDestroyed(AActor* Actor)
+{
+	GetProjectileMovementComponent()->bIsHomingProjectile = false;
 }
 
 void ABaseProjectile::Destroyed()

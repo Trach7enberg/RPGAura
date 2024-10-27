@@ -31,6 +31,9 @@ public:
 		return ProjectileMovementComponent.Get();
 	}
 	
+	/// 启用当飞弹的追踪目标被销毁时候的事件
+	virtual void EnableHomingActorOnDestroyedEvent();
+
 	virtual void Destroyed() override;
 
 protected:
@@ -78,5 +81,8 @@ private:
 	                             UPrimitiveComponent* OtherComp,
 	                             int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-	
+	/// 当飞弹的追踪目标被销毁时回调的事件
+	/// @param Actor 
+	UFUNCTION()
+	virtual void HomingActorOnPreDestroyed(AActor* Actor);
 };
