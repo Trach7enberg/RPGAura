@@ -236,6 +236,8 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 		{
 			GameplayTags.Abilities_CoolDown_Fire_FireBolt = UGameplayTagsManager::Get().AddNativeGameplayTag(
 				"Abilities.CoolDown.Fire.FireBolt", FString(""));
+			GameplayTags.Abilities_CoolDown_Electrical_Electrocute = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.CoolDown.Electrical.Electrocute", FString(""));
 		}
 
 		{

@@ -173,6 +173,7 @@ struct FRPGAuraGameplayTags
 
 	// 能力冷却的标签
 	FGameplayTag Abilities_CoolDown_Fire_FireBolt; // 火球技能冷却时间标签
+	FGameplayTag Abilities_CoolDown_Electrical_Electrocute; // 电束技能冷却时间标签
 
 	// 能力的Block标签
 	FGameplayTag Abilities_Block;
