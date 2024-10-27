@@ -28,7 +28,7 @@ ACharacterBase::ACharacterBase()
 	PrimaryActorTick.bCanEverTick = false;
 
 	CharacterLevel = 1;
-	SelfLifeSpan = 1.f;
+	SelfLifeSpan = 0.1f;
 	BIsHitReacting = false;
 	MaxWalkingSpeed = 600.f;
 	bIsDie = false;
@@ -192,10 +192,9 @@ void ACharacterBase::ShowDeBuffVfx(const FGameplayTag DeBuffType)
 
 void ACharacterBase::AddKnockBack(const FVector& Direction)
 {
-	auto KnockBackVector = Direction;
-	// TODO 角色移动时添加的击退效果会减弱待修复,以及将"魔法向量"移动到相应位置   
-	KnockBackVector *= 1000;
-	LaunchCharacter(FVector((KnockBackVector.X), (KnockBackVector.Y), 300), true, true);
+	GetMesh()->AnimScriptInstance.Get()->RootMotionMode = ERootMotionMode::Type::NoRootMotionExtraction;
+	GetMovementComponent()->StopMovementImmediately();
+	LaunchCharacter(FVector((Direction.X), (Direction.Y), 300), true, true);
 }
 
 void ACharacterBase::SetCastShockAnimState(const bool Enabled) {}
@@ -205,6 +204,11 @@ USkeletalMeshComponent* ACharacterBase::GetWeaponMesh()
 {
 	if (!WeaponLogicBaseComponent) { return nullptr; }
 	return WeaponLogicBaseComponent->GetWeaponMesh();
+}
+
+FOnDeathSignature& ACharacterBase::GetPreOnDeathDelegate()
+{
+	return OnDeathSignature;
 }
 
 ECharacterClass ACharacterBase::GetCharacterClass() { return CharacterClass; }
@@ -269,6 +273,14 @@ void ACharacterBase::UnHighLight()
 {
 	if (!CanHighLight()) { return; }
 	Cast<IHighLightInterface>(this)->UnHighLightActor();
+}
+
+void ACharacterBase::Destroyed()
+{
+	// 销毁武器,再销毁角色
+	UE_LOG(ACharacterBaseLog, Warning, TEXT("角色销毁"));
+	WeaponLogicBaseComponent->DestroyComponent(true);
+	Super::Destroyed();
 }
 
 void ACharacterBase::LifeSpanExpired()
@@ -498,6 +510,7 @@ void ACharacterBase::ShowDamageNumber_Implementation(const float Damage, bool bB
 void ACharacterBase::MulticastHandleDeath_Implementation()
 {
 	bIsDie = true;
+	OnDeathSignature.Broadcast(this);
 	WeaponLogicBaseComponent->DetachWeapon();
 	
 	// TODO 已在多播函数内,待决定是否需要使用多播进行停止 

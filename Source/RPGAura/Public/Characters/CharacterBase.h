@@ -42,8 +42,6 @@ public:
 	/// 解除高亮当前角色
 	virtual void UnHighLight();
 
-	virtual void LifeSpanExpired() override;
-
 	/// 获取当前角色的属性集 (该属性集在InitAbilityActorInfo中初始化)
 	virtual UAttributeSet* GetAttributeSet() const { return AttributeSet; }
 
@@ -53,6 +51,7 @@ public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	// ~ ICombatInterface
+	FOnDeathSignature OnDeathSignature;
 	virtual int32 GetCharacterLevel() override { return 0; };
 	virtual ECharacterClass GetCharacterClass() override;
 
@@ -86,8 +85,11 @@ public:
 	virtual void SetCastShockAnimState(const bool Enabled) override;
 	virtual bool GetCastShockAnimState() override;
 	virtual USkeletalMeshComponent* GetWeaponMesh() override;
+	virtual FOnDeathSignature& GetPreOnDeathDelegate() override;
 	// ~ ICombatInterface
 
+	virtual void Destroyed() override;
+	virtual void LifeSpanExpired() override;
 
 protected:
 	virtual void BeginPlay() override;
