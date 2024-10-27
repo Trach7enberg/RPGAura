@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CoreTypes/RPGAuraCoreTypes.h"
 #include "UObject/Interface.h"
 #include "CombatInterface.generated.h"
 
@@ -11,6 +12,7 @@ class UNiagaraSystem;
 struct FGameplayTag;
 struct FMontageWithTag;
 class UAnimMontage;
+
 /// 和战斗相关的接口
 UINTERFACE(MinimalAPI, meta=(CannotImplementInterfaceInBlueprint))
 class UCombatInterface : public UInterface
@@ -133,4 +135,8 @@ public:
 	/// @return 
 	UFUNCTION(BlueprintCallable)
 	virtual USkeletalMeshComponent* GetWeaponMesh() = 0;
+
+	/// 获取当前角色死亡时候(死亡动画开始前)的委托
+	/// @return
+	virtual FOnDeathSignature& GetPreOnDeathDelegate() = 0;
 };
