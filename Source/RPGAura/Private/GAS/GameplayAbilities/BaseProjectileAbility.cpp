@@ -92,27 +92,29 @@ void UBaseProjectileAbility::SpawnProjectiles(const FHitResult& HitResult,
 	if (bOverridePitch) { Rotation.Pitch = OverridePitch; }
 
 	const auto ForwardVector = Rotation.Vector();
-	// TODO 待修复当射弹是homing时,homing目标消失(但是并未死亡,正在处于死亡动画)射弹会在空中转圈 
 	const auto ProjNum = FMath::Max(1, GetValidProjectileNum(GetAbilityLevel()));
 	TArray<FVector> Directions;
-	URPGAuraBlueprintFunctionLibrary::GetVectorBySpread(SpawnSpread, 5, ForwardVector, Directions);
+	URPGAuraBlueprintFunctionLibrary::GetVectorBySpread(SpawnSpread, ProjNum, ForwardVector, Directions);
+	auto Random = FMath::RandRange(1, Directions.Num()); 
 	for (auto& Dire : Directions)
 	{
+		--Random;
 		FTransform SpawnTrans;
 		SpawnTrans.SetLocation(AttackSocketLoc);
 
 		auto Rot = Dire.Rotation();
 		SpawnTrans.SetRotation(Rot.Quaternion());
 
-		auto Projectile = CreateProjectile(SpawnTrans, Instigator);
+		const auto Projectile = CreateProjectile(SpawnTrans, Instigator);
 		if (!Projectile) { continue; }
 
-		auto ProjComp = Projectile->GetProjectileMovementComponent();
+		const auto ProjComp = Projectile->GetProjectileMovementComponent();
 		if (!ProjComp) { continue; }
 		ProjComp->ProjectileGravityScale = ProjectileGravity;
-			if (bIsHomingProjectile && HomingActor && HomingActor->Implements<UCombatInterface>())
+		if (bIsHomingProjectile && HomingActor && HomingActor->Implements<UCombatInterface>())
 		{
 			ProjComp->HomingTargetComponent = HomingActor->GetRootComponent();
+			Projectile->EnableHomingActorOnDestroyedEvent();
 		}
 		else
 		{
@@ -121,7 +123,14 @@ void UBaseProjectileAbility::SpawnProjectiles(const FHitResult& HitResult,
 		}
 		ProjComp->HomingAccelerationMagnitude = FMath::RandRange(HomingMinAcceleration, HomingMaxAcceleration);
 		ProjComp->bIsHomingProjectile = bIsHomingProjectile;
-		
+
+		//多个飞弹触发的各种概率 只会挑其中一个飞弹算一次 
+		if (Random != 0)
+		{
+			UE_LOG(UBaseProjectileAbilityLog,Error,TEXT("%d"),Random);
+			Projectile->DamageEffectParams.DeBuffChance = 0.f;
+			Projectile->DamageEffectParams.KnockBackChance = 0.f;
+		}
 		// 完成飞弹生成
 		Projectile->FinishSpawning(SpawnTrans);
 	}
@@ -134,7 +143,6 @@ void UBaseProjectileAbility::UpdateAbilityDescription(const FGameplayTag& Abilit
 	const auto DescStrLocked = CurrentAbilityDescription.DescriptionLocked.ToString();
 	const auto DescStrNextLevel = CurrentAbilityDescription.DescriptionNextLevel.ToString();
 
-	// TODO 待Clamp投射物的最大值 
 	const auto FormatNormalStr = FString::Format(*DescStrNormal, {
 		                                             // 当前技能等级{0}
 		                                             AbilityLevel,
@@ -193,9 +201,8 @@ void UBaseProjectileAbility::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 }
 
-int32 UBaseProjectileAbility::GetValidProjectileNum(const int32 AbilityLevel) 
+int32 UBaseProjectileAbility::GetValidProjectileNum(const int32 AbilityLevel)
 {
-	
 	return FMath::Min(AbilityLevel, MaxProjectileNum);
 }
 
@@ -225,7 +232,7 @@ ABaseProjectile* UBaseProjectileAbility::CreateProjectile(const FTransform& Tran
 		// 在GE context中传输当前冲击法线向量,以便属性集能获取进行相应操作
 		// 冲击向量是以Projectile的前向向量为基础,再以右向量为基础旋转45度,即Pitch Rotation -45度
 		Projectile->DamageEffectParams.ImpulseVector = Projectile->GetActorForwardVector().RotateAngleAxis(
-			45.f, Projectile->GetActorRightVector());
+			45.f, Projectile->GetActorRightVector()) * KnockBackFactor;
 		MakeDamageEffectParamsFromAbilityDefaults(Projectile->DamageEffectParams);
 	}
 	else { UE_LOG(UBaseProjectileAbilityLog, Error, TEXT("[%s]生成飞弹失败!"), *GetName()); }
