@@ -223,7 +223,8 @@ void ABasePlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 		}
 
 		break;
-	case EGameplayTagNum::InputRMB: BIsAutoWalking = false;
+	case EGameplayTagNum::InputRMB:
+		BIsAutoWalking = false;
 		GetAbilitySystemComponent()->AbilityInputTagHeld(InputTag);
 		break;
 
@@ -251,14 +252,11 @@ void ABasePlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 	{
 	// LMB释放
 	case EGameplayTagNum::InputLMB:
-
-		if (!BIsTargeting && !BIsShiftDown)
+		// TODO 该判断有重复,应该用变量存储起来,不至于重复循环判断(能力的Activation Required Tags)..   
+		if (!BIsTargeting && !BIsShiftDown && !GetAbilitySystemComponent()->HasMatchingGameplayTag(FRPGAuraGameplayTags::Get().Abilities_Block_Input_Pressed))
 		{
-			// TODO 该判断有重复,应该用变量存储起来,不至于重复循环判断(能力的Activation Required Tags)..    
-			if (!GetAbilitySystemComponent()->HasMatchingGameplayTag(FRPGAuraGameplayTags::Get().Abilities_Block_Input_Pressed))
-			{
-				UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ClickVfx, CurseHitResult.ImpactPoint);
-			}
+			  
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ClickVfx, CurseHitResult.ImpactPoint);
 			
 			CachedDestination = CurseHitResult.ImpactPoint;
 			// 人物跟随鼠标的时间 小于短按阈值,则进行点按鼠标左键人物自动行走
