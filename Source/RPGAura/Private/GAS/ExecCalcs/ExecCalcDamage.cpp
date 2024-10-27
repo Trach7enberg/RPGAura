@@ -185,11 +185,11 @@ void UExecCalcDamage::Execute_Implementation(const FGameplayEffectCustomExecutio
 	{
 		float ResistanceValue = 0;
 		// 获得伤害类型对应的抗性标签
-		const auto ResistanceAttributeTag = FRPGAuraGameplayTags::Get().DamageTypesToResistancesMap[DamageType];
-
+		FGameplayTag* ResistanceAttributeTag = FRPGAuraGameplayTags::Get().DamageTypesToResistancesMap.Find(DamageType);
+		if (!ResistanceAttributeTag) { continue; }
 
 		// 用抗性标签获取要捕获的属性
-		const auto GameplayEnum = FRPGAuraGameplayTags::FindEnumByTag(ResistanceAttributeTag);
+		const auto GameplayEnum = FRPGAuraGameplayTags::FindEnumByTag(*ResistanceAttributeTag);
 		if (GameplayEnum)
 		{
 			switch (*GameplayEnum)
