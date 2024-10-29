@@ -373,23 +373,14 @@ void UBaseAttributeSet::HandleHealthReact(
 	// 是否是致命伤
 	const bool BIsFatal = TempHealth <= 0.f;
 
-	// const auto TmpDeBuffArray = EffectProperties.MyGeContext.GetDeBuffInfos();
-	// if (TmpDeBuffArray.Num() > 0)
-	// {
-	// 	const auto OffName = GetNameSafe(EffectProperties.SourceAvatar);
-	// 	const auto SufferName = GetNameSafe(EffectProperties.TargetAvatar);
-	// 	UE_LOG(UBaseAttributeSetLog, Error, TEXT("攻击者[%s] -> 受击[%s],DeBuff数组大小:%d"), *OffName, *SufferName,
-	// 	       TmpDeBuffArray.Num());
-	// 	UE_LOG(UBaseAttributeSetLog, Error, TEXT("攻击者[%s] -> 受击[%s],Debuff[0]是否触发Debuff?: %d , DeBuff名字: %s"), *OffName,
-	// 	       *SufferName, TmpDeBuffArray[0].bIsSuccessfulDeBuff, *TmpDeBuffArray[0].DeBuffType.ToString());
-	// }
-
 	// 非致命伤,给击中的敌人 激活含有标签HitReact的能力
 	if (!BIsFatal)
 	{
+		// GetMyCurrentAbilitySystem()->TryActivateAbilitiesByTag(FGameplayTagContainer{FRPGAuraGameplayTags::Get().Abilities_DeBuff_Stun});
 		// 使用该函数需要确保能力蓝图类中的AbilityTags容器里有Effects_HitReact标签
+		// TODO 受击反应会影响电击DeBuff的眩晕(并且被电击时不应该启用)....  
 		GetMyCurrentAbilitySystem()->TryActivateAbilitiesByTag(
-			FGameplayTagContainer(FRPGAuraGameplayTags::Get().Abilities_Effects_HitReact));
+			FGameplayTagContainer(FRPGAuraGameplayTags::Get().Abilities_Effects_HitReact_Normal));
 		// UE_LOG(UBaseAttributeSetLog, Error, TEXT("是否暴击[%d] 是否格挡[%d]"), IsCriticalHit, IsBlockHit);
 		if (!EffectProperties.MyGeContext.IsDeBuffSideEffect() && EffectProperties.MyGeContext.IsKnockBackHit())
 		{
@@ -403,6 +394,7 @@ void UBaseAttributeSet::HandleHealthReact(
 			// 发送经验游戏事件
 			SendXpGamePlayEvent(EffectProperties.TargetAvatar, EffectProperties.SourceAvatar);
 			CbInterface->Die();
+			// TODO 如果已经触发击退,则不应该添加死亡冲击? 
 			CbInterface->AddDeathImpulse(EffectProperties.MyGeContext.GetImpulse());
 		}
 	}
@@ -416,67 +408,89 @@ void UBaseAttributeSet::HandleDeBuff()
 		return;
 	}
 
+	for (auto& DeBuffInfo : EffectProperties.MyGeContext.GetDeBuffInfos()) { HandleDeBuff(DeBuffInfo); }
+}
+
+void UBaseAttributeSet::HandleDeBuff(const FDeBuffInfo& DeBuffInfo)
+{
+	if (!DeBuffInfo.bIsSuccessfulDeBuff) { return; }
+	const auto Enum = FRPGAuraGameplayTags::FindEnumByTag(DeBuffInfo.DeBuffType);
+	if (!Enum) { return; }
 	const auto TargetCombInt = Cast<ICombatInterface>(EffectProperties.TargetAvatar);
-	if (!TargetCombInt) { return; }
 
-	// 创建动态GE
-	for (auto& DeBuffInfo : EffectProperties.MyGeContext.GetDeBuffInfos())
+	switch (*Enum)
 	{
-		if (!DeBuffInfo.bIsSuccessfulDeBuff) { continue; }
-
-		// 通过Instigator	的ASC创建新的 FGameplayEffectContextHandle
-		auto GeContextHandle = EffectProperties.SourceAsc->MakeEffectContext();
-		GeContextHandle.AddSourceObject(EffectProperties.SourceAvatar);
-
-		// 动态GE的名字
-		FString DeBuffName = FString::Printf(TEXT("DynamicDeBuff_%s"), *DeBuffInfo.DeBuffType.ToString());
-
-		// 在UE中,包Package是对资源进行组织和管理的方式
-		// GetTransientPackage() 返回的临时包对象用于在运行时动态创建对象和资源，而无需将其永久保存到磁盘上的包文件中
-		// 当代码需要在运行时创建临时资源（如动态创建GE、蓝图或其他对象）时
-		// 可以使用 GetTransientPackage() 函数来获取一个临时的包对象,并将新创建的对象分配给该包
-		// 这样做可以方便地管理这些临时资源，而无需创建和维护额外的包文件
-		// 即临时包对象在游戏运行期间存在,并且不会被保存到磁盘上的包文件中一旦游戏结束或重新编译项目,这里new的GE将被清理并释放内存
-		UGameplayEffect* GameplayEffect = NewObject<UGameplayEffect>(GetTransientPackage(), FName(DeBuffName));
-		if (!GameplayEffect) { continue; }
-
-		GameplayEffect->DurationPolicy = EGameplayEffectDurationType::HasDuration;
-		GameplayEffect->Period = DeBuffInfo.DeBuffFrequency;
-		GameplayEffect->DurationMagnitude = FScalableFloat(DeBuffInfo.DeBuffDuration);
-		// 按施法者设置堆叠策略
-		GameplayEffect->StackingType = EGameplayEffectStackingType::AggregateBySource;
-		GameplayEffect->StackLimitCount = 1;
-
-		// 添加GE组件,用于添加授予目标的标签 TODO 待修改const_cast 
-		UTargetTagsGameplayEffectComponent& GeComp = GameplayEffect->AddComponent<UTargetTagsGameplayEffectComponent>();
-		auto& TagContainer = const_cast<FInheritedTagContainer&>(GeComp.GetConfiguredTargetTagChanges());
-		TagContainer.Added.AddTag(DeBuffInfo.DeBuffType);
-		GeComp.SetAndApplyTargetTagChanges(TagContainer);
-
-		// 新建Modifier并且配置Modifier信息
-		GameplayEffect->Modifiers.Add(FGameplayModifierInfo());
-		auto& GameplayModifierInfo = GameplayEffect->Modifiers.Last();
-		GameplayModifierInfo.ModifierMagnitude = FScalableFloat(DeBuffInfo.DeBuffDamage);
-		GameplayModifierInfo.ModifierOp = EGameplayModOp::Additive;
-		GameplayModifierInfo.Attribute = UBaseAttributeSet::GetInComingDamageAttribute();
-
-		const auto Level = EffectProperties.MyGeContext.GetAbilityLevel();
-		const auto Str = EffectProperties.MyGeContext.GetImpulse().ToString();
-		UE_LOG(UBaseAttributeSetLog, Warning, TEXT("[前向向量: , %s]"), *Str);
-
-		// 通过GE上下文句柄和创建的GE new 一个GE Spec,以便我们Apply
-		if (const FGameplayEffectSpec* MutableSpec = new FGameplayEffectSpec(GameplayEffect, GeContextHandle, Level))
+	// TODO 动态GE可以重构成一个函数?或者改成由GE引发的能力  
+	case EGameplayTagNum::Abilities_DeBuff_Burn:
 		{
-			// 我的蓝图函数库,用于从GE上下文转换为我自己的GE自定义上下文
-			if (const auto TmpGeContext =
-				UGameAbilitySystemGlobals::GetCustomGeContext(MutableSpec->GetContext().Get()))
+			// 创建动态GE 
+			// 通过Instigator	的ASC创建新的 FGameplayEffectContextHandle
+			auto GeContextHandle = EffectProperties.SourceAsc->MakeEffectContext();
+			GeContextHandle.AddSourceObject(EffectProperties.SourceAvatar);
+
+			// 动态GE的名字
+			FString DeBuffName = FString::Printf(TEXT("DynamicDeBuff_%s"), *DeBuffInfo.DeBuffType.ToString());
+
+			// 在UE中,包Package是对资源进行组织和管理的方式
+			// GetTransientPackage() 返回的临时包对象用于在运行时动态创建对象和资源，而无需将其永久保存到磁盘上的包文件中
+			// 当代码需要在运行时创建临时资源（如动态创建GE、蓝图或其他对象）时
+			// 可以使用 GetTransientPackage() 函数来获取一个临时的包对象,并将新创建的对象分配给该包
+			// 这样做可以方便地管理这些临时资源，而无需创建和维护额外的包文件
+			// 即临时包对象在游戏运行期间存在,并且不会被保存到磁盘上的包文件中一旦游戏结束或重新编译项目,这里new的GE将被清理并释放内存
+			UGameplayEffect* GameplayEffect = NewObject<UGameplayEffect>(GetTransientPackage(), FName(DeBuffName));
+			if (!GameplayEffect) { break; }
+
+			GameplayEffect->DurationPolicy = EGameplayEffectDurationType::HasDuration;
+			GameplayEffect->Period = DeBuffInfo.DeBuffFrequency;
+			GameplayEffect->DurationMagnitude = FScalableFloat(DeBuffInfo.DeBuffDuration);
+			// 按施法者设置堆叠策略
+			GameplayEffect->StackingType = EGameplayEffectStackingType::AggregateBySource;
+			GameplayEffect->StackLimitCount = 1;
+
+			// 添加GE组件,用于添加授予目标的标签 TODO 待修改const_cast 
+			UTargetTagsGameplayEffectComponent& GeComp = GameplayEffect->AddComponent<
+				UTargetTagsGameplayEffectComponent>();
+			auto& TagContainer = const_cast<FInheritedTagContainer&>(GeComp.GetConfiguredTargetTagChanges());
+			TagContainer.Added.AddTag(DeBuffInfo.DeBuffType);
+			GeComp.SetAndApplyTargetTagChanges(TagContainer);
+
+			// 新建Modifier并且配置Modifier信息
+			GameplayEffect->Modifiers.Add(FGameplayModifierInfo());
+			auto& GameplayModifierInfo = GameplayEffect->Modifiers.Last();
+			GameplayModifierInfo.ModifierMagnitude = FScalableFloat(DeBuffInfo.DeBuffDamage);
+			GameplayModifierInfo.ModifierOp = EGameplayModOp::Additive;
+			GameplayModifierInfo.Attribute = UBaseAttributeSet::GetInComingDamageAttribute();
+
+			const auto Level = EffectProperties.MyGeContext.GetAbilityLevel();
+			const auto Str = EffectProperties.MyGeContext.GetImpulse().ToString();
+			UE_LOG(UBaseAttributeSetLog, Warning, TEXT("[前向向量: , %s]"), *Str);
+
+			// 通过GE上下文句柄和创建的GE new 一个GE Spec,以便我们Apply
+			if (const FGameplayEffectSpec* MutableSpec = new
+				FGameplayEffectSpec(GameplayEffect, GeContextHandle, Level))
 			{
-				TmpGeContext->AddDamageType(DeBuffInfo.DamageType);
-				// 注意DeBuff所产生的负面GE上下文里携带的所有DeBuffInfo信息里的bIsSuccessfulDeBuff一定要为false,或者没有,否则会产生无限循环
-				TmpGeContext->SetIsDeBuffSideEffect(true);
-				EffectProperties.TargetAsc->ApplyGameplayEffectSpecToSelf(*MutableSpec);
-				TargetCombInt->ShowDeBuffVfx(DeBuffInfo.DeBuffType);
+				// 我的蓝图函数库,用于从GE上下文转换为我自己的GE自定义上下文
+				if (const auto TmpGeContext =
+					UGameAbilitySystemGlobals::GetCustomGeContext(MutableSpec->GetContext().Get()))
+				{
+					TmpGeContext->AddDamageType(DeBuffInfo.DamageType);
+					// 注意DeBuff所产生的负面GE上下文里携带的所有DeBuffInfo信息里的bIsSuccessfulDeBuff一定要为false,或者没有,否则会产生无限循环
+					TmpGeContext->SetIsDeBuffSideEffect(true);
+					EffectProperties.TargetAsc->ApplyGameplayEffectSpecToSelf(*MutableSpec);
+				}
+				if (TargetCombInt) { TargetCombInt->ShowDeBuffVfx(DeBuffInfo.DeBuffType); }
 			}
 		}
+		break;
+
+	case EGameplayTagNum::Abilities_DeBuff_Stun:
+		// TODO 应该由GE(或者动态创建GE)来启用能力(这样可以通过GeContext设置眩晕的时间)
+		// TODO 当前Stun是由电击能力引起的DeBuff,但是参数并未和DeBuff参数联动(例如持续时间)
+		// TODO Stun应该可以触发动态GE(即Duration GE的伤害)
+		if (TargetCombInt) { TargetCombInt->ShowDeBuffVfx(DeBuffInfo.DeBuffType); }
+		GetMyCurrentAbilitySystem()->TryActivateAbilitiesByTag(FGameplayTagContainer{DeBuffInfo.DeBuffType});
+		break;
+
+	default: break;
 	}
 }

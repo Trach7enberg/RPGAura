@@ -322,6 +322,7 @@ private:
 	/// 注意:动态GE不支持Replication,因此只能在服务器上进行这样任何更改都将会复制到客户端
 	void HandleDeBuff();
 
+	void HandleDeBuff(const FDeBuffInfo& DeBuffInfo );
 	/// 对生命值在不同的值时进行一系列反应的处理     
 	/// @param TempValue 
 	/// @param TempHealth 
