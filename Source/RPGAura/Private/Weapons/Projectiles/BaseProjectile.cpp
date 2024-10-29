@@ -90,6 +90,7 @@ void ABaseProjectile::EnableHomingActorOnDestroyedEvent()
 
 void ABaseProjectile::HomingActorOnPreDestroyed(AActor* Actor)
 {
+	if(!GetProjectileMovementComponent()){return;}
 	GetProjectileMovementComponent()->bIsHomingProjectile = false;
 }
 
