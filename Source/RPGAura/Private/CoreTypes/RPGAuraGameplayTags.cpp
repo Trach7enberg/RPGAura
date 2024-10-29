@@ -127,8 +127,10 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 			GameplayTags.Abilities_DamageType_Arcane = UGameplayTagsManager::Get().AddNativeGameplayTag(
 				"Abilities.DamageType.Arcane", FString("奥术法术伤害"));
 
-			GameplayTags.Abilities_Effects_HitReact = UGameplayTagsManager::Get().AddNativeGameplayTag(
-				"Abilities.Effects.HitReact", FString("被击中时给予的标签"));
+			GameplayTags.Abilities_Effects_HitReact_Normal = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Effects.HitReact.Normal", FString("被击中时给予的标签"));
+			GameplayTags.Abilities_Effects_HitReact_InShock = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Effects.HitReact.InShock", FString(""));
 		}
 
 		// 蒙太奇事件标签
@@ -173,6 +175,21 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 				"Abilities.DeBuff.Arcane", FString(""));
 			GameplayTags.Abilities_DeBuff_Physical = UGameplayTagsManager::Get().AddNativeGameplayTag(
 				"Abilities.DeBuff.Physical", FString(""));
+		}
+
+		{
+			GameplayTags.Abilities_Vfx = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Vfx.DeBuff", FString(""));
+			GameplayTags.Abilities_VfxDeBuff_Burn = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Vfx.DeBuff.Burn", FString(""));
+			GameplayTags.Abilities_VfxDeBuff_Stun = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Vfx.DeBuff.Stun", FString(""));
+			GameplayTags.Abilities_VfxDeBuff_Arcane = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Vfx.DeBuff.Arcane", FString(""));
+			GameplayTags.Abilities_VfxDeBuff_Physical = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Vfx.DeBuff.Physical", FString(""));
+			GameplayTags.Abilities_Vfx_Misc_LevelUp = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Vfx.Misc.LevelUp", FString(""));
 		}
 
 		// DeBuff Effect
@@ -408,7 +425,7 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 		                             EGameplayTagNum::Abilities_Damage_Spell_Lightning);
 		GameplayTags.TagToNumMap.Add(GameplayTags.Abilities_DamageType_Arcane,
 		                             EGameplayTagNum::Abilities_Damage_Spell_Arcane);
-		GameplayTags.TagToNumMap.Add(GameplayTags.Abilities_Effects_HitReact,
+		GameplayTags.TagToNumMap.Add(GameplayTags.Abilities_Effects_HitReact_Normal,
 		                             EGameplayTagNum::Abilities_Effects_HitReact);
 
 		GameplayTags.TagToNumMap.Add(GameplayTags.CombatSocket_Normal,
@@ -417,6 +434,15 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 		                             EGameplayTagNum::Montage_Attack_LeftHand);
 		GameplayTags.TagToNumMap.Add(GameplayTags.CombatSocket_Normal,
 		                             EGameplayTagNum::Montage_Attack_RightHand);
+
+		GameplayTags.TagToNumMap.Add(GameplayTags.Abilities_DeBuff_Arcane,
+		                             EGameplayTagNum::Abilities_DeBuff_Arcane);
+		GameplayTags.TagToNumMap.Add(GameplayTags.Abilities_DeBuff_Burn,
+		                             EGameplayTagNum::Abilities_DeBuff_Burn);
+		GameplayTags.TagToNumMap.Add(GameplayTags.Abilities_DeBuff_Physical,
+		                             EGameplayTagNum::Abilities_DeBuff_Physical);
+		GameplayTags.TagToNumMap.Add(GameplayTags.Abilities_DeBuff_Stun,
+		                             EGameplayTagNum::Abilities_DeBuff_Stun);
 	}
 
 	// 伤害类型到对应的抵抗类型映射

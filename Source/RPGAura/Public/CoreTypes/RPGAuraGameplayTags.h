@@ -8,7 +8,7 @@
 
 /// GAS的属性集里属性、InputAction 对应的游戏标签
 UENUM(BlueprintType)
-enum class EGameplayTagNum : uint8
+enum class EGameplayTagNum
 {
 	CurrentHealth,
 	CurrentMana,
@@ -54,7 +54,11 @@ enum class EGameplayTagNum : uint8
 	Montage_Attack_Normal,
 	Montage_Attack_LeftHand,
 	Montage_Attack_RightHand,
-	
+
+	Abilities_DeBuff_Burn,
+	Abilities_DeBuff_Stun,
+	Abilities_DeBuff_Arcane,
+	Abilities_DeBuff_Physical,
 };
 
 
@@ -136,12 +140,20 @@ struct FRPGAuraGameplayTags
 	FGameplayTag Abilities_Attack_Spell_Lightning_Electrocute;		// 雷电系法术下的触电技能
 	FGameplayTag Abilities_Attack_Spell_Arcane;						// TODO 奥术系
 
-	// 能力的负面效果
+	// 能力的负面效果 
 	FGameplayTag Abilities_DeBuff;
 	FGameplayTag Abilities_DeBuff_Burn;								// 火焰伤害附带的DeBuff
 	FGameplayTag Abilities_DeBuff_Stun;								// 闪电伤害附带的
 	FGameplayTag Abilities_DeBuff_Arcane;							// 奥术伤害附带的
 	FGameplayTag Abilities_DeBuff_Physical;							// 物理伤害附带
+
+	// 用于标识能力的特效 TODO 除了Misc其它的暂时未用到,直接用的DeBuff标签 
+	FGameplayTag Abilities_Vfx;
+	FGameplayTag Abilities_VfxDeBuff_Burn;								
+	FGameplayTag Abilities_VfxDeBuff_Stun;								
+	FGameplayTag Abilities_VfxDeBuff_Arcane;							
+	FGameplayTag Abilities_VfxDeBuff_Physical;
+	FGameplayTag Abilities_Vfx_Misc_LevelUp;						// 升级特效
 
 	// 负面效果的各种效果,主要用于GE的SetByCaller来调整相应的magnitude
 	FGameplayTag Abilities_DeBuff_Effects;
@@ -190,7 +202,8 @@ struct FRPGAuraGameplayTags
 
 
 	// 受击反应
-	FGameplayTag Abilities_Effects_HitReact;
+	FGameplayTag Abilities_Effects_HitReact_Normal;
+	FGameplayTag Abilities_Effects_HitReact_InShock;		// 被电击中时
 
 	/// 获取GameplayTags静态实例
 	/// @return GameplayTags单例
