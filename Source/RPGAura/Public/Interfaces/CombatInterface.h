@@ -47,12 +47,22 @@ public:
 	/// 获取受击蒙太奇动画
 	/// @return 受击蒙太奇动画
 	UFUNCTION(BlueprintCallable)
-	virtual UAnimMontage* GetHitReactAnim() =0;
+	virtual UAnimMontage* GetHitReactAnim() = 0;
 
+	/// 获取眩晕蒙太奇动画
+	/// @return 
+	UFUNCTION(BlueprintCallable)
+	virtual UAnimMontage* GetStunAnim() =0;
+
+	/// 获取被电击(持续电击)的蒙太奇动画
+	/// @return 
+	UFUNCTION(BlueprintCallable)
+	virtual UAnimMontage* GetInShockAnim() =0;
+	
 	///  获取死亡蒙太奇动画
 	/// @return 死亡蒙太奇动画
 	UFUNCTION(BlueprintCallable)
-	virtual UAnimMontage* GetDeathAnim() =0;
+	virtual UAnimMontage* GetDeathAnim() = 0;
 
 	UFUNCTION(BlueprintCallable)
 	virtual TArray<FMontageWithTag> GetAttackAnims() =0;
@@ -131,6 +141,16 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual bool GetCastShockAnimState() = 0;
 
+	/// 设置当前角色是否进入被电击状态
+	/// @param Enabled 
+	UFUNCTION(BlueprintCallable)
+	virtual void SetInShockHitState(const bool Enabled) = 0;
+
+	/// 获取当前角色是否进入被电击状态
+	/// @return 
+	UFUNCTION(BlueprintCallable)
+	virtual bool GetInShockHitState() = 0;
+	
 	/// 获取当前角色的武器,可能为nullptr
 	/// @return 
 	UFUNCTION(BlueprintCallable)
@@ -139,4 +159,8 @@ public:
 	/// 获取当前角色死亡时候(死亡动画开始前)的委托
 	/// @return
 	virtual FOnDeathSignature& GetPreOnDeathDelegate() = 0;
+
+	/// 获取当前角色处于被电击时会广播的委托
+	/// @return 
+	virtual FOnShockStateChangeSignature& GetOnShockStateChangeDelegate() = 0;
 };
