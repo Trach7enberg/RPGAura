@@ -45,7 +45,7 @@ public:
 
 	/// 获取所有的能力信息结构体
 	/// @return 
-	TArray<FTagToAbilityInfo> GetAllAbilityInfos();
+	const TArray<FTagToAbilityInfo>& GetAllAbilityInfos();
 private:
 	UPROPERTY()
 	TArray<FTagToAbilityInfo> AllAbilityInfos;

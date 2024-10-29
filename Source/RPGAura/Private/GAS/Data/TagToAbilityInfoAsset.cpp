@@ -10,7 +10,7 @@ DEFINE_LOG_CATEGORY_STATIC(UTagToAbilityInfoAssetLog, All, All);
 FTagToAbilityInfo UTagToAbilityInfoAsset::FindOffensiveAbilityInfo(const FGameplayTag& AbilityTag,
                                                                       const bool bLogNotFound) const
 {
-	for(int i = 0;AbilityTag.IsValid() && i<AbilityInfosOffensive.Num();++i)
+for(int i = 0;AbilityTag.IsValid() && i<AbilityInfosOffensive.Num();++i)
 	{
 		if (AbilityInfosOffensive[i].AbilityTag == AbilityTag) { return AbilityInfosOffensive[i]; }
 	}
@@ -49,7 +49,7 @@ FTagToAbilityInfo UTagToAbilityInfoAsset::FindAbilityInfo(const FGameplayTag& Ab
 	return FTagToAbilityInfo();
 }
 
-TArray<FTagToAbilityInfo> UTagToAbilityInfoAsset::GetAllAbilityInfos()
+const TArray<FTagToAbilityInfo>& UTagToAbilityInfoAsset::GetAllAbilityInfos()
 {
 	if(AllAbilityInfos.Num() == 0)
 	{
