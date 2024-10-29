@@ -6,16 +6,12 @@
 #include "AbilitySystemComponent.h"
 
 #include "CoreTypes/RPGAuraGasCoreTypes.h"
-#include "GameModes/RPGAuraGameModeBase.h"
 #include "GAS/Data/CharacterClassInfo.h"
 #include "GAS/Data/PickupMessageAsset.h"
 #include "GAS/Data/TagToAbilityInfoAsset.h"
 #include "GAS/Data/LevelUpInfoAsset.h"
-#include "Kismet/GameplayStatics.h"
 
 DEFINE_LOG_CATEGORY_STATIC(URPGAuraGameInstanceSubsystemLog, All, All);
-
-TObjectPtr<UTagToAbilityInfoAsset> URPGAuraGameInstanceSubsystem::AbilityInfoAsset;
 
 void URPGAuraGameInstanceSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -156,7 +152,14 @@ int32 URPGAuraGameInstanceSubsystem::GetCharacterDefaultMaxXP()
 	return LevelUpInfoAsset->LevelUpInfos[LevelUpInfoAsset->LevelUpInfos.Num() - 1].LeveRequirement;
 }
 
-UTagToAbilityInfoAsset* URPGAuraGameInstanceSubsystem::GetAbilityInfoAsset(const UObject* WorldContextObject)
+UTagToAbilityInfoAsset* URPGAuraGameInstanceSubsystem::GetAbilityInfoAsset()
 {
+	if(!AbilityInfoAsset.Get())
+	{
+		AbilityInfoAsset = LoadObject<UTagToAbilityInfoAsset>(
+		this,TEXT(
+			"/Script/RPGAura.TagToAbilityInfoAsset'/Game/Blueprints/GAS/Data/DataAssets/DA_TagToAbilityInfo.DA_TagToAbilityInfo'"));
+	}
 	return AbilityInfoAsset.Get();
+	
 }

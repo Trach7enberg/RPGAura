@@ -93,11 +93,11 @@ public:
 	int32 GetCharacterDefaultMaxXP();
 
 	/// 获取AbilityInfo数据资产,结果可能为nullptr
-	/// @param WorldContextObject 
 	/// @return 
-	static UTagToAbilityInfoAsset* GetAbilityInfoAsset(const UObject* WorldContextObject);
+	UTagToAbilityInfoAsset* GetAbilityInfoAsset( );
 
 protected:
 	// 技能信息资产,其中部分信息由GameMode设置
-	static TObjectPtr<UTagToAbilityInfoAsset> AbilityInfoAsset;
+	UPROPERTY()
+	TObjectPtr<UTagToAbilityInfoAsset> AbilityInfoAsset;
 };

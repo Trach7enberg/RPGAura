@@ -89,7 +89,7 @@ void UBaseAbilitySystemComponent::UpdateAbilityStatusWhenLevelUp(const int32 Lev
 {
 	if (Level < 1) { return; }
 
-	const auto AbilityInfo = URPGAuraGameInstanceSubsystem::GetAbilityInfoAsset(GetAvatarActor());
+	const auto AbilityInfo = (GetMyGiSystem()) ? GetMyGiSystem()->GetAbilityInfoAsset() : nullptr;
 	if (!AbilityInfo) { return; }
 
 	// 遍历能力信息数据资产,
@@ -165,12 +165,9 @@ void UBaseAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& Inp
 		{
 			// 通知能力系统,输入已经按下,该函数内部会调用虚函数InputPressed,如果你想在这里干别的事情,可以通过覆写虚函数InputPressed实现
 			AbilitySpecInputPressed(AbilitySpec);
-			if (!AbilitySpec.IsActive())
-			{
-				TryActivateAbility(AbilitySpec.Handle);
-			}
+			if (!AbilitySpec.IsActive()) { TryActivateAbility(AbilitySpec.Handle); }
 			InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputPressed, AbilitySpec.Handle,
-								  AbilitySpec.ActivationInfo.GetActivationPredictionKey());
+			                      AbilitySpec.ActivationInfo.GetActivationPredictionKey());
 		}
 	}
 }
@@ -199,7 +196,7 @@ void UBaseAbilitySystemComponent::AbilityInputTagHeld(const FGameplayTag& InputT
 void UBaseAbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& InputTag)
 {
 	if (!InputTag.IsValid()) { return; }
-	
+
 	// 获取可以激活的能力数组
 	for (auto& AbilitySpec : GetActivatableAbilities())
 	{
@@ -254,7 +251,7 @@ void UBaseAbilitySystemComponent::BroadCastDefaultActivatableAbilitiesInfo()
 
 	if (!GetMyGiSystem()) { return; }
 
-	const auto Infos = URPGAuraGameInstanceSubsystem::GetAbilityInfoAsset(GetOwner());
+	const auto Infos = (GetMyGiSystem()) ? GetMyGiSystem()->GetAbilityInfoAsset() : nullptr;
 	if (Infos == nullptr)
 	{
 		UE_LOG(UBaseAbilitySystemComponentLog, Error, TEXT("[%s]获取技能信息消息数据资产表失败"), *GetNameSafe(this));
@@ -286,7 +283,7 @@ void UBaseAbilitySystemComponent::BroadCastDefaultSpellButtonAbilitiesInfo()
 
 	if (!GetMyGiSystem()) { return; }
 
-	const auto Infos = URPGAuraGameInstanceSubsystem::GetAbilityInfoAsset(GetOwner());
+	const auto Infos = (GetMyGiSystem()) ? GetMyGiSystem()->GetAbilityInfoAsset() : nullptr;
 	if (Infos == nullptr)
 	{
 		UE_LOG(UBaseAbilitySystemComponentLog, Error, TEXT("[%s]获取技能信息消息数据资产表失败"), *GetNameSafe(this));
@@ -387,7 +384,7 @@ void UBaseAbilitySystemComponent::ServerEquipAbility_Implementation(const FGamep
 	const auto OldSpec = GetSpecFromInputTag(NewInputSlot);
 	FGameplayTag OldInputSlot = FGameplayTag();
 
-	auto NewAbilityInfo = URPGAuraGameInstanceSubsystem::GetAbilityInfoAsset(GetOwner())->
+	auto NewAbilityInfo = GetMyGiSystem()->GetAbilityInfoAsset()->
 		FindAbilityInfo(ToEquipAbilityTag);
 	NewAbilityInfo.InputTag = NewInputSlot;
 	NewAbilityInfo.StatusTag = FRPGAuraGameplayTags::Get().Abilities_Status_Equipped;
@@ -518,7 +515,7 @@ void UBaseAbilitySystemComponent::ClientEquipAbility_Implementation(const FTagTo
 	// 两个技能位交换时,需要给交换位置后的旧技能槽进行广播更新显示
 	if (OldSpec.Ability && bIsSwapAbilitySlot)
 	{
-		auto OldAbilityInfo = URPGAuraGameInstanceSubsystem::GetAbilityInfoAsset(GetOwner())->
+		auto OldAbilityInfo = GetMyGiSystem()->GetAbilityInfoAsset()->
 			FindAbilityInfo(GetTagFromAbilitySpec(OldSpec, FRPGAuraGameplayTags::Get().Abilities_Attack));
 		OldAbilityInfo.InputTag = OldInputSlot;
 		OldAbilityInfo.StatusTag = FRPGAuraGameplayTags::Get().Abilities_Status_Equipped;

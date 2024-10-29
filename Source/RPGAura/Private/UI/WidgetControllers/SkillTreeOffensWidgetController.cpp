@@ -13,8 +13,7 @@ void USkillTreeOffensWidgetController::BindCallBack()
 {
 	if (!IsWidgetControllerParamsValid()) { return; }
 
-	const auto AbilityInfos = URPGAuraGameInstanceSubsystem::GetAbilityInfoAsset(
-		GetWidgetControllerParams().CurrentPlayerController);
+	const auto AbilityInfos = GetWidgetControllerParams().GameInstanceSubsystem->GetAbilityInfoAsset();
 	if (!AbilityInfos) { return; }
 	
 	const auto MyAsc = Cast<UBaseAbilitySystemComponent>(GetWidgetControllerParams().CurrentAbilitySystemComponent);
