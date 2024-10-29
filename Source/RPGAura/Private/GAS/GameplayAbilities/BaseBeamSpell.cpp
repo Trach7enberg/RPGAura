@@ -3,6 +3,8 @@
 
 #include "GAS/GameplayAbilities/BaseBeamSpell.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemComponent.h"
 #include "GameplayCueFunctionLibrary.h"
 #include "CoreTypes/RPGAuraGameplayTags.h"
 #include "FunctionLibrary/RPGAuraBlueprintFunctionLibrary.h"
@@ -28,13 +30,14 @@ void UBaseBeamSpell::TracingTarget(const FVector TracingStartPoint,
 		                                                                ? EDrawDebugTrace::ForDuration
 		                                                                : EDrawDebugTrace::None,
 	                                                                HitsResults, true);
-
 	if (BlockingHit && HitsResults.Num())
 	{
 		// 获取第一个击中的Actor
 		CursorImpactPoint = HitsResults.Last().ImpactPoint;
 		FirstTraceDetectedActor = HitsResults[0].GetActor();
 		BeamEndLoc = CursorImpactPoint;
+		// 如果第一个被击中的Actor实现了战斗接口 ,则CueTarget是这个Actor
+		CueTargetActor = FirstTraceDetectedActor;
 
 		// 从第一个Actor开始,按照给定半径检测附近实现了combat接口并且存活的角色
 		OverlapActors.Reset();
@@ -53,11 +56,27 @@ void UBaseBeamSpell::TracingTarget(const FVector TracingStartPoint,
 				                                 TEXT("[Limited -> %d]OverlapActors: %d"), ChainReactionNum,
 				                                 OverlapActors.Num()));
 		}
-		if (!CanApplyGE() || !OverlapActors.Num()) { return; }
-		const auto CombInterF = Cast<ICombatInterface>(FirstTraceDetectedActor);
+
+		if (!CanApplyGE() || !OverlapActors.Num())
+		{
+			// 否则CueTarget是我们的化身
+			CueTargetActor = GetAvatarActorFromActorInfo();
+			return;
+		}
+		const auto CombInterF = Cast<ICombatInterface>(GetStartCueTarget());
 		if (!CombInterF->GetPreOnDeathDelegate().IsAlreadyBound(this, &UBaseBeamSpell::StartTargetPreOnDeath))
 		{
 			CombInterF->GetPreOnDeathDelegate().AddDynamic(this, &UBaseBeamSpell::StartTargetPreOnDeath);
+		}
+
+		// 设置被射线击中的起始角色进入Shock状态
+		CombInterF->SetInShockHitState(true);
+		if (const auto StartSufferAsc = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetStartCueTarget()))
+		{
+			// 给被射线击中的第一个角色启用被电击的动画
+			StartSufferAsc->TryActivateAbilitiesByTag(FGameplayTagContainer{
+				FRPGAuraGameplayTags::Get().Abilities_Effects_HitReact_InShock
+			});
 		}
 
 		// 按照离当前玩家最近的位置开始进行排序 (这样MST最终的射线结果就会是从距离最短到最大依次有序)
@@ -96,17 +115,7 @@ FGameplayCueParameters UBaseBeamSpell::MakeBeamGameplayCueParameters(AActor* Sou
 	return Parameters;
 }
 
-AActor* UBaseBeamSpell::GetStartCueTarget()
-{
-	// 如果第一个被击中的Actor实现了战斗接口 ,则CueTarget是这个Actor
-	if (CanApplyGE()) { CueTargetActor = FirstTraceDetectedActor; }
-	else
-	// 否则是我们的化身
-	{
-		CueTargetActor = GetAvatarActorFromActorInfo();
-	}
-	return CueTargetActor.Get();
-}
+AActor* UBaseBeamSpell::GetStartCueTarget() { return CueTargetActor.Get(); }
 
 
 void UBaseBeamSpell::FindBeamChain(TArray<FCloseEdge>& CloseEdges,
@@ -226,14 +235,22 @@ void UBaseBeamSpell::StartBeamChainReactionCue(TMap<AActor*, FGameplayCueParamet
 	if (!CanEnableBeamChainReaction()) { return; }
 	for (auto& Pair : ActorToGcParam)
 	{
+		UGameplayCueFunctionLibrary::AddGameplayCueOnActor(Pair.Key, GameplayCueTag, Pair.Value);
+		if (const auto SufferAsc = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pair.Key))
+		{
+			// 启用受害者被电击的动画
+			SufferAsc->TryActivateAbilitiesByTag(FGameplayTagContainer{
+				FRPGAuraGameplayTags::Get().Abilities_Effects_HitReact_InShock
+			});
+		}
+
 		const auto ComInt = Cast<ICombatInterface>(Pair.Key);
 		if (!ComInt) { continue; }
-		UGameplayCueFunctionLibrary::AddGameplayCueOnActor(Pair.Key, GameplayCueTag, Pair.Value);
-
 		// TODO 绑定目标死亡回调 
 		if (ComInt->GetPreOnDeathDelegate().IsAlreadyBound(this, &UBaseBeamSpell::ChainTargetPreOnDeath)) { continue; }
 
 		ComInt->GetPreOnDeathDelegate().AddDynamic(this, &UBaseBeamSpell::ChainTargetPreOnDeath);
+		ComInt->SetInShockHitState(true);
 	}
 }
 
@@ -243,6 +260,9 @@ void UBaseBeamSpell::RemoveBeamChainReactionCue(TMap<AActor*, FGameplayCueParame
 	for (auto& Pair : ActorToGcParam)
 	{
 		UGameplayCueFunctionLibrary::RemoveGameplayCueOnActor(Pair.Key, GameplayCueTag, Pair.Value);
+		const auto ComInt = Cast<ICombatInterface>(Pair.Key);
+		if (!ComInt) { continue; }
+		ComInt->SetInShockHitState(false);
 	}
 
 	ActorToGcParam.Reset();
@@ -256,6 +276,8 @@ void UBaseBeamSpell::RemoveAllBeamCue(const FGameplayTag StartCueTag, const FGam
 		UGameplayCueFunctionLibrary::RemoveGameplayCueOnActor(GetStartCueTarget(), StartCueTag,
 		                                                      StartBeamGameplayCueParam);
 	}
+
+	if (const auto CombatI = Cast<ICombatInterface>(GetStartCueTarget())) { CombatI->SetInShockHitState(false); }
 	RemoveBeamChainReactionCue(ActorToGamePlayCueParam, GameplayCueTag);
 	bIsDeBuffSet = false;
 }

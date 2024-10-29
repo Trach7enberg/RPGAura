@@ -188,4 +188,5 @@ private:
 	/// @param bDebug
 	void FindBeamChain(TArray<FCloseEdge>& CloseEdges, int StartPos,
 	                   bool bDebug = false) const;
+
 };
