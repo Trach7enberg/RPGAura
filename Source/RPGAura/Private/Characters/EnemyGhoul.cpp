@@ -10,7 +10,6 @@
 
 AEnemyGhoul::AEnemyGhoul()
 {
-	ImpulseFactorMesh /= 2;
 	MaxWalkingSpeed = 125.0;
 	AttackSocketName_LeftHand = "LeftHandAttackSocket";
 	AttackSocketName_RightHand = "RightHandAttackSocket";
