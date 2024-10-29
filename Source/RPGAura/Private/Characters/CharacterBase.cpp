@@ -29,7 +29,6 @@ ACharacterBase::ACharacterBase()
 
 	CharacterLevel = 1;
 	SelfLifeSpan = 0.1f;
-	BIsHitReacting = false;
 	MaxWalkingSpeed = 600.f;
 	bIsDie = false;
 	CurrentSummonsCount = 0;
@@ -52,11 +51,12 @@ void ACharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
 	check(WeaponLogicBaseComponent);
-	WeaponLogicBaseComponent->AttachWeaponToSocket(this,WeaponLogicBaseComponent->GetWeaponAttachSocketName());
+	WeaponLogicBaseComponent->AttachWeaponToSocket(this, WeaponLogicBaseComponent->GetWeaponAttachSocketName());
 	GetCharacterMovement()->MaxWalkSpeed = MaxWalkingSpeed;
 
 	InitDissolveTimeLine();
 	InitSummonTimeLine();
+	LocalDefaultRootMotionMode = GetMesh()->AnimScriptInstance.Get()->RootMotionMode;
 }
 
 void ACharacterBase::AddCharacterAbilities()
@@ -118,10 +118,7 @@ void ACharacterBase::InitAllAttributes(bool BIsPlayer)
 	                                         BIsPlayer);
 }
 
-void ACharacterBase::InitAbilityActorInfo()
-{
-	
-}
+void ACharacterBase::InitAbilityActorInfo() {}
 
 void ACharacterBase::RegisterGameplayTagEvent()
 {
@@ -132,12 +129,16 @@ void ACharacterBase::RegisterGameplayTagEvent()
 	}
 	// 绑定(注册)当ASC被授予Effects_HitReact标签或者(被完全)移除标签时触发的Event
 	// ( EGameplayTagEventType::AnyCountChange 意味着任何改变都会触发,如果有多个相同的标签只移除一个也会被触发)
-	GetAbilitySystemComponent()->RegisterGameplayTagEvent(FRPGAuraGameplayTags::Get().Abilities_Effects_HitReact).
-	                             AddUObject(
-		                             this, &ACharacterBase::OnGrantedTag_HitReact);
+	GetAbilitySystemComponent()->RegisterGameplayTagEvent(FRPGAuraGameplayTags::Get().Abilities_Effects_HitReact_Normal)
+	                           .
+	                           AddUObject(
+		                           this, &ACharacterBase::OnGrantedTag_HitReact);
 
-	GetAbilitySystemComponent()->RegisterGameplayTagEvent(FRPGAuraGameplayTags::Get().Abilities_DeBuff).AddUObject(
-		this, &ACharacterBase::OnGrantedTag_DeBuff);
+	GetAbilitySystemComponent()->RegisterGameplayTagEvent(FRPGAuraGameplayTags::Get().Abilities_DeBuff_Burn).AddUObject(
+		this, &ACharacterBase::OnGrantedTag_DeBuffBurn);
+
+	GetAbilitySystemComponent()->RegisterGameplayTagEvent(FRPGAuraGameplayTags::Get().Abilities_DeBuff_Stun).AddUObject(
+		this, &ACharacterBase::OnGrantedTag_DeBuffStun);
 }
 
 ABasePlayerState* ACharacterBase::GetMyPlayerState()
@@ -164,8 +165,7 @@ URPGAuraGameInstanceSubsystem* ACharacterBase::GetMyGiSubSystem()
 
 void ACharacterBase::MulticastStopVfx_Implementation()
 {
-	if (!NiagaraComponent) { return; }
-	NiagaraComponent->Deactivate();
+	for (const auto& Pair : VfxComponentPool) { Pair.Value->DeactivateImmediate(); }
 }
 
 bool ACharacterBase::CanHighLight()
@@ -186,19 +186,40 @@ void ACharacterBase::ShowDeBuffVfx(const FGameplayTag DeBuffType)
 	{
 		UE_LOG(ACharacterBaseLog, Error, TEXT("[DeBuffVfx]: %s"), *DeBuffType.GetTagName().ToString());
 		// DeBuff特效是持续性的,不是一次性并且坐标是相对的不是世界系
-		MulticastVfx(Vfx->Get(), {FRotator{}, FVector{}, FVector(DeBuffVfxScale)});
+		MulticastVfx(DeBuffType, Vfx->Get(), {FRotator{}, FVector{}, FVector(DeBuffVfxScale)},
+		             EAttachLocation::KeepRelativeOffset);
 	}
 }
 
 void ACharacterBase::AddKnockBack(const FVector& Direction)
 {
+	if (!LandedDelegate.IsAlreadyBound(this, &ACharacterBase::OnKnockBackFinished))
+	{
+		LandedDelegate.AddDynamic(this, &ACharacterBase::OnKnockBackFinished);
+	}
 	GetMesh()->AnimScriptInstance.Get()->RootMotionMode = ERootMotionMode::Type::NoRootMotionExtraction;
 	GetMovementComponent()->StopMovementImmediately();
 	LaunchCharacter(FVector((Direction.X), (Direction.Y), 300), true, true);
 }
 
+void ACharacterBase::OnKnockBackFinished(const FHitResult& Hit)
+{
+	if (!GetMesh() || !GetMesh()->AnimScriptInstance.Get()) { return; }
+	if (GetMesh()->AnimScriptInstance.Get()->RootMotionMode == ERootMotionMode::Type::NoRootMotionExtraction)
+	{
+		UE_LOG(ACharacterBaseLog, Error, TEXT("击退结束"));
+		GetMesh()->AnimScriptInstance.Get()->RootMotionMode = LocalDefaultRootMotionMode;
+	}
+}
+
 void ACharacterBase::SetCastShockAnimState(const bool Enabled) {}
 bool ACharacterBase::GetCastShockAnimState() { return false; }
+bool ACharacterBase::GetInShockHitState() { return BIsInShockHitReact; }
+void ACharacterBase::SetInShockHitState(const bool Enabled)
+{
+	BIsInShockHitReact = Enabled;
+	OnShockStateChangeSignature.Broadcast(BIsInShockHitReact);
+}
 
 USkeletalMeshComponent* ACharacterBase::GetWeaponMesh()
 {
@@ -206,9 +227,10 @@ USkeletalMeshComponent* ACharacterBase::GetWeaponMesh()
 	return WeaponLogicBaseComponent->GetWeaponMesh();
 }
 
-FOnDeathSignature& ACharacterBase::GetPreOnDeathDelegate()
+FOnDeathSignature& ACharacterBase::GetPreOnDeathDelegate() { return OnDeathSignature; }
+FOnShockStateChangeSignature& ACharacterBase::GetOnShockStateChangeDelegate()
 {
-	return OnDeathSignature;
+	return OnShockStateChangeSignature;
 }
 
 ECharacterClass ACharacterBase::GetCharacterClass() { return CharacterClass; }
@@ -243,6 +265,8 @@ void ACharacterBase::UpdateCharacterFacingTarget(const FVector& TargetLoc)
 }
 
 UAnimMontage* ACharacterBase::GetHitReactAnim() { return HitReactAnimMontage.Get(); }
+UAnimMontage* ACharacterBase::GetStunAnim() { return StunAnimMontage.Get(); }
+UAnimMontage* ACharacterBase::GetInShockAnim() { return HitReactLoopAnimMontage.Get(); }
 UAnimMontage* ACharacterBase::GetDeathAnim() { return DeathAnimMontage; }
 TArray<FMontageWithTag> ACharacterBase::GetAttackAnims() { return AttackMontageWithTagArray; }
 UAnimMontage* ACharacterBase::GetSummonAnim() { return SummonAnimMontage; }
@@ -278,54 +302,37 @@ void ACharacterBase::UnHighLight()
 void ACharacterBase::Destroyed()
 {
 	// 销毁武器,再销毁角色
-	UE_LOG(ACharacterBaseLog, Warning, TEXT("角色销毁"));
-	WeaponLogicBaseComponent->DestroyComponent(true);
+	// UE_LOG(ACharacterBaseLog, Warning, TEXT("角色销毁"));
+	// WeaponLogicBaseComponent->DestroyComponent(true);
 	Super::Destroyed();
 }
 
 void ACharacterBase::LifeSpanExpired()
 {
 	// 销毁武器,再销毁角色
-	UE_LOG(ACharacterBaseLog, Warning, TEXT("角色销毁"));
+	UE_LOG(ACharacterBaseLog, Warning, TEXT("角色销毁LifeSpanExpired"));
 	WeaponLogicBaseComponent->DestroyComponent(true);
 	Super::LifeSpanExpired();
 }
 
-void ACharacterBase::MulticastVfx_Implementation(UNiagaraSystem* Vfx, const FTransform VfxTransform,
+void ACharacterBase::MulticastVfx_Implementation(const FGameplayTag& VfxTag, UNiagaraSystem* Vfx,
+                                                 const FTransform VfxTransform,
                                                  const EAttachLocation::Type LocationType, const bool SingleUse)
 {
 	if (!Vfx || !NiagaraComponent) { return; }
 
-	if (NiagaraComponent->IsActive() && SingleUse)
+	auto NiagaraComp = VfxComponentPool.Find(VfxTag);
+	if (!NiagaraComp)
 	{
-		UNiagaraFunctionLibrary::SpawnSystemAttached(Vfx, GetRootComponent(), NAME_None, VfxTransform.GetLocation(),
-		                                             VfxTransform.Rotator(), LocationType,
-		                                             true);
-		return;
+		auto LocalNiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAttached(
+			Vfx, GetRootComponent(), NAME_None, VfxTransform.GetLocation(),
+			VfxTransform.Rotator(), LocationType,
+			SingleUse, SingleUse);
+		NiagaraComp = &LocalNiagaraComp;
+		VfxComponentPool.Add(VfxTag, *NiagaraComp);
 	}
 
-	auto AttachmentTransformRules = FAttachmentTransformRules::KeepRelativeTransform;
-	switch (LocationType)
-	{
-	case EAttachLocation::KeepRelativeOffset:
-		NiagaraComponent->SetRelativeTransform(VfxTransform);
-		break;
-	case EAttachLocation::KeepWorldPosition:
-		NiagaraComponent->SetWorldTransform(VfxTransform);
-		AttachmentTransformRules = FAttachmentTransformRules::KeepWorldTransform;
-		break;
-	case EAttachLocation::SnapToTarget:
-		AttachmentTransformRules = FAttachmentTransformRules::SnapToTargetNotIncludingScale;
-		break;
-	case EAttachLocation::SnapToTargetIncludingScale:
-		AttachmentTransformRules = FAttachmentTransformRules::SnapToTargetIncludingScale;
-		break;
-	default: return;
-	}
-
-	NiagaraComponent->AttachToComponent(GetRootComponent(), AttachmentTransformRules);
-	NiagaraComponent.Get()->SetAsset(Vfx);
-	NiagaraComponent.Get()->Activate();
+	if (NiagaraComp && (*NiagaraComp)) { (*NiagaraComp)->Activate(); }
 }
 
 FORCEINLINE UAbilitySystemComponent* ACharacterBase::GetAbilitySystemComponent() const
@@ -336,28 +343,43 @@ FORCEINLINE UAbilitySystemComponent* ACharacterBase::GetAbilitySystemComponent()
 
 void ACharacterBase::OnGrantedTag_HitReact(const FGameplayTag Tag, int32 NewTagCount)
 {
-	BIsHitReacting = NewTagCount > 0;
-
-	// 触发回调函数时,NewTagCount不大于0意味着当前标签正在移除,所以继续行走 否则停止走动
-	// TODO 减速应该只持续一段时间,然后恢复速度 或者把减速作为技能的升级副作用
-	GetCharacterMovement()->MaxWalkSpeed = BIsHitReacting ? MaxWalkingSpeed / 2.f : MaxWalkingSpeed;
-
 	GEngine->AddOnScreenDebugMessage(1, 2, FColor::Red,
 	                                 FString::Printf(
 		                                 TEXT("TagName: [%s] , NewTagCount: [%d]"), *Tag.ToString(), NewTagCount));
 }
 
-void ACharacterBase::OnGrantedTag_DeBuff(const FGameplayTag Tag, int32 NewTagCount)
+void ACharacterBase::OnGrantedTag_DeBuffBurn(const FGameplayTag Tag, int32 NewTagCount)
 {
 	const auto DeBuffing = NewTagCount > 0;
 
+	// TODO 待封装为停止函数  
 	if (!DeBuffing)
 	{
+		const auto TmpVfxComp = VfxComponentPool.Find(Tag);
+		if (TmpVfxComp) { (*TmpVfxComp)->DeactivateImmediate(); }
 		// TODO 需要判断是DeBuff特效,然后再停用DeBuff特效? 
-		MulticastStopVfx();
+		// MulticastStopVfx();
 	}
 	UE_LOG(ACharacterBaseLog, Error, TEXT("获得DeBuff!,Actor: [%s] , DeBuff: [%s] , NewTagCount: [%d]"),
 	       *GetNameSafe(this), *Tag.ToString(), NewTagCount);
+}
+
+void ACharacterBase::OnGrantedTag_DeBuffStun(const FGameplayTag Tag, int32 NewTagCount)
+{
+	const auto Stunning = NewTagCount > 0;
+	const auto LocalWalkingSpeed = (Stunning) ? 0.f : MaxWalkingSpeed;
+	GetCharacterMovement()->MaxWalkSpeed = LocalWalkingSpeed;
+	// 避免眩晕期间角色输入,让角色进行转向
+	GetCharacterMovement()->bOrientRotationToMovement = !Stunning;
+
+	if (!Stunning)
+	{
+		const auto TmpVfxComp = VfxComponentPool.Find(Tag);
+		if (TmpVfxComp) { (*TmpVfxComp)->DeactivateImmediate(); }
+		// TODO 需要判断是DeBuff特效,然后再停用DeBuff特效? 
+		// MulticastStopVfx();
+	}
+	UE_LOG(LogTemp, Error, TEXT("获得DeBuff![%s] -> 数量[%d]"), *Tag.ToString(), NewTagCount);
 }
 
 void ACharacterBase::SetDissolveMaterial()
@@ -457,10 +479,7 @@ void ACharacterBase::StartSummonTimeline() const
 void ACharacterBase::SummonTimelineUpdateFunc(float Output) { GetMesh()->SetRelativeScale3D(FVector(Output)); }
 void ACharacterBase::SummonTimelineFinishedFunc() {}
 
-void ACharacterBase::Die()
-{
-	MulticastHandleDeath();
-}
+void ACharacterBase::Die() { MulticastHandleDeath(); }
 
 bool ACharacterBase::IsCharacterDie() { return bIsDie; }
 
@@ -477,10 +496,12 @@ void ACharacterBase::ShowDamageNumber_Implementation(const float Damage, bool bB
 	DamageTextComponent->RegisterComponent();
 	DamageTextComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	DamageTextComponent->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+	DamageTextComponent->SetRelativeLocation(FVector(FMath::RandRange(10, 50), FMath::RandRange(10, 50),
+	                                                 FMath::RandRange(10, 50)));
 	// Detach之后就会在原地
 	// DamageText->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
 	const FText DamageStr = FText::FromString(FString::Printf(TEXT("%.3f"), Damage));
-
+	// TODO 伤害消息待设置为蓝图可配置,并且文字要支持本地化  
 	FText HitMessageText = FText();
 	if (bCriticalHit && bBlockedHit)
 	{
@@ -512,7 +533,7 @@ void ACharacterBase::MulticastHandleDeath_Implementation()
 	bIsDie = true;
 	OnDeathSignature.Broadcast(this);
 	WeaponLogicBaseComponent->DetachWeapon();
-	
+
 	// TODO 已在多播函数内,待决定是否需要使用多播进行停止 
 	MulticastStopVfx();
 	// 启用布娃娃
@@ -537,13 +558,6 @@ void ACharacterBase::MulticastHandleDeath_Implementation()
 void ACharacterBase::AddDeathImpulse_Implementation(const FVector& Impulse)
 {
 	if (!bIsDie) { return; }
-	UE_LOG(ACharacterBaseLog, Error, TEXT("%d"), ImpulseFactorMesh);
-	if (GetMesh())
-	{
-		GetMesh()->AddImpulse(Impulse * ImpulseFactorMesh, NAME_None, true);
-	}
-	if (WeaponLogicBaseComponent)
-	{
-		WeaponLogicBaseComponent->AddWeaponImpulse(Impulse * ImpulseFactorWeaponMesh, NAME_None, true);
-	}
+	if (GetMesh()) { GetMesh()->AddImpulse(Impulse, NAME_None, true); }
+	if (WeaponLogicBaseComponent) { WeaponLogicBaseComponent->AddWeaponImpulse(Impulse, NAME_None, true); }
 }

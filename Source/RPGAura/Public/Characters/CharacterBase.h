@@ -52,12 +52,15 @@ public:
 
 	// ~ ICombatInterface
 	FOnDeathSignature OnDeathSignature;
+ 	FOnShockStateChangeSignature OnShockStateChangeSignature;
 	virtual int32 GetCharacterLevel() override { return 0; };
 	virtual ECharacterClass GetCharacterClass() override;
 
 	virtual FVector GetCombatSocketLocation(const FGameplayTag& GameplayTag) override;
 	virtual void UpdateCharacterFacingTarget(const FVector& TargetLoc) override;
 	virtual UAnimMontage* GetHitReactAnim() override;
+	virtual UAnimMontage* GetStunAnim() override;
+	virtual UAnimMontage* GetInShockAnim() override;
 	virtual UAnimMontage* GetDeathAnim() override;
 	virtual TArray<FMontageWithTag> GetAttackAnims() override;
 	virtual UAnimMontage* GetSummonAnim() override;
@@ -84,8 +87,11 @@ public:
 	virtual void AddKnockBack(const FVector& Direction) override;
 	virtual void SetCastShockAnimState(const bool Enabled) override;
 	virtual bool GetCastShockAnimState() override;
+	virtual bool GetInShockHitState() override;
+	virtual void SetInShockHitState(const bool Enabled) override;
 	virtual USkeletalMeshComponent* GetWeaponMesh() override;
 	virtual FOnDeathSignature& GetPreOnDeathDelegate() override;
+	virtual FOnShockStateChangeSignature& GetOnShockStateChangeDelegate() override;
 	// ~ ICombatInterface
 
 	virtual void Destroyed() override;
@@ -93,14 +99,10 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-
+	
 	// 当前角色的lifeSpan
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
 	float SelfLifeSpan;
-
-	/// 当前角色是否在进行被击中逻辑
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
-	bool BIsHitReacting;
 
 	/// 当前角色的最大移动速度
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
@@ -117,14 +119,6 @@ protected:
 	// 当前角色能拥有召唤物的最大数量
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
 	int32 MaxSummonsCount;
-
-	/// 角色添加冲击时,Mesh的冲击系数
-	UPROPERTY()
-	int32 ImpulseFactorMesh = 6000;
-
-	/// 角色添加冲击时,武器Mesh的冲击系数
-	UPROPERTY()
-	int32 ImpulseFactorWeaponMesh = ImpulseFactorMesh / 5;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
 	FName AttackSocketName_BodyTip = "TipSocket";
@@ -167,9 +161,21 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UAttributeSet> AttributeSet;
 
+	// 当前角色是否在被电击
+	UPROPERTY()
+	bool BIsInShockHitReact = false;
+
 	// 角色的受击动画
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Combat")
 	TObjectPtr<UAnimMontage> HitReactAnimMontage;
+
+	// 角色的受击(被电击)循环动画
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Combat")
+	TObjectPtr<UAnimMontage> HitReactLoopAnimMontage;
+
+	// 角色眩晕动画
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Combat")
+	TObjectPtr<UAnimMontage> StunAnimMontage;
 
 	// 角色的死亡动画
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Combat")
@@ -219,7 +225,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Combat")
 	TObjectPtr<UTimelineComponent> SummonTimelineComponent;
 
-
+	/// 管理同时生成多个特效的特效池
+	UPROPERTY()
+	TMap<FGameplayTag, UNiagaraComponent*> VfxComponentPool;
 	/// 给角色授予能力
 	void AddCharacterAbilities();
 
@@ -253,20 +261,23 @@ protected:
 	/// 多播RPC,服务器和客户端都会调用,用于处理角色死亡
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void MulticastHandleDeath();
-	
-	/// 多播RPC,用于处理服务器和客户端的特效,当同时播放多个特效时可以使用单次使用选项
-	/// @param Vfx
-	/// @param VfxTransform
-	/// @param LocationType
+
+	/// 
+	/// @param VfxTag 
+	/// @param Vfx 
+	/// @param VfxTransform 
+	/// @param LocationType 
 	/// @param SingleUse 
 	UFUNCTION(NetMulticast, Reliable)
-	virtual void MulticastVfx(UNiagaraSystem* Vfx, FTransform VfxTransform,
-							  EAttachLocation::Type LocationType = EAttachLocation::Type::KeepRelativeOffset,
-							  bool SingleUse = false);
+	virtual void MulticastVfx(const FGameplayTag& VfxTag, UNiagaraSystem* Vfx,
+	                          FTransform VfxTransform = FTransform{},
+	                          EAttachLocation::Type LocationType = EAttachLocation::Type::KeepRelativeOffset,
+	                          const bool SingleUse = false);
 
 	/// 多播进行停止特效的播放
-	UFUNCTION(NetMulticast,Reliable)
+	UFUNCTION(NetMulticast, Reliable)
 	virtual void MulticastStopVfx();
+
 private:
 	/// 当前角色是否死亡
 	bool bIsDie;
@@ -276,6 +287,9 @@ private:
 
 	// 当前角色能拥有召唤物的数量
 	int32 CurrentSummonsCount;
+
+	UPROPERTY()
+	TEnumAsByte<ERootMotionMode::Type> LocalDefaultRootMotionMode{};
 
 	UPROPERTY()
 	TObjectPtr<ABasePlayerState> BasePlayerState;
@@ -305,7 +319,10 @@ private:
 	/// @param Tag 
 	/// @param NewTagCount 
 	UFUNCTION()
-	virtual void OnGrantedTag_DeBuff(const FGameplayTag Tag, int32 NewTagCount);
+	virtual void OnGrantedTag_DeBuffBurn(const FGameplayTag Tag, int32 NewTagCount);
+
+	UFUNCTION()
+	virtual void OnGrantedTag_DeBuffStun(const FGameplayTag Tag, int32 NewTagCount);
 
 	/*----------------
 		溶解时间线
@@ -353,5 +370,7 @@ private:
 	// 召唤时间线完成时调用的函数
 	UFUNCTION()
 	void SummonTimelineFinishedFunc();
-	
+
+	UFUNCTION()
+	void OnKnockBackFinished(const FHitResult& Hit);
 };
