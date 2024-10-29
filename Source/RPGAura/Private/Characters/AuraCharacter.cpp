@@ -159,8 +159,9 @@ void AAuraCharacter::LevelUp()
 	MyAsc->UpdateAbilityStatusWhenLevelUp(GetCharacterLevel());
 
 	// 升级特效的位置是世界位置
-	MulticastVfx(LevelUpEffect, FTransform{FRotator(90, 0, 180), GetActorLocation()},
-	             EAttachLocation::Type::KeepWorldPosition, true);
+	MulticastVfx(FRPGAuraGameplayTags::Get().Abilities_Vfx_Misc_LevelUp, LevelUpEffect,
+	                                  FTransform{FRotator(90, 0, 180), GetActorLocation()},
+	                                  EAttachLocation::Type::KeepWorldPosition, true);
 }
 
 int32 AAuraCharacter::GetAttributePointsReward(const int32 InCharacterLevel)
