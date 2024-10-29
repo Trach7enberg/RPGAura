@@ -59,7 +59,6 @@ protected:
 	/// 当前角色的攻击目标
 	UPROPERTY()
 	TWeakObjectPtr<AActor> CombatTarget = nullptr;
-	
 
 private:
 	// ~ IHighLightInterface Begin
@@ -71,6 +70,8 @@ private:
 	void EndMouseOver(AActor* TouchedActor);
 	// ~IHighLightInterface End
 	
+	virtual void OnGrantedTag_DeBuffStun(const FGameplayTag Tag, int32 NewTagCount) override;
+
 	UPROPERTY()
 	TObjectPtr<ABaseAIController> CurrentAiController;
 };

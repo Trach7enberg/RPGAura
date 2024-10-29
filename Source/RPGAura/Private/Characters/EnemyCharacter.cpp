@@ -3,6 +3,7 @@
 
 #include "Characters/EnemyCharacter.h"
 
+#include "NiagaraComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -155,11 +156,12 @@ void AEnemyCharacter::UnHighLightActor()
 
 void AEnemyCharacter::Die()
 {
-	if(CurrentAiController) { CurrentAiController->GetBlackboardComponent()->SetValueAsBool("IsDead", true); }
+	if (CurrentAiController) { CurrentAiController->GetBlackboardComponent()->SetValueAsBool("IsDead", true); }
 	Super::Die();
 }
+
 AActor* AEnemyCharacter::GetCombatTarget() { return CombatTarget.Get(); }
-void AEnemyCharacter::SetCombatTarget(AActor* NewCombatTarget){CombatTarget = NewCombatTarget;}
+void AEnemyCharacter::SetCombatTarget(AActor* NewCombatTarget) { CombatTarget = NewCombatTarget; }
 
 void AEnemyCharacter::PossessedBy(AController* NewController)
 {
@@ -183,6 +185,26 @@ void AEnemyCharacter::PossessedBy(AController* NewController)
 void AEnemyCharacter::OnMouseOver(AActor* TouchedActor) { Super::HighLight(); }
 
 void AEnemyCharacter::EndMouseOver(AActor* TouchedActor) { Super::UnHighLight(); }
+
+void AEnemyCharacter::OnGrantedTag_DeBuffStun(const FGameplayTag Tag, int32 NewTagCount)
+{
+	const auto Stunning = NewTagCount > 0;
+	const auto LocalWalkingSpeed = (Stunning) ? 0.f : MaxWalkingSpeed;
+	GetCharacterMovement()->MaxWalkSpeed = LocalWalkingSpeed;
+
+	// TODO 待封装为停止函数 
+	if (!Stunning)
+	{
+		const auto TmpVfxComp = VfxComponentPool.Find(Tag);
+		if (TmpVfxComp) { (*TmpVfxComp)->Deactivate(); }
+		// TODO 需要判断是DeBuff特效,然后再停用DeBuff特效? 
+	}
+	
+	if (CurrentAiController && CurrentAiController->GetBlackboardComponent())
+	{
+		CurrentAiController->GetBlackboardComponent()->SetValueAsBool("IsStun", Stunning);
+	}
+}
 
 
 void AEnemyCharacter::BroadCastHealthBarInit() const
