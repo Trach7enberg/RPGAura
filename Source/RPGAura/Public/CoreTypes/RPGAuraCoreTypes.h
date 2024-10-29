@@ -204,6 +204,8 @@ struct FMontageWithTag
 
 /// 角色死亡的委托(死亡动画之前)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDeathSignature, AActor*, DeadActor);
+/// 角色设置被电击状态时广播的委托
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnShockStateChangeSignature, bool, BIsShocked);
 
 
 /*--------------------------------
