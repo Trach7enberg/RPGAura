@@ -93,7 +93,7 @@ void UBaseAbilitySystemComponent::UpdateAbilityStatusWhenLevelUp(const int32 Lev
 	if (!AbilityInfo) { return; }
 
 	// 遍历能力信息数据资产,
-	for (const auto& Info : AbilityInfo->AbilityInfosOffensive)
+	for (const auto& Info : AbilityInfo->GetAllAbilityInfos())
 	{
 		if (Level < Info.LevelRequirement || !Info.AbilityTag.IsValid()) { continue; }
 
@@ -146,7 +146,7 @@ void UBaseAbilitySystemComponent::AddCharacterDefaultAbility(const TSubclassOf<U
 			return;
 		}
 		// 给能力添加标签
-		AbilitySpec.DynamicAbilityTags.AddTag(MyAbility->DefaultInputTag);
+		if (MyAbility->DefaultInputTag.IsValid()) { AbilitySpec.DynamicAbilityTags.AddTag(MyAbility->DefaultInputTag); }
 
 		GiveAbility(AbilitySpec);
 	}
@@ -268,7 +268,7 @@ void UBaseAbilitySystemComponent::BroadCastDefaultActivatableAbilitiesInfo()
 		// 能力标签找不到就不需要进行下面步骤了
 		if (!TempAbilityTag.IsValid()) { continue; }
 
-		FTagToAbilityInfo AbilityInfo = Infos->FindOffensiveAbilityInfo(TempAbilityTag);
+		FTagToAbilityInfo AbilityInfo = Infos->FindAbilityInfo(TempAbilityTag);
 
 		// 从能力里获得触发该能力对应的输入键(标签)
 		AbilityInfo.InputTag = GetTagFromAbilitySpecDynamicTags(AbilitySpec, FRPGAuraGameplayTags::Get().InputTag);
@@ -284,11 +284,7 @@ void UBaseAbilitySystemComponent::BroadCastDefaultSpellButtonAbilitiesInfo()
 	if (!GetMyGiSystem()) { return; }
 
 	const auto Infos = (GetMyGiSystem()) ? GetMyGiSystem()->GetAbilityInfoAsset() : nullptr;
-	if (Infos == nullptr)
-	{
-		UE_LOG(UBaseAbilitySystemComponentLog, Error, TEXT("[%s]获取技能信息消息数据资产表失败"), *GetNameSafe(this));
-		return;
-	}
+	if (Infos == nullptr) { return; }
 
 	FScopedAbilityListLock AbilityListLock(*this);
 
@@ -303,7 +299,7 @@ void UBaseAbilitySystemComponent::BroadCastDefaultSpellButtonAbilitiesInfo()
 		Info.StatusTag = GetAbilityStatusFromSpec(*Spec);
 		if (!Info.InfoDataAbilityIsValid()) { continue; }
 
-		GetMyGiSystem()->OnSpellButtonAbilityInfoChange.Broadcast(Info);
+		ClientOnSpellButtonAbilityInfoChange(Info);
 	}
 }
 
@@ -385,11 +381,23 @@ void UBaseAbilitySystemComponent::ServerEquipAbility_Implementation(const FGamep
 	FGameplayTag OldInputSlot = FGameplayTag();
 
 	auto NewAbilityInfo = GetMyGiSystem()->GetAbilityInfoAsset()->
-		FindAbilityInfo(ToEquipAbilityTag);
+	                                       FindAbilityInfo(ToEquipAbilityTag);
 	NewAbilityInfo.InputTag = NewInputSlot;
 	NewAbilityInfo.StatusTag = FRPGAuraGameplayTags::Get().Abilities_Status_Equipped;
+
+	// 从要装备的能力获取当前技能准备装备到法术菜单的区域类型(被动区域还是主动区域)
+	const auto CurrentEquipAbilityAreaType = NewAbilityInfo.AbilityType == (FRPGAuraGameplayTags::Get().
+		                                         Abilities_Type_Passive)
+		                                         ? FRPGAuraGameplayTags::Get().Abilities_Passive
+		                                         : FRPGAuraGameplayTags::Get().Abilities_Attack;
+	if (!CurrentEquipAbilityAreaType.IsValid()) { return; }
+
+	auto OldAbilityInfo = FTagToAbilityInfo{};
+
 	bool bIsSwapAbilitySlotPos = false;
-	//TODO 待判断要装备的技能是否符合对应的插槽(如主动技能只能装在主动技能槽,不能装到被动技能槽 
+	// TODO 待判断要装备的技能是否符合对应的插槽(如主动技能只能装在主动技能槽,不能装到被动技能槽
+	// TODO 尚未实现从装备菜单中移除技能球功能...   
+
 	// 如果该能力状态是[UnLocked]的,意味着没有装备
 	if (ToEquipAbilityStatus.MatchesTagExact(FRPGAuraGameplayTags::Get().Abilities_Status_Unlocked))
 	{
@@ -403,6 +411,15 @@ void UBaseAbilitySystemComponent::ServerEquipAbility_Implementation(const FGamep
 			AddTagToAbilitySpecContainer(OldSpec->DynamicAbilityTags,
 			                             FRPGAuraGameplayTags::Get().Abilities_Status_Unlocked,
 			                             FRPGAuraGameplayTags::Get().Abilities_Status);
+
+			OldAbilityInfo = GetMyGiSystem()->GetAbilityInfoAsset()->FindAbilityInfo(
+				GetTagFromAbilitySpec(*OldSpec, CurrentEquipAbilityAreaType));
+
+			// 判断NewInputSlot插槽位置上已经装备的能力是否是被动技能,如果是则需要停用能力
+			if (OldAbilityInfo.AbilityType == FRPGAuraGameplayTags::Get().Abilities_Type_Passive)
+			{
+				OnDeActivePassiveAbility.Broadcast(OldAbilityInfo.AbilityTag);
+			}
 		}
 
 		// 最后设置ToEquipAbilitySpec的插槽标签为NewInputSlot,且能力状态为Equipped
@@ -412,8 +429,13 @@ void UBaseAbilitySystemComponent::ServerEquipAbility_Implementation(const FGamep
 		AddTagToAbilitySpecContainer(ToEquipAbilitySpec->DynamicAbilityTags,
 		                             FRPGAuraGameplayTags::Get().Abilities_Status_Equipped,
 		                             FRPGAuraGameplayTags::Get().Abilities_Status);
+		// 判断要装备的技能是否为被动技能,被动技能装备时机会立即启用能力
+		if (NewAbilityInfo.AbilityType == FRPGAuraGameplayTags::Get().Abilities_Type_Passive)
+		{
+			TryActivateAbility(ToEquipAbilitySpec->Handle);
+		}
 	}
-	// 如果该能力是[Equipped]的,意味着已经装备在某个插槽上了
+	// 如果要准备装备的能力是[Equipped]的,意味着已经装备在某个插槽上了,无非就是交换位置(即新插槽已经有装备的技能)和换到没有装备技能的插槽上(被动技能交换位置不需要停用)
 	else if (ToEquipAbilityStatus.MatchesTagExact(FRPGAuraGameplayTags::Get().Abilities_Status_Equipped))
 	{
 		// 获取当前要装备到新插槽的技能身上所拥有的插槽标签OldInputSlot,如果等于NewInputSlot 说明要装备的位置一样,则<返回>
@@ -430,6 +452,8 @@ void UBaseAbilitySystemComponent::ServerEquipAbility_Implementation(const FGamep
 		if (OldSpec)
 		{
 			bIsSwapAbilitySlotPos = true;
+			OldAbilityInfo = GetMyGiSystem()->GetAbilityInfoAsset()->FindAbilityInfo(
+				GetTagFromAbilitySpec(*OldSpec, CurrentEquipAbilityAreaType));
 			AddTagToAbilitySpecContainer(OldSpec->DynamicAbilityTags,
 			                             OldInputSlot,
 			                             FRPGAuraGameplayTags::Get().InputTag);
@@ -441,8 +465,9 @@ void UBaseAbilitySystemComponent::ServerEquipAbility_Implementation(const FGamep
 
 	MarkAbilitySpecDirty(*ToEquipAbilitySpec);
 
-	ClientEquipAbility(NewAbilityInfo, (OldSpec) ? (*OldSpec) : FGameplayAbilitySpec(), NewInputSlot,
-	                   OldInputSlot, bIsSwapAbilitySlotPos);
+	// TODO 被动能力装备获取卸下来时的启用和停用 
+	ClientEquipAbility(NewAbilityInfo, OldAbilityInfo, CurrentEquipAbilityAreaType,
+	                   NewInputSlot, OldInputSlot, bIsSwapAbilitySlotPos);
 }
 
 FAbilityDescription UBaseAbilitySystemComponent::GetAbilityDescriptionByAbilityTag(const FGameplayTag& AbilityTag)
@@ -463,8 +488,23 @@ FAbilityDescription UBaseAbilitySystemComponent::GetAbilityDescriptionByAbilityT
 void UBaseAbilitySystemComponent::OnRep_ActivateAbilities()
 {
 	Super::OnRep_ActivateAbilities();
-	// TODO 只广播一次,而不是每次OnRep都广播
-	BroadCastDefaultActivatableAbilitiesInfo();
+	// 只广播一次,而不是每次OnRep都广播
+	if (!BIsBroadCastedDefault)
+	{
+		// TODO UI控制器里调用以下两个方法不生效 待修复(只能在OnRep里调用生效)  
+		BroadCastDefaultActivatableAbilitiesInfo();
+		BroadCastDefaultSpellButtonAbilitiesInfo();
+		BIsBroadCastedDefault = true;
+		UE_LOG(UBaseAbilitySystemComponentLog, Warning, TEXT("[%s]->ActivateAbilities网络复制!"),
+		       *FString::Printf(TEXT(__FUNCTION__)));
+	}
+}
+
+void UBaseAbilitySystemComponent::ClientOnSpellButtonAbilityInfoChange_Implementation(const FTagToAbilityInfo& Info)
+{
+	if (!GetMyGiSystem()) { return; }
+
+	GetMyGiSystem()->OnSpellButtonAbilityInfoChange.Broadcast(Info);
 }
 
 void UBaseAbilitySystemComponent::ClientOnAbilityStatusChanged_Implementation(const FGameplayTag& AbilityTag,
@@ -491,7 +531,8 @@ void UBaseAbilitySystemComponent::ClientOnGEAppliedToSelf_Implementation(
 }
 
 void UBaseAbilitySystemComponent::ClientEquipAbility_Implementation(const FTagToAbilityInfo& NewAbilityInfo,
-                                                                    const FGameplayAbilitySpec& OldSpec,
+                                                                    const FTagToAbilityInfo& OldAbilityInfo,
+                                                                    const FGameplayTag& EquipAbilityAreaType,
                                                                     const FGameplayTag& NewInputSlot,
                                                                     const FGameplayTag& OldInputSlot,
                                                                     const bool bIsSwapAbilitySlot)
@@ -502,10 +543,7 @@ void UBaseAbilitySystemComponent::ClientEquipAbility_Implementation(const FTagTo
 	if (NewAbilityInfo.InfoDataInputIsValid()) { GetMyGiSystem()->AbilityInfoDelegate.Broadcast(NewAbilityInfo); }
 
 	// 法术菜单栏中的技能树按钮信息也需要更新
-	if (NewAbilityInfo.InfoDataAbilityIsValid())
-	{
-		GetMyGiSystem()->OnSpellButtonAbilityInfoChange.Broadcast(NewAbilityInfo);
-	}
+	if (NewAbilityInfo.InfoDataAbilityIsValid()) { ClientOnSpellButtonAbilityInfoChange(NewAbilityInfo); }
 
 
 	GetMyGiSystem()->OnAbilityEquippedChange.Broadcast(NewAbilityInfo.AbilityTag, NewAbilityInfo.StatusTag,
@@ -513,18 +551,18 @@ void UBaseAbilitySystemComponent::ClientEquipAbility_Implementation(const FTagTo
 	                                                   OldInputSlot, false);
 
 	// 两个技能位交换时,需要给交换位置后的旧技能槽进行广播更新显示
-	if (OldSpec.Ability && bIsSwapAbilitySlot)
+	if (bIsSwapAbilitySlot)
 	{
-		auto OldAbilityInfo = GetMyGiSystem()->GetAbilityInfoAsset()->
-			FindAbilityInfo(GetTagFromAbilitySpec(OldSpec, FRPGAuraGameplayTags::Get().Abilities_Attack));
-		OldAbilityInfo.InputTag = OldInputSlot;
-		OldAbilityInfo.StatusTag = FRPGAuraGameplayTags::Get().Abilities_Status_Equipped;
-		if (OldAbilityInfo.InfoDataInputIsValid()) { GetMyGiSystem()->AbilityInfoDelegate.Broadcast(OldAbilityInfo); }
-		if (OldAbilityInfo.InfoDataAbilityIsValid())
+		auto LocalOldAbilityInfo = OldAbilityInfo;
+		LocalOldAbilityInfo.InputTag = OldInputSlot;
+		LocalOldAbilityInfo.StatusTag = FRPGAuraGameplayTags::Get().Abilities_Status_Equipped;
+		if (LocalOldAbilityInfo.InfoDataInputIsValid())
 		{
-			GetMyGiSystem()->OnSpellButtonAbilityInfoChange.Broadcast(OldAbilityInfo);
+			GetMyGiSystem()->AbilityInfoDelegate.Broadcast(LocalOldAbilityInfo);
 		}
-		GetMyGiSystem()->OnAbilityEquippedChange.Broadcast(OldAbilityInfo.AbilityTag, OldAbilityInfo.StatusTag,
+		if (LocalOldAbilityInfo.InfoDataAbilityIsValid()) { ClientOnSpellButtonAbilityInfoChange(LocalOldAbilityInfo); }
+		GetMyGiSystem()->OnAbilityEquippedChange.Broadcast(LocalOldAbilityInfo.AbilityTag,
+		                                                   LocalOldAbilityInfo.StatusTag,
 		                                                   OldInputSlot,
 		                                                   NewInputSlot, bIsSwapAbilitySlot);
 	}

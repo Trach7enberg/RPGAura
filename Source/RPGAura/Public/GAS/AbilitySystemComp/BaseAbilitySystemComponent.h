@@ -17,6 +17,8 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnGetAssetTagsDelegate, const FGameplayTagC
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnAbilityStatusChanged, const FGameplayTag& /* AbilityTag */,
                                        const FGameplayTag& /* AbilityStatusTag */, int32 /*AbilityLevel*/);
 
+// 广播被动能力结束的委托,以便被动能力能响应回调函数
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnDeActivePassiveAbility, const FGameplayTag& /* PassiveAbilityTag*/);
 
 /**
  * ASC
@@ -39,6 +41,9 @@ public:
 
 	// 应用于一个(角色的主动被动)能力的状态变化时
 	FOnAbilityStatusChanged OnAbilityStatusChanged;
+
+	// 用于关闭被动技能的委托
+	FOnDeActivePassiveAbility OnDeActivePassiveAbility;
 
 	/// 给玩家添加默认能力,可能有多个
 	/// @param Abilities 能力列表
@@ -136,6 +141,10 @@ public:
 	/// @return 
 	FAbilityDescription GetAbilityDescriptionByAbilityTag(const FGameplayTag& AbilityTag);
 
+	/// 客户端广播更新法术菜单的法术按钮信息
+	/// @param Info 
+	UFUNCTION(Client,Reliable)
+	void ClientOnSpellButtonAbilityInfoChange(const FTagToAbilityInfo& Info);
 protected:
 	/// 当前ACS被应用任意的GE到自己身上时触发的回调函数
 	/// @param AbilitySystemComponent 
@@ -148,7 +157,7 @@ protected:
 
 	/// 该函数会在GiveAbility后被调用(对ActivateAbilities进行网络复制)
 	virtual void OnRep_ActivateAbilities() override;
-
+	
 	/// 角色的能力状态改变时候的广播
 	/// @param AbilityTag 
 	/// @param AbilityStatusTag
@@ -159,15 +168,15 @@ protected:
 
 	/// 客户端切换、装备技能
 	/// @param NewAbilityInfo 准备装到新插槽上的能力的技能信息
-	/// @param OldSpec 新插槽位置上已装备技能(如果装备了)的能力Spec
+	/// @param OldAbilityInfo
+	/// @param EquipAbilityAreaType
 	/// @param NewInputSlot 当前技能要装备的新插槽位置
 	/// @param OldInputSlot 新插槽位置上已装备技能(如果装备了)的插槽位置
 	/// @param bIsSwapAbilitySlot 是否在技能位上互换两个技能的位置
 	UFUNCTION(Client, Reliable)
-	void ClientEquipAbility(const FTagToAbilityInfo& NewAbilityInfo, const FGameplayAbilitySpec& OldSpec,
-	                        const FGameplayTag& NewInputSlot,
-	                        const FGameplayTag& OldInputSlot,
-	                        const bool bIsSwapAbilitySlot);
+	void ClientEquipAbility(const FTagToAbilityInfo& NewAbilityInfo, const FTagToAbilityInfo& OldAbilityInfo,
+	                        const FGameplayTag& EquipAbilityAreaType,
+	                        const FGameplayTag& NewInputSlot, const FGameplayTag& OldInputSlot, const bool bIsSwapAbilitySlot);
 
 	/// 从标签容器中删除给定的目标标签
 	/// @param TagContainer 
@@ -193,4 +202,7 @@ private:
 	TObjectPtr<URPGAuraGameInstanceSubsystem> GameInstanceSubsystem;
 
 	URPGAuraGameInstanceSubsystem* GetMyGiSystem();
+
+	UPROPERTY()
+	bool BIsBroadCastedDefault = false;
 };
