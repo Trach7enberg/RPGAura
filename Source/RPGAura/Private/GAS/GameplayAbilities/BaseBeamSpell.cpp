@@ -86,7 +86,7 @@ void UBaseBeamSpell::TracingTarget(const FVector TracingStartPoint,
 		});
 
 		// 从射线检测到的第一个角色开始,依次离当前角色最近的边集合
-		// 注意:CloseEdges的Index代表OverlapActors,而对应的Index中的结构代表边,并且CloseEdges[StartPos]出发结点,权值无穷大
+		// 注意:CloseEdges的Index代表OverlapActors,而对应的索引中的元素代表索引位置到这个边的最近举例,并且CloseEdges[StartPos]出发结点,权值无穷大
 		// 例如:CloseEdges[0] = FCloseEdge{1,457},意思是从OverlapActors[0]到OverlapActors[1]的最近的边
 		TArray<FCloseEdge> CloseEdges{};
 		const auto StartPos = 1;
@@ -138,7 +138,7 @@ void UBaseBeamSpell::FindBeamChain(TArray<FCloseEdge>& CloseEdges,
 	CloseEdges.Init(FCloseEdge{}, Vertex);
 	AlreadyAddToMst.Init(false, Vertex);
 
-	// 初始化图(顶点矩阵) 
+	// 初始化动态构建图(顶点矩阵) 
 	for (int i = 0; i < Vertex; ++i)
 	{
 		if (bDebug) { UE_LOG(UBaseBeamSpellLog, Error, TEXT("[结点%-2d:%23s]"), i+1, *OverlapActors[i]->GetName()); }
@@ -173,6 +173,7 @@ void UBaseBeamSpell::FindBeamChain(TArray<FCloseEdge>& CloseEdges,
 	{
 		int32 MinDistance = Max;
 		int LowCostIndex = -1;
+		// 从最近边集合里找出一个权值最小的顶点
 		for (int j = 0; j < Vertex; ++j)
 		{
 			if (AlreadyAddToMst[j]) { continue; }
@@ -188,7 +189,7 @@ void UBaseBeamSpell::FindBeamChain(TArray<FCloseEdge>& CloseEdges,
 		// 加入MST
 		AlreadyAddToMst[LowCostIndex] = true;
 
-		// 因为新加入了新边,所以得更新其它点到这个边的最近的位置
+		// 因为新加入了新边(LowCostIndex顶点),所以得更新其它点到这个新加入(LowCostIndex顶点)的最近的位置
 		for (int k = 0; k < Vertex; ++k)
 		{
 			if (AlreadyAddToMst[k]) { continue; }
