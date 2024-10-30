@@ -76,14 +76,15 @@ int32 ABasePlayerState::GetAttributePointsReward(const int32 CharacterLevel, con
 	auto Result = GetGiSubSystem()->LevelUpInfoAsset->LevelUpInfos[CharacterLevel].AttributedPointAward;
 	for (int j = MultipleLevel; j > 1; --j)
 	{
+		if (!GetGiSubSystem()->LevelUpInfoAsset->LevelUpInfos.IsValidIndex(CharacterLevel - j)) { continue; }
 		Result += GetGiSubSystem()->LevelUpInfoAsset->LevelUpInfos[CharacterLevel - j].AttributedPointAward;
 	}
 	return Result;
-}
+}  
 
 int32 ABasePlayerState::GetSpellPointsReward(const int32 CharacterLevel, int32 MultipleLevel)
 {
-	if (!GetGiSubSystem() || !GetGiSubSystem()->LevelUpInfoAsset || CharacterLevel >= GetGiSubSystem()->LevelUpInfoAsset
+	if (!GetGiSubSystem() || !GetGiSubSystem()->LevelUpInfoAsset || CharacterLevel >= GetGiSubSystem()->LevelUpInfoAsset 
 		->LevelUpInfos.Num()) { return 0; }
 
 	auto Result = GetGiSubSystem()->LevelUpInfoAsset->LevelUpInfos[CharacterLevel].SpellPointAward;
@@ -106,6 +107,7 @@ void ABasePlayerState::OnRep_AssignableAttributePoints(int32 OldValue)
 {
 	AssignableAttributePointsChangeDelegate.Broadcast(AssignableAttributePoints);
 }
+
 void ABasePlayerState::OnRep_AssignableSpellPoints(int32 OldValue)
 {
 	AssignableSpellPointsChangeDelegate.Broadcast(AssignableSpellPoints);
