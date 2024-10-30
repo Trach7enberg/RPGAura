@@ -163,6 +163,17 @@ URPGAuraGameInstanceSubsystem* ACharacterBase::GetMyGiSubSystem()
 	return RPGAuraGameInstanceSubsystem;
 }
 
+
+void ACharacterBase::StopVfx(const FGameplayTag& Tag)
+{
+	MulticastStopVfxWithTag(Tag);
+}
+
+void ACharacterBase::MulticastStopVfxWithTag_Implementation(const FGameplayTag& Tag)
+{
+	if (const auto NComp = VfxComponentPool.Find(Tag)) { (*NComp)->Deactivate(); }
+}
+
 void ACharacterBase::MulticastStopVfx_Implementation()
 {
 	for (const auto& Pair : VfxComponentPool) { Pair.Value->DeactivateImmediate(); }
@@ -179,17 +190,18 @@ bool ACharacterBase::CanHighLight()
 UNiagaraSystem* ACharacterBase::GetBloodEffect() { return BloodEffect; }
 void ACharacterBase::StartSummonAnim() { StartSummonTimeline(); }
 
-void ACharacterBase::ShowDeBuffVfx(const FGameplayTag DeBuffType)
+void ACharacterBase::ShowVfx(const FGameplayTag Tag)
 {
-	// TODO 暂未处理多重DeBuff的特效
-	if (const auto Vfx = DeBuffVfxMap.Find(DeBuffType))
+	if(!Tag.IsValid()){return;}
+	if (const auto Vfx = DeBuffVfxMap.Find(Tag))
 	{
-		UE_LOG(ACharacterBaseLog, Error, TEXT("[DeBuffVfx]: %s"), *DeBuffType.GetTagName().ToString());
+		UE_LOG(ACharacterBaseLog, Error, TEXT("[DeBuffVfx]: %s"), *Tag.GetTagName().ToString());
 		// DeBuff特效是持续性的,不是一次性并且坐标是相对的不是世界系
-		MulticastVfx(DeBuffType, Vfx->Get(), {FRotator{}, FVector{}, FVector(DeBuffVfxScale)},
+		MulticastVfx(Tag, Vfx->Get(), {FRotator{}, FVector{}, FVector(DeBuffVfxScale)},
 		             EAttachLocation::KeepRelativeOffset);
 	}
 }
+
 
 void ACharacterBase::AddKnockBack(const FVector& Direction)
 {
@@ -215,6 +227,7 @@ void ACharacterBase::OnKnockBackFinished(const FHitResult& Hit)
 void ACharacterBase::SetCastShockAnimState(const bool Enabled) {}
 bool ACharacterBase::GetCastShockAnimState() { return false; }
 bool ACharacterBase::GetInShockHitState() { return BIsInShockHitReact; }
+
 void ACharacterBase::SetInShockHitState(const bool Enabled)
 {
 	BIsInShockHitReact = Enabled;
@@ -228,10 +241,7 @@ USkeletalMeshComponent* ACharacterBase::GetWeaponMesh()
 }
 
 FOnDeathSignature& ACharacterBase::GetPreOnDeathDelegate() { return OnDeathSignature; }
-FOnShockStateChangeSignature& ACharacterBase::GetOnShockStateChangeDelegate()
-{
-	return OnShockStateChangeSignature;
-}
+FOnShockStateChangeSignature& ACharacterBase::GetOnShockStateChangeDelegate() { return OnShockStateChangeSignature; }
 
 ECharacterClass ACharacterBase::GetCharacterClass() { return CharacterClass; }
 
@@ -319,7 +329,7 @@ void ACharacterBase::MulticastVfx_Implementation(const FGameplayTag& VfxTag, UNi
                                                  const FTransform VfxTransform,
                                                  const EAttachLocation::Type LocationType, const bool SingleUse)
 {
-	if (!Vfx || !NiagaraComponent) { return; }
+	if (!VfxTag.IsValid() || !Vfx || !NiagaraComponent) { return; }
 
 	auto NiagaraComp = VfxComponentPool.Find(VfxTag);
 	if (!NiagaraComp)
@@ -329,7 +339,7 @@ void ACharacterBase::MulticastVfx_Implementation(const FGameplayTag& VfxTag, UNi
 			VfxTransform.Rotator(), LocationType,
 			SingleUse, SingleUse);
 		NiagaraComp = &LocalNiagaraComp;
-		VfxComponentPool.Add(VfxTag, *NiagaraComp);
+		if (!SingleUse) { VfxComponentPool.Add(VfxTag, *NiagaraComp); }
 	}
 
 	if (NiagaraComp && (*NiagaraComp)) { (*NiagaraComp)->Activate(); }

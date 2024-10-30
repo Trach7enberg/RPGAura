@@ -81,7 +81,8 @@ public:
 	virtual void ShowDamageNumber(const float Damage, bool bBlockedHit = false, bool bCriticalHit = false) override;
 	virtual UNiagaraSystem* GetBloodEffect() override;
 	virtual void StartSummonAnim() override;
-	virtual void ShowDeBuffVfx(FGameplayTag DeBuffType) override;
+	virtual void ShowVfx(FGameplayTag Tag) override;
+	virtual void StopVfx(const FGameplayTag& Tag) override;
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void AddDeathImpulse(const FVector& Impulse) override;
 	virtual void AddKnockBack(const FVector& Direction) override;
@@ -141,7 +142,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="VFX")
 	TObjectPtr<UNiagaraComponent> NiagaraComponent;
 
-	/// DeBuff类型到对应的VFX
+	/// 存储着各种标签对应的VFX特效 TODO 待重命名 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="VFX")
 	TMap<FGameplayTag, TObjectPtr<UNiagaraSystem>> DeBuffVfxMap;
 
@@ -225,7 +226,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Combat")
 	TObjectPtr<UTimelineComponent> SummonTimelineComponent;
 
-	/// 管理同时生成多个特效的特效池
+	/// 管理当前角色生成特效的特效池
 	UPROPERTY()
 	TMap<FGameplayTag, UNiagaraComponent*> VfxComponentPool;
 	/// 给角色授予能力
@@ -267,7 +268,7 @@ protected:
 	/// @param Vfx 
 	/// @param VfxTransform 
 	/// @param LocationType 
-	/// @param SingleUse 
+	/// @param SingleUse 除非必要,不单次使用
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void MulticastVfx(const FGameplayTag& VfxTag, UNiagaraSystem* Vfx,
 	                          FTransform VfxTransform = FTransform{},
@@ -277,6 +278,11 @@ protected:
 	/// 多播进行停止特效的播放
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void MulticastStopVfx();
+
+	/// 通过标签停止播放VFX
+	/// @param Tag 
+	UFUNCTION(NetMulticast, Reliable)
+	virtual void MulticastStopVfxWithTag(const FGameplayTag& Tag);
 
 private:
 	/// 当前角色是否死亡

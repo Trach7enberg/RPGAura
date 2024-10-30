@@ -118,9 +118,13 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void StartSummonAnim() = 0;
 
-	/// 显示角色触发DeBuff的特效
-	/// @param DeBuffType 负面标签
-	virtual void ShowDeBuffVfx(FGameplayTag DeBuffType) = 0;
+	/// 根据Tag显示角色的特效
+	/// @param Tag 负面标签
+	virtual void ShowVfx(FGameplayTag Tag) = 0;
+
+	/// 根据Tag停止给定的特效
+	/// @param Tag 
+	virtual void StopVfx(const FGameplayTag& Tag) = 0;
 
 	/// 添加冲击力(当死亡时)
 	/// @param Impulse
