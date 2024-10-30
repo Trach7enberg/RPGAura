@@ -155,13 +155,13 @@ void AAuraCharacter::LevelUp()
 	// 先前的等级与当前等级之差
 	const auto LevelDifference = GetCharacterLevel() - TempCurrentLevel;
 	AddToAttributesPoints(GetMyPlayerState()->GetAttributePointsReward(GetCharacterLevel(), LevelDifference));
-	AddToSpellPoints(GetMyPlayerState()->GetSpellPointsReward(GetCharacterLevel(), 1));
+	AddToSpellPoints(GetMyPlayerState()->GetSpellPointsReward(GetCharacterLevel(), LevelDifference));
 	MyAsc->UpdateAbilityStatusWhenLevelUp(GetCharacterLevel());
 
 	// 升级特效的位置是世界位置
 	MulticastVfx(FRPGAuraGameplayTags::Get().Abilities_Vfx_Misc_LevelUp, LevelUpEffect,
 	                                  FTransform{FRotator(90, 0, 180), GetActorLocation()},
-	                                  EAttachLocation::Type::KeepWorldPosition, true);
+	                                  EAttachLocation::Type::KeepWorldPosition);
 }
 
 int32 AAuraCharacter::GetAttributePointsReward(const int32 InCharacterLevel)

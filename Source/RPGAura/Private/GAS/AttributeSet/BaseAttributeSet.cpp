@@ -478,7 +478,7 @@ void UBaseAttributeSet::HandleDeBuff(const FDeBuffInfo& DeBuffInfo)
 					TmpGeContext->SetIsDeBuffSideEffect(true);
 					EffectProperties.TargetAsc->ApplyGameplayEffectSpecToSelf(*MutableSpec);
 				}
-				if (TargetCombInt) { TargetCombInt->ShowDeBuffVfx(DeBuffInfo.DeBuffType); }
+				if (TargetCombInt) { TargetCombInt->ShowVfx(DeBuffInfo.DeBuffType); }
 			}
 		}
 		break;
@@ -487,7 +487,7 @@ void UBaseAttributeSet::HandleDeBuff(const FDeBuffInfo& DeBuffInfo)
 		// TODO 应该由GE(或者动态创建GE)来启用能力(这样可以通过GeContext设置眩晕的时间)
 		// TODO 当前Stun是由电击能力引起的DeBuff,但是参数并未和DeBuff参数联动(例如持续时间)
 		// TODO Stun应该可以触发动态GE(即Duration GE的伤害)
-		if (TargetCombInt) { TargetCombInt->ShowDeBuffVfx(DeBuffInfo.DeBuffType); }
+		if (TargetCombInt) { TargetCombInt->ShowVfx(DeBuffInfo.DeBuffType); }
 		GetMyCurrentAbilitySystem()->TryActivateAbilitiesByTag(FGameplayTagContainer{DeBuffInfo.DeBuffType});
 		break;
 
