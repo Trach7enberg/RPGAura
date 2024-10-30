@@ -3,6 +3,7 @@
 
 #include "UI/WidgetControllers/SkillTreeOffensWidgetController.h"
 
+#include "CoreTypes/RPGAuraGameplayTags.h"
 #include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
 #include "GAS/Data/TagToAbilityInfoAsset.h"
 #include "SubSystems/RPGAuraGameInstanceSubsystem.h"
@@ -20,14 +21,16 @@ void USkillTreeOffensWidgetController::BindCallBack()
 
 	if (!MyAsc) { return; }
 	MyAsc->OnAbilityStatusChanged.AddLambda(
-		[this,AbilityInfos](const FGameplayTag& AbilityTag, const FGameplayTag& AbilityStatusTag,int32 AbilityLevel)
+		[this,AbilityInfos,MyAsc](const FGameplayTag& AbilityTag, const FGameplayTag& AbilityStatusTag,int32 AbilityLevel)
 		{
+			// 只响应主动技能标签
+			if(AbilityTag.MatchesTag(FRPGAuraGameplayTags::Get().Abilities_Passive)){return;}
 			// 广播AbilityInfo用于(主动)技能树技能球按钮的显示状态
 			FTagToAbilityInfo AbilityInfo = AbilityInfos->FindOffensiveAbilityInfo(AbilityTag);
 			AbilityInfo.StatusTag = AbilityStatusTag;
 			if (AbilityInfo.InfoDataAbilityIsValid())
 			{
-				GetWidgetControllerParams().GameInstanceSubsystem->OnSpellButtonAbilityInfoChange.Broadcast(AbilityInfo);
+				MyAsc->ClientOnSpellButtonAbilityInfoChange(AbilityInfo);
 			}
 		});
 }
