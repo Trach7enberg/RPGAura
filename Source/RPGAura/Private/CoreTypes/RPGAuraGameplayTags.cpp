@@ -217,10 +217,12 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 		{
 			GameplayTags.Abilities_Passive = UGameplayTagsManager::Get().AddNativeGameplayTag(
 				"Abilities.Passive", FString());
-			GameplayTags.Abilities_Passive_1 = UGameplayTagsManager::Get().AddNativeGameplayTag(
-				"Abilities.Passive.1", FString());
-			GameplayTags.Abilities_Passive_2 = UGameplayTagsManager::Get().AddNativeGameplayTag(
-				"Abilities.Passive.2", FString());
+			GameplayTags.Abilities_Passive_HaloOfProtection = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Passive.HaloOfProtection", FString());
+			GameplayTags.Abilities_Passive_LifeSiphon = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Passive.LifeSiphon", FString());
+			GameplayTags.Abilities_Passive_ManaSiphon = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Passive.ManaSiphon", FString());
 		}
 
 		//能力状态
@@ -503,8 +505,9 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 
 	// 添加被动技能标签到对应的容器
 	{
-		GameplayTags.PassiveTagsContainer.AddTag(GameplayTags.Abilities_Passive_1);
-		GameplayTags.PassiveTagsContainer.AddTag(GameplayTags.Abilities_Passive_2);
+		GameplayTags.PassiveTagsContainer.AddTag(GameplayTags.Abilities_Passive_HaloOfProtection);
+		GameplayTags.PassiveTagsContainer.AddTag(GameplayTags.Abilities_Passive_LifeSiphon);
+		GameplayTags.PassiveTagsContainer.AddTag(GameplayTags.Abilities_Passive_ManaSiphon);
 	}
 
 	// 添加DeBuff效果标签到对应的容器

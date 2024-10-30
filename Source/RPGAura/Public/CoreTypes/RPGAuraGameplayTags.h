@@ -174,8 +174,9 @@ struct FRPGAuraGameplayTags
 	FGameplayTag Abilities_Status_Equipped;
 
 	FGameplayTag Abilities_Passive;
-	FGameplayTag Abilities_Passive_1;
-	FGameplayTag Abilities_Passive_2;
+	FGameplayTag Abilities_Passive_HaloOfProtection;				// 保护光环
+	FGameplayTag Abilities_Passive_LifeSiphon;						// 生命虹吸被动
+	FGameplayTag Abilities_Passive_ManaSiphon;						// 法术虹吸被动
 
 	// 能力的分类,主动还是被动,无则是一些通用的能力,比如受击反应能力
 	FGameplayTag Abilities_Type;
@@ -184,13 +185,13 @@ struct FRPGAuraGameplayTags
 	FGameplayTag Abilities_Type_Normal;
 
 	// 能力冷却的标签
-	FGameplayTag Abilities_CoolDown_Fire_FireBolt; // 火球技能冷却时间标签
-	FGameplayTag Abilities_CoolDown_Electrical_Electrocute; // 电束技能冷却时间标签
+	FGameplayTag Abilities_CoolDown_Fire_FireBolt;					// 火球技能冷却时间标签
+	FGameplayTag Abilities_CoolDown_Electrical_Electrocute;			// 电束技能冷却时间标签
 
 	// 能力的Block标签
 	FGameplayTag Abilities_Block;
-	FGameplayTag Abilities_Block_Misc;						// 杂项Block
-	FGameplayTag Abilities_Block_Input;						// 输入Block
+	FGameplayTag Abilities_Block_Misc;								// 杂项Block
+	FGameplayTag Abilities_Block_Input;								// 输入Block
 	FGameplayTag Abilities_Block_Input_Pressed;
 	FGameplayTag Abilities_Block_Input_Held;
 	FGameplayTag Abilities_Block_Input_Released;
@@ -203,7 +204,7 @@ struct FRPGAuraGameplayTags
 
 	// 受击反应
 	FGameplayTag Abilities_Effects_HitReact_Normal;
-	FGameplayTag Abilities_Effects_HitReact_InShock;		// 被电击中时
+	FGameplayTag Abilities_Effects_HitReact_InShock;				// 被电击中时
 
 	/// 获取GameplayTags静态实例
 	/// @return GameplayTags单例
