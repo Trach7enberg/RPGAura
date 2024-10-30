@@ -28,6 +28,6 @@ void UMainSpell::InitPassiveArea()
 	if (!SpellGlobeWidgetClass || !GetOwningPlayer()) { return; }
 
 	UWidgetControllerBpFuncLib::CreateMultipleWidget<UVerticalBoxSlot>(
-		SpellGlobeWidgetClass, GetOwningPlayer(), PassiveArea, PassiveGlobeNum, FRPGAuraGameplayTags::Get().PassiveTagsContainer,
+		SpellGlobeWidgetClass, GetOwningPlayer(), PassiveArea, PassiveGlobeNum, FRPGAuraGameplayTags::Get().InputPassiveTagsContainer,
 		USpellGlobeWidgetController::StaticClass());
 }

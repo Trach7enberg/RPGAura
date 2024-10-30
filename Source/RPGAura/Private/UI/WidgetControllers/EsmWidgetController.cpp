@@ -5,10 +5,10 @@
 
 #include "CoreTypes/RPGAuraGameplayTags.h"
 #include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
-#include "SubSystems/RPGAuraGameInstanceSubsystem.h"
+
+DEFINE_LOG_CATEGORY_STATIC(UEsmWidgetControllerLog,All,All);
 
 void UEsmWidgetController::BindCallBack() {}
-
 void UEsmWidgetController::BroadcastInitialValues()
 {
 	if (!IsWidgetControllerParamsValid()) { return; }
@@ -18,5 +18,7 @@ void UEsmWidgetController::BroadcastInitialValues()
 	// 广播技能树区域(包括被动和主动)的技能按钮更新显示所需要的能力信息
 	MyAsc->BroadCastDefaultSpellButtonAbilitiesInfo();
 }
+
+
 
 

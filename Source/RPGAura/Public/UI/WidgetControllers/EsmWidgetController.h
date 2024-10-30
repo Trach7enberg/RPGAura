@@ -16,6 +16,7 @@ class RPGAURA_API UEsmWidgetController : public UBaseWidgetController
 
 public:
 	virtual void BindCallBack() override;
+	
 	virtual void BroadcastInitialValues() override;
 
 	

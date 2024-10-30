@@ -38,5 +38,5 @@ void UEquippedAbilitiesWidget::InitPassiveEquippedArea()
 	
 	UWidgetControllerBpFuncLib::CreateMultipleWidget<UVerticalBoxSlot>(
 		EquippedSpell, GetOwningPlayer(), PassiveEquippedArea
-		, EquippedAbilityNum_Passive, FRPGAuraGameplayTags::Get().PassiveTagsContainer, UEquippedAbilityWidgetController::StaticClass());
+		, EquippedAbilityNum_Passive, FRPGAuraGameplayTags::Get().InputPassiveTagsContainer, UEquippedAbilityWidgetController::StaticClass());
 }
