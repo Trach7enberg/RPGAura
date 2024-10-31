@@ -14,6 +14,7 @@
 #include "CharacterBase.generated.h"
 
 
+class ABasePlayerController;
 class UBaseAbilitySystemComponent;
 class UNiagaraComponent;
 class URPGAuraGameInstanceSubsystem;
@@ -52,7 +53,7 @@ public:
 
 	// ~ ICombatInterface
 	FOnDeathSignature OnDeathSignature;
- 	FOnShockStateChangeSignature OnShockStateChangeSignature;
+	FOnShockStateChangeSignature OnShockStateChangeSignature;
 	virtual int32 GetCharacterLevel() override { return 0; };
 	virtual ECharacterClass GetCharacterClass() override;
 
@@ -93,6 +94,8 @@ public:
 	virtual USkeletalMeshComponent* GetWeaponMesh() override;
 	virtual FOnDeathSignature& GetPreOnDeathDelegate() override;
 	virtual FOnShockStateChangeSignature& GetOnShockStateChangeDelegate() override;
+	virtual void ShowMagicCircle(UMaterialInterface* DecalMaterial) override;
+	virtual void HideMagicCircle() override;
 	// ~ ICombatInterface
 
 	virtual void Destroyed() override;
@@ -100,7 +103,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-	
+
 	// 当前角色的lifeSpan
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
 	float SelfLifeSpan;
@@ -259,6 +262,10 @@ protected:
 	/// @return 
 	virtual URPGAuraGameInstanceSubsystem* GetMyGiSubSystem();
 
+	/// 获取项目自定义的玩家控制
+	/// @return 
+	virtual ABasePlayerController* GetMyController();
+
 	/// 多播RPC,服务器和客户端都会调用,用于处理角色死亡
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void MulticastHandleDeath();
@@ -302,6 +309,9 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<URPGAuraGameInstanceSubsystem> RPGAuraGameInstanceSubsystem;
+
+	UPROPERTY()
+	TObjectPtr<ABasePlayerController> BasePlayerController;
 
 	// 时间线组件
 	UPROPERTY()

@@ -8,7 +8,9 @@
 #include "NavigationPath.h"
 #include "NavigationSystem.h"
 #include "NiagaraFunctionLibrary.h"
+#include "Actor/DecalActor/BaseDecalActor.h"
 #include "Characters/EnemyCharacter.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/SplineComponent.h"
 #include "CoreTypes/RPGAuraGameplayTags.h"
 #include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
@@ -37,6 +39,7 @@ ABasePlayerController::ABasePlayerController()
 	BIsShiftDown = false;
 
 	SplineComponent = CreateDefaultSubobject<USplineComponent>("SplineComponent");
+	MagicDecal = nullptr;
 }
 
 void ABasePlayerController::PlayerTick(float DeltaTime)
@@ -45,10 +48,18 @@ void ABasePlayerController::PlayerTick(float DeltaTime)
 	AutoWalking();
 }
 
+void ABasePlayerController::Destroyed()
+{
+	if (GetWorld() && MagicDecalHandle.IsValid()) { GetWorldTimerManager().ClearTimer(MagicDecalHandle); }
+	Super::Destroyed();
+}
+
+
 void ABasePlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	check(InputContext);
+
 
 	// 获得增强输入的本地玩家子系统,通过这个根据添加我们的上下文映射
 	auto SubSystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
@@ -105,11 +116,7 @@ void ABasePlayerController::OnPossess(APawn* aPawn)
 	// UE_LOG(ABasePlayerControllerLog, Warning, TEXT("控制器: [%s] , 以控制 : [%s] 角色"),*GetName(),*aPawn->GetName());
 }
 
-void ABasePlayerController::CursorTrace()
-{
-	GetHitResultUnderCursor(ECC_Visibility, false, CurseHitResult);
-	
-}
+void ABasePlayerController::CursorTrace() { GetHitResultUnderCursor(ECC_Visibility, false, CurseHitResult); }
 
 UBaseAbilitySystemComponent* ABasePlayerController::GetAbilitySystemComponent()
 {
@@ -253,11 +260,11 @@ void ABasePlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 	// LMB释放
 	case EGameplayTagNum::InputLMB:
 		// TODO 该判断有重复,应该用变量存储起来,不至于重复循环判断(能力的Activation Required Tags)..   
-		if (!BIsTargeting && !BIsShiftDown && !GetAbilitySystemComponent()->HasMatchingGameplayTag(FRPGAuraGameplayTags::Get().Abilities_Block_Input_Pressed))
+		if (!BIsTargeting && !BIsShiftDown && !GetAbilitySystemComponent()->
+			HasMatchingGameplayTag(FRPGAuraGameplayTags::Get().Abilities_Block_Input_Pressed))
 		{
-			  
 			UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ClickVfx, CurseHitResult.ImpactPoint);
-			
+
 			CachedDestination = CurseHitResult.ImpactPoint;
 			// 人物跟随鼠标的时间 小于短按阈值,则进行点按鼠标左键人物自动行走
 			if (FollowCursorTime <= ShortPressThreshold && GetPawn())
@@ -322,14 +329,74 @@ void ABasePlayerController::AutoWalking()
 		const auto Dir = SplineComponent->FindDirectionClosestToWorldLocation(Loc, ESplineCoordinateSpace::World);
 		GetPawn()->AddMovementInput(Dir);
 
-		const auto DisToDes = (Loc - CachedDestination).Length();	
+		const auto DisToDes = (Loc - CachedDestination).Length();
 		if (DisToDes <= StopDistance) { BIsAutoWalking = false; }
 	}
 }
 
-void ABasePlayerController::ShiftPressed()
-{
-	BIsShiftDown = true;
-}
+void ABasePlayerController::ShiftPressed() { BIsShiftDown = true; }
 
 void ABasePlayerController::ShiftReleased() { BIsShiftDown = false; }
+
+void ABasePlayerController::ShowMagicDecal()
+{
+	if (!IsValid(MagicDecal))
+	{
+		if (!DecalActorClass)
+		{
+			UE_LOG(ABasePlayerControllerLog, Error, TEXT("DecalActorClass 为 null!"));
+			return;
+		}
+		MagicDecal = GetWorld()->SpawnActor<ABaseDecalActor>(DecalActorClass);
+	}
+	
+	SetShowMouseCursor(false);
+	if (!GetWorldTimerManager().IsTimerPaused(MagicDecalHandle))
+	{
+		GetWorldTimerManager().SetTimer(MagicDecalHandle, this, &ABasePlayerController::EnableMagicDecalTick, .01f,
+		                                true,
+		                                0.f);
+	}
+	else { GetWorldTimerManager().UnPauseTimer(MagicDecalHandle); }
+}
+
+void ABasePlayerController::HideMagicDecal()
+{
+	if (MagicDecalHandle.IsValid())
+	{
+		if (IsValid(MagicDecal))
+		{
+			MagicDecal->SetDecalActorVisibility(false);
+			MagicDecal->Destroy();
+		}
+		GetWorldTimerManager().PauseTimer(MagicDecalHandle);
+	}
+	SetShowMouseCursor(true);
+}
+
+void ABasePlayerController::EnableMagicDecalTick()
+{
+	if (!MagicDecal)
+	{
+		GetWorldTimerManager().PauseTimer(MagicDecalHandle);
+		return;
+	}
+	FHitResult LocalHr{};
+	// TODO 待修改光标碰到角色身上时的抖动,
+	// GetHitResultUnderCursorByChannel(TraceTypeQuery2, false, LocalHr);
+	GetHitResultUnderCursor(ECC_Visibility,false,LocalHr);
+	if (LocalHr.bBlockingHit)
+	{
+		// UKismetSystemLibrary::DrawDebugSphere(this,LocalHr.ImpactPoint,5,10,FColor::Red,5,5.f);
+		MagicDecal->SetDecalActorVisibility(true);
+		MagicDecal->AddActorWorldRotation(FRotator{0, 0.1, 0});
+		MagicDecal->SetActorLocation(LocalHr.ImpactPoint);
+	}
+}
+
+
+void ABasePlayerController::SetMagicDecalMaterial(UMaterialInterface* MaterialInterface)
+{
+	if (!MagicDecal || !MaterialInterface) { return; }
+	MagicDecal->SetDecalMaterial(MaterialInterface);
+}

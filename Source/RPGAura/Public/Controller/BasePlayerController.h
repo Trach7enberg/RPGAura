@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "BasePlayerController.generated.h"
 
+class ABaseDecalActor;
 class UNiagaraSystem;
 class USplineComponent;
 class UBaseAbilitySystemComponent;
@@ -27,11 +28,24 @@ public:
 	ABasePlayerController();
 	virtual void PlayerTick(float DeltaTime) override;
 
+	/// 显示魔法贴花
+	virtual void ShowMagicDecal();
+
+	/// 隐藏魔法贴花
+	virtual void HideMagicDecal();
+
+	virtual void SetMagicDecalMaterial(UMaterialInterface* MaterialInterface);
+	virtual void Destroyed() override;
+
 protected:
 	/// 玩家点击地面时显示的特效
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="VFX")
 	TObjectPtr<UNiagaraSystem> ClickVfx;
-	
+
+	/// 魔法贴花
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Decal")
+	TSubclassOf<ABaseDecalActor> DecalActorClass;
+
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
 	virtual void OnPossess(APawn* aPawn) override;
@@ -69,6 +83,14 @@ private:
 	UPROPERTY()
 	TObjectPtr<USplineComponent> SplineComponent;
 
+	// 魔法贴花的定时器
+	UPROPERTY()
+	FTimerHandle MagicDecalHandle;
+
+	/// 魔法贴花
+	UPROPERTY()
+	TObjectPtr<ABaseDecalActor> MagicDecal;
+
 	// 存储目标点
 	FVector CachedDestination;
 
@@ -90,7 +112,7 @@ private:
 
 	// 是否按下Shift键
 	bool BIsShiftDown;
-	
+
 	UBaseAbilitySystemComponent* GetAbilitySystemComponent();
 	void AbilityInputTagPressed(FGameplayTag InputTag);
 	void AbilityInputTagReleased(FGameplayTag InputTag);
@@ -100,4 +122,8 @@ private:
 
 	void ShiftPressed();
 	void ShiftReleased();
+
+	/// 启用魔法贴花事件
+	UFUNCTION()
+	void EnableMagicDecalTick();
 };

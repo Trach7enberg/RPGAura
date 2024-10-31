@@ -10,6 +10,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WeaponLogicBaseComponent.h"
+#include "Controller/BasePlayerController.h"
 #include "CoreTypes/RPGAuraGameplayTags.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
@@ -163,11 +164,18 @@ URPGAuraGameInstanceSubsystem* ACharacterBase::GetMyGiSubSystem()
 	return RPGAuraGameInstanceSubsystem;
 }
 
-
-void ACharacterBase::StopVfx(const FGameplayTag& Tag)
+ABasePlayerController* ACharacterBase::GetMyController()
 {
-	MulticastStopVfxWithTag(Tag);
+	if (!BasePlayerController)
+	{
+		if (!GetController()) { return nullptr; }
+
+		BasePlayerController = Cast<ABasePlayerController>(GetController());
+	}
+	return BasePlayerController.Get();
 }
+
+void ACharacterBase::StopVfx(const FGameplayTag& Tag) { MulticastStopVfxWithTag(Tag); }
 
 void ACharacterBase::MulticastStopVfxWithTag_Implementation(const FGameplayTag& Tag)
 {
@@ -192,7 +200,7 @@ void ACharacterBase::StartSummonAnim() { StartSummonTimeline(); }
 
 void ACharacterBase::ShowVfx(const FGameplayTag Tag)
 {
-	if(!Tag.IsValid()){return;}
+	if (!Tag.IsValid()) { return; }
 	if (const auto Vfx = DeBuffVfxMap.Find(Tag))
 	{
 		UE_LOG(ACharacterBaseLog, Error, TEXT("[DeBuffVfx]: %s"), *Tag.GetTagName().ToString());
@@ -242,6 +250,19 @@ USkeletalMeshComponent* ACharacterBase::GetWeaponMesh()
 
 FOnDeathSignature& ACharacterBase::GetPreOnDeathDelegate() { return OnDeathSignature; }
 FOnShockStateChangeSignature& ACharacterBase::GetOnShockStateChangeDelegate() { return OnShockStateChangeSignature; }
+
+void ACharacterBase::ShowMagicCircle(UMaterialInterface* DecalMaterial)
+{
+	if (!GetMyController()) { return; }
+	GetMyController()->ShowMagicDecal();
+	if (DecalMaterial) { GetMyController()->SetMagicDecalMaterial(DecalMaterial); }
+}
+
+void ACharacterBase::HideMagicCircle()
+{
+	if (!GetMyController()) { return; }
+	GetMyController()->HideMagicDecal();
+}
 
 ECharacterClass ACharacterBase::GetCharacterClass() { return CharacterClass; }
 
