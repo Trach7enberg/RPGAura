@@ -161,6 +161,9 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 			GameplayTags.Abilities_Attack_Spell_Lightning_Electrocute = UGameplayTagsManager::Get().
 				AddNativeGameplayTag(
 					"Abilities.Attack.Spell.Lightning.Electrocute", FString("触电法术技能"));
+			GameplayTags.Abilities_Attack_Spell_Arcane_ArcaneShards = UGameplayTagsManager::Get().
+				AddNativeGameplayTag(
+					"Abilities.Attack.Spell.Arcane.ArcaneShards", FString(""));
 		}
 
 		// DeBuff
@@ -274,6 +277,11 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 				"Abilities.Block.Input.Released", FString(""));
 			GameplayTags.Abilities_Block_Misc_CursorTrace = UGameplayTagsManager::Get().AddNativeGameplayTag(
 				"Abilities.Block.Misc.CursorTrace", FString(""));
+		}
+
+		{
+			GameplayTags.GameplayCue_Spawn_ArcaneShards = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"GameplayCue.Spawn.ArcaneShards", FString(""));
 		}
 	}
 
@@ -496,6 +504,9 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 		             AddTag(GameplayTags.Abilities_Attack_Spell_Lightning_Electrocute);
 	}
 
+	{
+		GameplayTags.AttackSpellArcaneTagsContainer.AddTag(GameplayTags.Abilities_Attack_Spell_Arcane_ArcaneShards);
+	}
 	// 添加所有主动攻击标签到容器
 	{
 		GameplayTags.AttackOffensiveTagsContainer.AppendTags(GameplayTags.AttackSpellFireTagsContainer);

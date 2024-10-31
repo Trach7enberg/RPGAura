@@ -138,7 +138,7 @@ struct FRPGAuraGameplayTags
 	// 实际的技能标签 ,分为火、电、奥术三系
 	FGameplayTag Abilities_Attack_Spell_Fire_FireBolt;				// 火系法术下的火球技能
 	FGameplayTag Abilities_Attack_Spell_Lightning_Electrocute;		// 雷电系法术下的触电技能
-	FGameplayTag Abilities_Attack_Spell_Arcane;						// TODO 奥术系
+	FGameplayTag Abilities_Attack_Spell_Arcane_ArcaneShards;		// TODO 奥术系
 
 	// 能力的负面效果 
 	FGameplayTag Abilities_DeBuff;
@@ -205,6 +205,8 @@ struct FRPGAuraGameplayTags
 	// 受击反应
 	FGameplayTag Abilities_Effects_HitReact_Normal;
 	FGameplayTag Abilities_Effects_HitReact_InShock;				// 被电击中时
+
+	FGameplayTag GameplayCue_Spawn_ArcaneShards;					// 用于生成奥术碎片的GameplayCueTag
 
 	/// 获取GameplayTags静态实例
 	/// @return GameplayTags单例
