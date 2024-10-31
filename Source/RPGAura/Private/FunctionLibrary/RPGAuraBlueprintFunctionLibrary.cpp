@@ -19,7 +19,8 @@ URPGAuraBlueprintFunctionLibrary::URPGAuraBlueprintFunctionLibrary() {}
 
 void URPGAuraBlueprintFunctionLibrary::FindLivePlayersWithinRadius(const AActor* Causer,
                                                                    TArray<AActor*>& OutOverlappingActors,
-                                                                   const TArray<AActor*>& IgnoreActors, const float Radius,
+                                                                   const TArray<AActor*>& IgnoreActors,
+                                                                   const float Radius,
                                                                    const FVector& SphereOrigin, const bool IgnoreSelf,
                                                                    const FName IgnoreTag, const int LimitedNum)
 {
@@ -205,13 +206,16 @@ void URPGAuraBlueprintFunctionLibrary::GetVectorBySpread(const float BaseSpread,
                                                          const FVector& RotateAxis)
 {
 	if (NumVector <= 0) { return; }
-	// const auto Tmp = (NumVector + 1);
+
+	// 细分分子数
+	const auto DeltaFactor = (FMath::IsNearlyZero((FMath::Fmod(BaseSpread, 360.f)))) ? 0 : 1;
 	// 细分角度
-	const auto DeltaSpread = (NumVector > 1) ? BaseSpread / (NumVector - 1) : 0;
+	const auto DeltaSpread = (NumVector > 1) ? BaseSpread / (NumVector - DeltaFactor) : 0;
 	// 初始向量的角度(以UpVector为轴)
 	const auto InitSpread = (NumVector > 1) ? -((BaseSpread / 2.f)) : 0;
 	// 左分散的向量
 	const auto LeftOfSpread = ForwardVector.RotateAngleAxis(InitSpread, RotateAxis);
+
 	for (int i = 0; i < NumVector; ++i)
 	{
 		const auto Dir = LeftOfSpread.RotateAngleAxis((DeltaSpread) * i,
