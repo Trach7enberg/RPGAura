@@ -58,7 +58,7 @@ public:
 	/// @return 
 	UFUNCTION(BlueprintCallable)
 	virtual UAnimMontage* GetInShockAnim() =0;
-	
+
 	///  获取死亡蒙太奇动画
 	/// @return 死亡蒙太奇动画
 	UFUNCTION(BlueprintCallable)
@@ -154,7 +154,7 @@ public:
 	/// @return 
 	UFUNCTION(BlueprintCallable)
 	virtual bool GetInShockHitState() = 0;
-	
+
 	/// 获取当前角色的武器,可能为nullptr
 	/// @return 
 	UFUNCTION(BlueprintCallable)
@@ -167,4 +167,12 @@ public:
 	/// 获取当前角色处于被电击时会广播的委托
 	/// @return 
 	virtual FOnShockStateChangeSignature& GetOnShockStateChangeDelegate() = 0;
+
+	/// 
+	UFUNCTION(BlueprintCallable)
+	virtual void ShowMagicCircle(UMaterialInterface* DecalMaterial = nullptr) = 0;
+
+	/// 
+	UFUNCTION(BlueprintCallable)
+	virtual void HideMagicCircle() = 0;
 };
