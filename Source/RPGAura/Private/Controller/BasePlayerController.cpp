@@ -10,12 +10,12 @@
 #include "NiagaraFunctionLibrary.h"
 #include "Actor/DecalActor/BaseDecalActor.h"
 #include "Characters/EnemyCharacter.h"
-#include "Components/CapsuleComponent.h"
 #include "Components/SplineComponent.h"
 #include "CoreTypes/RPGAuraGameplayTags.h"
 #include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
 #include "Input/Components/BaseEnhancedInputComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "RPGAura/RPGAura.h"
 
 DEFINE_LOG_CATEGORY_STATIC(ABasePlayerControllerLog, All, All);
 
@@ -382,9 +382,7 @@ void ABasePlayerController::EnableMagicDecalTick()
 		return;
 	}
 	FHitResult LocalHr{};
-	// TODO 待修改光标碰到角色身上时的抖动,
-	// GetHitResultUnderCursorByChannel(TraceTypeQuery2, false, LocalHr);
-	GetHitResultUnderCursor(ECC_Visibility,false,LocalHr);
+	GetHitResultUnderCursor(TRACE_CHANNEL_MAGICDECAL,false,LocalHr);
 	if (LocalHr.bBlockingHit)
 	{
 		// UKismetSystemLibrary::DrawDebugSphere(this,LocalHr.ImpactPoint,5,10,FColor::Red,5,5.f);
