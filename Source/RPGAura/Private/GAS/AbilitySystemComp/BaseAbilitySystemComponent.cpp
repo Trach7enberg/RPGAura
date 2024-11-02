@@ -104,7 +104,7 @@ void UBaseAbilitySystemComponent::UpdateAbilityStatusWhenLevelUp(const int32 Lev
 		if (Spec) { continue; }
 
 		FGameplayAbilitySpec GameplayAbilitySpec = FGameplayAbilitySpec(Info.AbilityClass, 1);
-
+		
 		// 把能力的状态设置为Eligible,并给予能力但是不激活 
 		AddTagToAbilitySpecContainer(GameplayAbilitySpec.DynamicAbilityTags,
 		                             FRPGAuraGameplayTags::Get().Abilities_Status_Eligible);
@@ -156,7 +156,11 @@ void UBaseAbilitySystemComponent::AddCharacterDefaultAbility(const TSubclassOf<U
 void UBaseAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& InputTag)
 {
 	if (!InputTag.IsValid()) { return; }
+	UE_LOG(UBaseAbilitySystemComponentLog,Warning,TEXT("[%s]按下"),*InputTag.ToString())
+
+	
 	// 获取可以激活的能力数组
+	FScopedAbilityListLock AbilityListLock(*this);
 	for (auto& AbilitySpec : GetActivatableAbilities())
 	{
 		// DynamicAbilityTags 中保存的是与该能力动态相关的标签，而不是全部标签,表示在能力激活或执行过程中可能变化的标签
@@ -165,9 +169,9 @@ void UBaseAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& Inp
 		{
 			// 通知能力系统,输入已经按下,该函数内部会调用虚函数InputPressed,如果你想在这里干别的事情,可以通过覆写虚函数InputPressed实现
 			AbilitySpecInputPressed(AbilitySpec);
-			if (!AbilitySpec.IsActive()) { TryActivateAbility(AbilitySpec.Handle); }
 			InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputPressed, AbilitySpec.Handle,
 			                      AbilitySpec.ActivationInfo.GetActivationPredictionKey());
+			if (!AbilitySpec.IsActive()) { TryActivateAbility(AbilitySpec.Handle); }
 		}
 	}
 }
@@ -175,7 +179,9 @@ void UBaseAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& Inp
 void UBaseAbilitySystemComponent::AbilityInputTagHeld(const FGameplayTag& InputTag)
 {
 	if (!InputTag.IsValid()) { return; }
-	// 获取可以激活的能力数组
+
+	FScopedAbilityListLock AbilityListLock(*this);
+	// 获取可以激活的能力数组 
 	for (auto& AbilitySpec : GetActivatableAbilities())
 	{
 		// DynamicAbilityTags 中保存的是与该能力动态相关的标签，而不是全部标签,表示在能力激活或执行过程中可能变化的标签
@@ -197,6 +203,7 @@ void UBaseAbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& In
 {
 	if (!InputTag.IsValid()) { return; }
 
+	FScopedAbilityListLock AbilityListLock(*this);
 	// 获取可以激活的能力数组
 	for (auto& AbilitySpec : GetActivatableAbilities())
 	{
@@ -216,6 +223,7 @@ void UBaseAbilitySystemComponent::TryActivateAbilityByDefaultInputTag(const FGam
 {
 	if (!Tag.IsValid()) { return; }
 
+	FScopedAbilityListLock AbilityListLock(*this);
 	// 获取可以激活的能力数组
 	for (auto& AbilitySpec : GetActivatableAbilities())
 	{
@@ -260,7 +268,6 @@ void UBaseAbilitySystemComponent::BroadCastDefaultActivatableAbilitiesInfo()
 
 	// 安全地遍历所有可激活的能力，当前范围将被锁定,如果有新增加或者被移除的能力不会改变GetActivatableAbilities的结果,完成当前范围之后才会改变
 	FScopedAbilityListLock AbilityListLock(*this);
-
 	for (const auto& AbilitySpec : GetActivatableAbilities())
 	{
 		const auto TempAbilityTag = GetTagFromAbilitySpec(AbilitySpec, FRPGAuraGameplayTags::Get().Abilities_Attack);
@@ -270,6 +277,7 @@ void UBaseAbilitySystemComponent::BroadCastDefaultActivatableAbilitiesInfo()
 
 		FTagToAbilityInfo AbilityInfo = Infos->FindAbilityInfo(TempAbilityTag);
 
+		// TODO 如果初始配置的能力的输入标签有重复会导致显示BUG,待修复   
 		// 从能力里获得触发该能力对应的输入键(标签)
 		AbilityInfo.InputTag = GetTagFromAbilitySpecDynamicTags(AbilitySpec, FRPGAuraGameplayTags::Get().InputTag);
 		AbilityInfo.StatusTag = GetAbilityStatusFromSpec(AbilitySpec);
