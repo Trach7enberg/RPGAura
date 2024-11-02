@@ -213,6 +213,14 @@ void ACharacterBase::ShowVfx(const FGameplayTag Tag)
 
 void ACharacterBase::AddKnockBack(const FVector& Direction)
 {
+	if (!GetMesh() || !GetMesh()->AnimScriptInstance.Get()) { return; }
+
+	// 说明角色正在被击退,不能再击退了防止叠加飞起来
+	if (GetMesh()->AnimScriptInstance.Get()->RootMotionMode == ERootMotionMode::Type::NoRootMotionExtraction)
+	{
+		return;
+	}
+
 	if (!LandedDelegate.IsAlreadyBound(this, &ACharacterBase::OnKnockBackFinished))
 	{
 		LandedDelegate.AddDynamic(this, &ACharacterBase::OnKnockBackFinished);
@@ -227,7 +235,7 @@ void ACharacterBase::OnKnockBackFinished(const FHitResult& Hit)
 	if (!GetMesh() || !GetMesh()->AnimScriptInstance.Get()) { return; }
 	if (GetMesh()->AnimScriptInstance.Get()->RootMotionMode == ERootMotionMode::Type::NoRootMotionExtraction)
 	{
-		UE_LOG(ACharacterBaseLog, Error, TEXT("击退结束"));
+		UE_LOG(ACharacterBaseLog, Warning, TEXT("[%s]击退结束"), *GetNameSafe(this));
 		GetMesh()->AnimScriptInstance.Get()->RootMotionMode = LocalDefaultRootMotionMode;
 	}
 }
@@ -588,7 +596,15 @@ void ACharacterBase::MulticastHandleDeath_Implementation()
 
 void ACharacterBase::AddDeathImpulse_Implementation(const FVector& Impulse)
 {
+	auto LocalImpulse = Impulse;
+	UKismetSystemLibrary::DrawDebugArrow(this, GetActorLocation(), GetActorLocation() + LocalImpulse, 1000,
+	                                     FLinearColor::Red, 3, 2);
 	if (!bIsDie) { return; }
-	if (GetMesh()) { GetMesh()->AddImpulse(Impulse, NAME_None, true); }
+	if (GetMesh())
+	{
+		// TODO 待修改硬编码值
+		// LocalImpulse.Z += 8000;
+		GetMesh()->AddImpulse(LocalImpulse, NAME_None, true);
+	}
 	if (WeaponLogicBaseComponent) { WeaponLogicBaseComponent->AddWeaponImpulse(Impulse, NAME_None, true); }
 }
