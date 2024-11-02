@@ -96,5 +96,7 @@ void ABaseProjectile::HomingActorOnPreDestroyed(AActor* Actor)
 
 void ABaseProjectile::Destroyed()
 {
-	
+	Super::Destroyed();
 }
+
+void ABaseProjectile::LifeSpanExpired() { Super::LifeSpanExpired(); }

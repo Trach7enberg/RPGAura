@@ -36,6 +36,8 @@ public:
 
 	virtual void Destroyed() override;
 
+	virtual void LifeSpanExpired() override;
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Projectile")
 	float ProjectileLifeSpawn = 5.0f;
