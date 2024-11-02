@@ -92,10 +92,10 @@ void UBaseProjectileAbility::SpawnProjectiles(const FHitResult& HitResult,
 	if (bOverridePitch) { Rotation.Pitch = OverridePitch; }
 
 	const auto ForwardVector = Rotation.Vector();
-	const auto ProjNum = FMath::Max(1, GetValidProjectileNum(GetAbilityLevel()));
+	const auto ProjNum = FMath::Max(1, GetValidAbilityCount(GetAbilityLevel()));
 	TArray<FVector> Directions;
 	URPGAuraBlueprintFunctionLibrary::GetVectorBySpread(SpawnSpread, ProjNum, ForwardVector, Directions);
-	auto Random = FMath::RandRange(1, Directions.Num()); 
+	auto Random = FMath::RandRange(1, Directions.Num());
 	for (auto& Dire : Directions)
 	{
 		--Random;
@@ -124,73 +124,16 @@ void UBaseProjectileAbility::SpawnProjectiles(const FHitResult& HitResult,
 		ProjComp->HomingAccelerationMagnitude = FMath::RandRange(HomingMinAcceleration, HomingMaxAcceleration);
 		ProjComp->bIsHomingProjectile = bIsHomingProjectile;
 
-		//多个飞弹触发的各种概率 只会挑其中一个飞弹算一次 
+		//多个飞弹触发的各种DeBuff概率 只会挑其中一个飞弹算一次 
 		if (Random != 0)
 		{
-			UE_LOG(UBaseProjectileAbilityLog,Error,TEXT("%d"),Random);
+			UE_LOG(UBaseProjectileAbilityLog, Error, TEXT("%d"), Random);
 			Projectile->DamageEffectParams.DeBuffChance = 0.f;
 			Projectile->DamageEffectParams.KnockBackChance = 0.f;
 		}
 		// 完成飞弹生成
 		Projectile->FinishSpawning(SpawnTrans);
 	}
-}
-
-void UBaseProjectileAbility::UpdateAbilityDescription(const FGameplayTag& AbilityTag, int32 AbilityLevel)
-{
-	if (!CurrentAbilityDescription.IsDescriptionValid()) { return; }
-	const auto DescStrNormal = CurrentAbilityDescription.DescriptionNormal.ToString();
-	const auto DescStrLocked = CurrentAbilityDescription.DescriptionLocked.ToString();
-	const auto DescStrNextLevel = CurrentAbilityDescription.DescriptionNextLevel.ToString();
-
-	const auto FormatNormalStr = FString::Format(*DescStrNormal, {
-		                                             // 当前技能等级{0}
-		                                             AbilityLevel,
-		                                             // 能力冷却时间{1}
-		                                             FString::Printf(TEXT("%.1f"), GetCoolDown(AbilityLevel)),
-		                                             // 多少枚投射物{2}
-		                                             GetValidProjectileNum(AbilityLevel),
-		                                             // 预计伤害{3}
-		                                             FString::Printf(
-			                                             TEXT("%.1f"),
-			                                             GetEstimatedDamageFromDamageTypesMap(AbilityLevel)),
-		                                             // DeBuff几率{4}
-		                                             FString::Printf(TEXT("%.1f"), DeBuffChance),
-		                                             // DeBuff持续时间{5}
-		                                             FString::Printf(TEXT("%.1f"), DeBuffDuration),
-		                                             // DeBuff伤害{6}
-		                                             FString::Printf(TEXT("%.1f"), DeBuffDamage),
-		                                             // 能力蓝耗值{7}
-		                                             FString::Printf(
-			                                             TEXT("%.1f"),
-			                                             FMath::Abs(GetManaCost(AbilityLevel))),
-	                                             });
-
-	const auto NextLevel = AbilityLevel + 1;
-	const auto FormatNextLevelStr = FString::Format(*DescStrNextLevel, {
-		                                                // 当前技能等级{0}
-		                                                NextLevel,
-		                                                // 能力冷却时间{1}
-		                                                FString::Printf(TEXT("%.1f"), GetCoolDown(NextLevel)),
-		                                                // 多少枚投射物{2}
-		                                                GetValidProjectileNum(AbilityLevel) + 1,
-		                                                // 预计伤害{3}
-		                                                FString::Printf(
-			                                                TEXT("%.1f"),
-			                                                GetEstimatedDamageFromDamageTypesMap(NextLevel)),
-		                                                // DeBuff几率{4}
-		                                                FString::Printf(TEXT("%.1f"), DeBuffChance),
-		                                                // DeBuff持续时间{5}
-		                                                FString::Printf(TEXT("%.1f"), DeBuffDuration),
-		                                                // DeBuff伤害{6}
-		                                                FString::Printf(TEXT("%.1f"), DeBuffDamage),
-		                                                // 能力蓝耗值{7}
-		                                                FString::Printf(
-			                                                TEXT("%.1f"),
-			                                                FMath::Abs(GetManaCost(NextLevel))),
-	                                                });
-	CurrentAbilityDescription.DescriptionNormal = FText::FromString(FormatNormalStr);
-	CurrentAbilityDescription.DescriptionNextLevel = FText::FromString(FormatNextLevelStr);
 }
 
 void UBaseProjectileAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
@@ -201,7 +144,7 @@ void UBaseProjectileAbility::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 }
 
-int32 UBaseProjectileAbility::GetValidProjectileNum(const int32 AbilityLevel)
+int32 UBaseProjectileAbility::GetValidAbilityCount(const int32 AbilityLevel)
 {
 	return FMath::Min(AbilityLevel, MaxProjectileNum);
 }
