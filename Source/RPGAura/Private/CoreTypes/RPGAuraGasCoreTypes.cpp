@@ -20,11 +20,13 @@ bool FRPGAuraGameplayEffectContext::NetSerialize(FArchive& Ar, UPackageMap* Map,
 		if (DamageTypes.Num() > 0) { RepBits |= 1 << 9; }
 		if (DeBuffInfos.Num() > 0) { RepBits |= 1 << 10; }
 		if (!Impulse.IsZero()) { RepBits |= 1 << 11; }
-		if(bIsDeBuffSideEffect){ RepBits |= 1 << 12; }
-		if(bIsKnockBackHit){ RepBits |= 1 << 13; }
+		if (bIsDeBuffSideEffect) { RepBits |= 1 << 12; }
+		if (bIsKnockBackHit) { RepBits |= 1 << 13; }
+		// 不为1才传输
+		if (RadiusDamageFallOffFactor != 1) { RepBits |= 1 << 14; }
 	}
 
-	Ar.SerializeBits(&RepBits, 14);
+	Ar.SerializeBits(&RepBits, 15);
 
 	if (RepBits & (1 << 0)) { Ar << Instigator; }
 	if (RepBits & (1 << 1)) { Ar << EffectCauser; }
@@ -51,18 +53,10 @@ bool FRPGAuraGameplayEffectContext::NetSerialize(FArchive& Ar, UPackageMap* Map,
 		// 网络序列化DeBuff信息数组
 		SafeNetSerializeTArray_WithNetSerialize<31>(Ar, DeBuffInfos, Map);
 	}
-	if(RepBits & (1 << 11))
-	{
-		Impulse.NetSerialize(Ar,Map,bOutSuccess);
-	}
-	if(RepBits & (1 << 12))
-	{
-		Ar << bIsDeBuffSideEffect;
-	}
-	if(RepBits & (1 << 13))
-	{
-		Ar << bIsKnockBackHit;
-	}
+	if (RepBits & (1 << 11)) { Impulse.NetSerialize(Ar, Map, bOutSuccess); }
+	if (RepBits & (1 << 12)) { Ar << bIsDeBuffSideEffect; }
+	if (RepBits & (1 << 13)) { Ar << bIsKnockBackHit; }
+	if (RepBits & (1 << 14)) { Ar << RadiusDamageFallOffFactor; }
 
 	if (Ar.IsLoading())
 	{

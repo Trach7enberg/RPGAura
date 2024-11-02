@@ -70,6 +70,13 @@ public:
 	bool IsKnockBackHit() const { return bIsKnockBackHit; }
 	void SetIsKnockBackHit(const bool IsKnockBackHit) { this->bIsKnockBackHit = IsKnockBackHit; }
 
+	float GetRadiusDamageFallOffFactor() const { return RadiusDamageFallOffFactor; }
+
+	void SetRadiusDamageFallOffFactor(const float NewRadiusDamageFallOffFactor)
+	{
+		this->RadiusDamageFallOffFactor = NewRadiusDamageFallOffFactor;
+	}
+
 protected:
 	// 攻击是否被格挡
 	UPROPERTY()
@@ -86,6 +93,10 @@ protected:
 	// 当前GE的能力是否触发击退
 	UPROPERTY()
 	bool bIsKnockBackHit = false;
+
+	// 伤害范围半径的衰减系数 (不为1则说明是范围衰减伤害)
+	UPROPERTY()
+	float RadiusDamageFallOffFactor = 1.f;
 
 	// TODO 结构体需要换成弱指针包裹?
 	// 当前GE拥有的DeBuff
