@@ -382,7 +382,7 @@ void ABasePlayerController::EnableMagicDecalTick()
 		return;
 	}
 	FHitResult LocalHr{};
-	GetHitResultUnderCursor(TRACE_CHANNEL_MAGICDECAL,false,LocalHr);
+	GetHitResultUnderCursor(OBJECT_CHANNEL_MAGICDECAL,false,LocalHr);
 	if (LocalHr.bBlockingHit)
 	{
 		// UKismetSystemLibrary::DrawDebugSphere(this,LocalHr.ImpactPoint,5,10,FColor::Red,5,5.f);
