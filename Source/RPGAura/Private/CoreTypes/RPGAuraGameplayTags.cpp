@@ -158,6 +158,8 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 
 			GameplayTags.Abilities_Attack_Spell_Fire_FireBolt = UGameplayTagsManager::Get().AddNativeGameplayTag(
 				"Abilities.Attack.Spell.Fire.FireBolt", FString("火球法术技能"));
+			GameplayTags.Abilities_Attack_Spell_Fire_BlazeBurst = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.Attack.Spell.Fire.BlazeBurst", FString(""));
 			GameplayTags.Abilities_Attack_Spell_Lightning_Electrocute = UGameplayTagsManager::Get().
 				AddNativeGameplayTag(
 					"Abilities.Attack.Spell.Lightning.Electrocute", FString("触电法术技能"));
@@ -258,8 +260,12 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 		{
 			GameplayTags.Abilities_CoolDown_Fire_FireBolt = UGameplayTagsManager::Get().AddNativeGameplayTag(
 				"Abilities.CoolDown.Fire.FireBolt", FString(""));
+			GameplayTags.Abilities_CoolDown_Fire_BlazeBurst = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.CoolDown.Fire.BlazeBurst", FString(""));
 			GameplayTags.Abilities_CoolDown_Electrical_Electrocute = UGameplayTagsManager::Get().AddNativeGameplayTag(
 				"Abilities.CoolDown.Electrical.Electrocute", FString(""));
+			GameplayTags.Abilities_CoolDown_Arcane_ArcaneShards = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Abilities.CoolDown.Arcane.ArcaneShards", FString(""));
 		}
 
 		{
@@ -496,6 +502,7 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 	// 添加火系法术攻击技能标签到容器里
 	{
 		GameplayTags.AttackSpellFireTagsContainer.AddTag(GameplayTags.Abilities_Attack_Spell_Fire_FireBolt);
+		GameplayTags.AttackSpellFireTagsContainer.AddTag(GameplayTags.Abilities_Attack_Spell_Fire_BlazeBurst);
 	}
 
 	// 添加电系技能标签到容器里

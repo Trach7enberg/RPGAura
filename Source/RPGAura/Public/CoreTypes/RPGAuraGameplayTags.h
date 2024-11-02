@@ -137,6 +137,7 @@ struct FRPGAuraGameplayTags
 
 	// 实际的技能标签 ,分为火、电、奥术三系
 	FGameplayTag Abilities_Attack_Spell_Fire_FireBolt;				// 火系法术下的火球技能
+	FGameplayTag Abilities_Attack_Spell_Fire_BlazeBurst;			// 火系法术下的焰爆扩散技能
 	FGameplayTag Abilities_Attack_Spell_Lightning_Electrocute;		// 雷电系法术下的触电技能
 	FGameplayTag Abilities_Attack_Spell_Arcane_ArcaneShards;		// TODO 奥术系
 
@@ -186,7 +187,9 @@ struct FRPGAuraGameplayTags
 
 	// 能力冷却的标签
 	FGameplayTag Abilities_CoolDown_Fire_FireBolt;					// 火球技能冷却时间标签
+	FGameplayTag Abilities_CoolDown_Fire_BlazeBurst;				// 焰爆扩散技能冷却时间标签
 	FGameplayTag Abilities_CoolDown_Electrical_Electrocute;			// 电束技能冷却时间标签
+	FGameplayTag Abilities_CoolDown_Arcane_ArcaneShards;			// 奥术碎片冷却时间标签
 
 	// 能力的Block标签
 	FGameplayTag Abilities_Block;
