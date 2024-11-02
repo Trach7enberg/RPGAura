@@ -22,14 +22,13 @@ void URPGAuraBlueprintFunctionLibrary::FindLivePlayersWithinRadius(const AActor*
                                                                    const TArray<AActor*>& IgnoreActors,
                                                                    const float Radius,
                                                                    const FVector& SphereOrigin, const bool IgnoreSelf,
-                                                                   const FName IgnoreTag, const int LimitedNum)
+                                                                   const FName IgnoreTag)
 {
 	if (!Causer || !IsValid(Causer))
 	{
 		UE_LOG(URPGAuraBlueprintFunctionLibraryLog, Warning, TEXT("Causer无效"));
 		return;
 	}
-	if (LimitedNum <= 0) { return; }
 
 	FCollisionQueryParams SphereParams;
 	if (IgnoreSelf) { SphereParams.AddIgnoredActor(Causer); }
@@ -49,7 +48,7 @@ void URPGAuraBlueprintFunctionLibrary::FindLivePlayersWithinRadius(const AActor*
 	{
 		// if(LocalCount < 0) { break; }
 		// 忽视友军或敌人?
-		if (OverlapResult.GetActor()->ActorHasTag(IgnoreTag)) { continue; }
+		if (IgnoreTag.IsValid() && OverlapResult.GetActor()->ActorHasTag(IgnoreTag)) { continue; }
 
 		const auto DoseImplement = OverlapResult.GetActor()->Implements<UCombatInterface>();
 		if (!DoseImplement) { continue; }
@@ -163,10 +162,11 @@ FActiveGameplayEffectHandle URPGAuraBlueprintFunctionLibrary::ApplyDamageGamepla
 		Params.DamageGameplayEffectClass, Params.AbilityLevel, EffectContextHandle);
 	EffectContextHandle.AddSourceObject(SourceAvatar);
 
-	/// 传输设置冲击点的前向向量
+	/// 传输设置冲击点的前向向量、以及范围衰减伤害系数(如果有)
 	if (const auto MyGeContext = UGameAbilitySystemGlobals::GetCustomGeContext(EffectContextHandle.Get()))
 	{
-		MyGeContext->SetImpulse(Params.ImpulseVector);
+		MyGeContext->SetImpulse(Params.ImpulseVector * Params.KnockBackDirection);
+		MyGeContext->SetRadiusDamageFallOffFactor(Params.RadiusDamageFallOffFactor);
 	}
 	AssignTagSetByCallerMagnitudeWithDamageTypes(Params.DamageTypesMap, GeSpecHandle, Params.AbilityLevel);
 	AssignTagSetByCallerMagnitudeByGeSpecHandle(GeSpecHandle, FRPGAuraGameplayTags::Get().DeBuffEffectsTagsContainer,
@@ -224,11 +224,55 @@ void URPGAuraBlueprintFunctionLibrary::GetVectorBySpread(const float BaseSpread,
 	}
 }
 
-
 void URPGAuraBlueprintFunctionLibrary::LoadAbilityDescriptionAsset(UObject* Outer)
 {
 	AbilityDescriptionAsset = LoadObject<UAbilityDescriptionAsset>(
 		Outer,TEXT(
 			"/Script/RPGAura.AbilityDescriptionAsset'/Game/Blueprints/GAS/Data/DataAssets/DA_AbilitiesDescriptions.DA_AbilitiesDescriptions'"));
 	if (!AbilityDescriptionAsset) { UE_LOG(URPGAuraBlueprintFunctionLibraryLog, Error, TEXT("获取技能描述数据资产失败!")); }
+}
+
+float URPGAuraBlueprintFunctionLibrary::GetRadialDamageWithFallOffFactor(const FVector& ActorLoc,
+                                                                         const FVector& SphereCenter,
+                                                                         const float OuterRadius,
+                                                                         const float InnerRadius,
+                                                                         const float MinDamageFactor,
+                                                                         const float Tolerance)
+{
+	auto TmpInnerR = InnerRadius;
+
+	// 没有内半径则当做普通圆处理
+	if (TmpInnerR == 0) { TmpInnerR = OuterRadius; }
+	if (OuterRadius < InnerRadius) { return 0.f; }
+
+	// 内外半径一样,就当成没有内半径的一个普通圆
+	const auto LocalInnerRadius = (TmpInnerR == OuterRadius) ? 0.f : TmpInnerR;
+
+	// 圆心到Actor的距离
+	auto Distance = FVector::Dist(SphereCenter, ActorLoc);
+	const auto OuterRadiusTolerance = OuterRadius + Tolerance;
+
+	// 处理当Actor在圆外不远处时,允许容差
+	if (Distance > OuterRadius)
+	{
+		if (FMath::IsWithinInclusive(Distance, 0.f,OuterRadiusTolerance))
+		{
+			// 在容差范围内,直接将Actor的距离设置为球的最边界
+			Distance = OuterRadius;
+		}
+	}
+
+	// Actor在圆中,但是不在内半径时,即Actor在内半径之外小于等于外半径里 TODO 修改不会进入当前分支的bug 
+	if (Distance > LocalInnerRadius && Distance <= OuterRadius)
+	{
+		const auto LinearFallOff = (1.f - ((Distance - LocalInnerRadius) / (OuterRadius -
+			LocalInnerRadius)));
+		return (MinDamageFactor + (1.f - MinDamageFactor) * LinearFallOff);
+	}
+
+	// Actor在内半径时
+	if (Distance <= LocalInnerRadius) { return 1.f; }
+
+	// Actor不在伤害圆中,因此没有伤害
+	return 0.f;
 }

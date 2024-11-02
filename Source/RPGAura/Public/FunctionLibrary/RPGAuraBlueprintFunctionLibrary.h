@@ -39,13 +39,11 @@ public:
 	/// @param SphereOrigin 球体中心点位
 	/// @param IgnoreSelf 是否忽略自己
 	/// @param IgnoreTag 是否忽略带有当前标签名字的角色
-	/// @param LimitedNum 最多返回多少个
 	UFUNCTION(BlueprintCallable, Category="Overlap")
 	static void FindLivePlayersWithinRadius(const AActor* Causer,
 	                                        TArray<AActor*>& OutOverlappingActors,
 	                                        const TArray<AActor*>& IgnoreActors, float Radius,
-	                                        const FVector& SphereOrigin, bool IgnoreSelf, const FName IgnoreTag,
-	                                        int LimitedNum = 5);
+	                                        const FVector& SphereOrigin, bool IgnoreSelf, const FName IgnoreTag);
 
 	/// 检查两个Actor是否是友军
 	/// @param Actor1 
@@ -121,6 +119,18 @@ public:
 			if (int32 Index = FMath::RandRange(0, LastIndex); i != Index) { InArray.Swap(i, Index); }
 		}
 	}
+
+	/// 根据给定的同心圆计算最终的衰减伤害 (当内半径等于外半径时视为一个圆)
+	/// @param ActorLoc Actor的位置
+	/// @param SphereCenter 圆心点
+	/// @param OuterRadius 外半径
+	/// @param InnerRadius 内半径
+	/// @param MinDamageFactor 当角色刚好处于外圆边的位置时最低的衰减伤害
+	/// @param Tolerance 当Actor在圆边界外不远处时,允许的容差值,该值需为正数
+	/// @return 
+	static float GetRadialDamageWithFallOffFactor(const FVector& ActorLoc,
+	                                              const FVector& SphereCenter, const float OuterRadius,
+	                                              const float InnerRadius = 0.f, const float MinDamageFactor = 0.5f, const float Tolerance = 10.f);
 
 protected:
 	/// 技能描述的静态数据资产
