@@ -7,6 +7,11 @@
 
 DEFINE_LOG_CATEGORY_STATIC(UTagToAbilityInfoAssetLog, All, All);
 
+UTagToAbilityInfoAsset::UTagToAbilityInfoAsset()
+{
+	
+}
+
 FTagToAbilityInfo UTagToAbilityInfoAsset::FindOffensiveAbilityInfo(const FGameplayTag& AbilityTag,
                                                                    const bool bLogNotFound) const
 {
@@ -53,15 +58,8 @@ FTagToAbilityInfo UTagToAbilityInfoAsset::FindAbilityInfo(const FGameplayTag& Ab
 	return FTagToAbilityInfo();
 }
 
-const TArray<FTagToAbilityInfo>& UTagToAbilityInfoAsset::GetAllAbilityInfos()
+ TArray<FTagToAbilityInfo> UTagToAbilityInfoAsset::GetAllAbilityInfos()
 {
-	// TODO 待优化加入的方法 
-	if (AllAbilityInfos.Num() < (AbilityInfosOffensive.Num() + AbilityInfosPassive.Num()))
-	{
-		AllAbilityInfos.Reset();
-		AllAbilityInfos.Append(AbilityInfosOffensive);
-		AllAbilityInfos.Append(AbilityInfosPassive);
-	}
-
+	// TODO 待优化,资产数据不应该重复 
 	return AllAbilityInfos;
 }

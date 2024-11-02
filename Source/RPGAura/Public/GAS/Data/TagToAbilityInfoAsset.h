@@ -17,6 +17,7 @@ class RPGAURA_API UTagToAbilityInfoAsset : public UDataAsset
 	GENERATED_BODY()
 
 public:
+	UTagToAbilityInfoAsset();
 	// 主动技能信息结构体数组
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TArray<FTagToAbilityInfo> AbilityInfosOffensive;
@@ -45,8 +46,8 @@ public:
 
 	/// 获取所有的能力信息结构体
 	/// @return 
-	const TArray<FTagToAbilityInfo>& GetAllAbilityInfos();
-private:
-	UPROPERTY()
+	TArray<FTagToAbilityInfo> GetAllAbilityInfos();
+protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TArray<FTagToAbilityInfo> AllAbilityInfos;
 };
