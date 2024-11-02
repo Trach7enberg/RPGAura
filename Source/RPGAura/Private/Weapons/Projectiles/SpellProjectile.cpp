@@ -16,7 +16,6 @@ ASpellProjectile::ASpellProjectile()
 	FireBoltNiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>("NiagaraComponent");
 
 	FireBoltNiagaraComponent->SetupAttachment(GetRootComponent());
-	
 }
 
 void ASpellProjectile::BeginPlay()
@@ -69,8 +68,17 @@ void ASpellProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent,
 
 void ASpellProjectile::Destroyed()
 {
+	// 在客户端情况下,快销毁且没有被击中时,播放爆炸特效和声音
 	if (!BIsHit && !HasAuthority()) { SpawnVfxAndSound(); }
 
 	if (IsValid(LoopSoundAudioComponent.Get())) { LoopSoundAudioComponent->Stop(); }
 	Super::Destroyed();
+}
+
+void ASpellProjectile::LifeSpanExpired()
+{
+	// 生命周期过期时,如果还没有被击中(则播放爆炸特效和声音)
+	if(!BIsHit){SpawnVfxAndSound();}
+	if (IsValid(LoopSoundAudioComponent.Get())) { LoopSoundAudioComponent->Stop(); }
+	Super::LifeSpanExpired();
 }

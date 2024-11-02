@@ -17,20 +17,20 @@ class RPGAURA_API ASpellProjectile : public ABaseProjectile
 public:
 	ASpellProjectile();
 
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Niagara")
 	TObjectPtr<UNiagaraComponent> FireBoltNiagaraComponent;
 	
 	virtual void BeginPlay() override;
 	virtual void Destroyed() override;
-	
+	virtual void LifeSpanExpired() override;
 
-private:
 	// 当前投射物有没有Overlap
 	bool BIsHit;
-
+	
 	virtual void SpawnVfxAndSound() const override;
-
+private:
 	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	                             UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
 	                             const FHitResult& SweepResult) override;
