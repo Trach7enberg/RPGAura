@@ -143,7 +143,7 @@ void UExecCalcDamage::Execute_Implementation(const FGameplayEffectCustomExecutio
 		return;
 	}
 
-	// 获取曲线表
+	// 获取曲线表 TODO 包装成函数访问,不要直接访问成员 
 	const auto RealCurveArmorPenetration = GiSubSystem->CharacterClassInfo.Get()->DamageCalculationFactors->FindCurve(
 		FName("ArmorPenetrationFactor"), FString());
 	const auto RealCurveEffectiveArmor = GiSubSystem->CharacterClassInfo.Get()->DamageCalculationFactors->FindCurve(
@@ -321,6 +321,7 @@ void UExecCalcDamage::Execute_Implementation(const FGameplayEffectCustomExecutio
 
 	// 修改属性集中名为InComingDamage的属性值
 	const FGameplayModifierEvaluatedData EvaluatedData(UBaseAttributeSet::GetInComingDamageAttribute(),
-	                                                   EGameplayModOp::Additive, Damage);
+	                                                   EGameplayModOp::Additive,
+	                                                   Damage * MyGeContext->GetRadiusDamageFallOffFactor());
 	OutExecutionOutput.AddOutputModifier(EvaluatedData);
 }
