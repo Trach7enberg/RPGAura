@@ -393,6 +393,10 @@ struct FDamageEffectParams
 	UPROPERTY()
 	float BaseDamage = 0.f;
 
+	// 如果伤害是带有半径的衰减伤害(1.0f为没有)
+	UPROPERTY()
+	float RadiusDamageFallOffFactor = 1.f;
+
 	UPROPERTY()
 	float DeBuffChance = 0.f;
 
@@ -407,6 +411,9 @@ struct FDamageEffectParams
 
 	UPROPERTY()
 	float KnockBackChance = 0.f;
+
+	UPROPERTY()
+	float KnockBackDirection = 1.f;
 	
 	UPROPERTY()
 	float KnockBackFactor = 0.f;
