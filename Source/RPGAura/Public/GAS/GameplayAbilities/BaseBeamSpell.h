@@ -86,7 +86,7 @@ public:
 	/// @param GameplayCueTag
 	UFUNCTION(BlueprintCallable)
 	void RemoveBeamChainReactionCue(UPARAM(REF)TMap<AActor*, FGameplayCueParameters>& ActorToGcParam,
-	                             const FGameplayTag GameplayCueTag);
+	                                const FGameplayTag GameplayCueTag);
 
 	/// 对射线目标应用GE
 	UFUNCTION(BlueprintCallable)
@@ -136,7 +136,7 @@ protected:
 	TArray<FHitResult> HitsResults{};
 
 	/// 第一次启动射线Cue所需要的Cue参数
-	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite, Category="Prop|GCN")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Prop|GCN")
 	FGameplayCueParameters StartBeamGameplayCueParam{};
 
 	/// 射线目标击中死亡的回调函数
@@ -148,11 +148,13 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent)
 	void StartTargetPreOnDeath(AActor* StartTarget);
 
+	virtual int32 GetValidAbilityCount(const int32 AbilityLevel) override;
+
 private:
 	/// 每次启动射线都只会有几率触发一次DeBuff效果,而不是射线期间持续判断触发
 	UPROPERTY()
 	bool bIsDeBuffSet = false;
-	
+
 	/// 激活链式反应前所检测到Actors
 	UPROPERTY()
 	TArray<AActor*> OverlapActors{};
@@ -188,5 +190,4 @@ private:
 	/// @param bDebug
 	void FindBeamChain(TArray<FCloseEdge>& CloseEdges, int StartPos,
 	                   bool bDebug = false) const;
-
 };

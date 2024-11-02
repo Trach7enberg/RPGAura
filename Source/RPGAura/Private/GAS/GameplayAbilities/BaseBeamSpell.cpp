@@ -44,8 +44,7 @@ void UBaseBeamSpell::TracingTarget(const FVector TracingStartPoint,
 		URPGAuraBlueprintFunctionLibrary::FindLivePlayersWithinRadius(GetAvatarActorFromActorInfo(), OverlapActors,
 		                                                              TArray<AActor*>{}, 650,
 		                                                              BeamEndLoc, true,
-		                                                              FRPGAuraGameplayTags::Get().Player,
-		                                                              ChainReactionNum);
+		                                                              FRPGAuraGameplayTags::Get().Player);
 
 		if (bDebug)
 		{
@@ -283,6 +282,11 @@ void UBaseBeamSpell::RemoveAllBeamCue(const FGameplayTag StartCueTag, const FGam
 	bIsDeBuffSet = false;
 }
 
+int32 UBaseBeamSpell::GetValidAbilityCount(const int32 AbilityLevel)
+{
+	return FMath::Min(AbilityLevel, ChainReactionNum);
+}
+
 bool UBaseBeamSpell::CanApplyGE() const
 {
 	// TODO 有很多冗余调用,是否Temp变量? 
@@ -298,7 +302,11 @@ void UBaseBeamSpell::ApplyBeamGE()
 	DeBuffChance = (bIsDeBuffSet) ? 0.f : DeBuffChance;
 
 	const auto LocalNum = GetValidChainNum();
-	for (int i = 0; i < LocalNum; ++i) { CauseDamage(OverlapActors[i]); }
+	for (int i = 0; i < LocalNum; ++i)
+	{
+		FDamageEffectParams LocalParams;
+		CauseDamage(OverlapActors[i], LocalParams);
+	}
 
 	// 恢复原值 (因为CauseDamage时候会传递DeBuffChance)
 	// TODO CauseDamage 是否需要新增 参数进行控制,而不是用一个LocalTmpDeBuffChance 
