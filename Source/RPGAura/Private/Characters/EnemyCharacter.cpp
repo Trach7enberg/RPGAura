@@ -67,6 +67,7 @@ void AEnemyCharacter::BeginPlay()
 	Super::BeginPlay();
 	check(AbilitySystemComponent);
 	check(GetCharacterMovement());
+	check(EnemyHealthBar);
 
 	if (!EnemyHealthBar->GetUserWidgetObject())
 	{
