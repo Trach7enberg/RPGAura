@@ -10,7 +10,10 @@
 
 UBaseGameplayAbility::UBaseGameplayAbility() {}
 
-void UBaseGameplayAbility::UpdateAbilityDescription(const FGameplayTag& AbilityTag, int32 AbilityLevel) {}
+void UBaseGameplayAbility::UpdateAbilityDescription(const FGameplayTag& AbilityTag, int32 AbilityLevel)
+{
+	
+}
 
 float UBaseGameplayAbility::GetManaCost(const float InLevel) const
 {
