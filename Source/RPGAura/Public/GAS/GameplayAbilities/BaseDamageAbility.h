@@ -16,10 +16,11 @@ class RPGAURA_API UBaseDamageAbility : public UBaseGameplayAbility
 	GENERATED_BODY()
 
 public:
-	/// 近战造成伤害(给对象应用GE)
+	/// 造成伤害(给对象应用GE,可以给近战对象使用)
 	/// @param Suffer
+	/// @param EffectParams
 	UFUNCTION(BlueprintCallable, Category="GameplayEffect")
-	void CauseDamage(AActor* Suffer);
+	void CauseDamage(AActor* Suffer, UPARAM(REF)FDamageEffectParams& EffectParams);
 
 
 	/// 获取随机的攻击动画
@@ -29,6 +30,10 @@ public:
 	FMontageWithTag GetRandomAttackAnim(const TArray<FMontageWithTag> MontageWithTags);
 
 protected:
+	/// 技能产生的物体最大值
+	UPROPERTY()
+	int32 MaxAbilityCount = 1;
+	
 	// 当前能力造成DeBuff的几率
 	UPROPERTY(EditDefauLtsOnLy, Category ="DamageDeBuff", meta=(ClampMin="0", ClampMax="100"))
 	float DeBuffChance = 20.f;
@@ -40,6 +45,10 @@ protected:
 	// 击退的力度
 	UPROPERTY(EditDefauLtsOnLy, Category ="DamageDeBuff", meta=(ClampMin="100", ClampMax="9000"))
 	float KnockBackFactor = 300.f;
+
+	// 击退的力度方向,eg. 1为正方向, -1为反方向
+	UPROPERTY(EditDefauLtsOnLy, Category ="DamageDeBuff", meta=(ClampMin=-1, ClampMax=1))
+	float KnockBackDirection = 1.f;
 
 	// 当前能力触发DeBuff时造成的伤害
 	UPROPERTY(EditDefauLtsOnLy, Category ="DamageDeBuff")
@@ -76,4 +85,18 @@ protected:
 	/// @param TargetActor 
 	/// @return 
 	void MakeDamageEffectParamsFromAbilityDefaults(FDamageEffectParams& Params, AActor* TargetActor = nullptr) const;
+
+	/// 获取冲击向量
+	/// @param ImpulseFactor 冲击力度缩放系数
+	/// @param ImpulseAngle 冲击角度
+	/// @param Direction 方向 (-1向角色的方向冲击,1则为正向冲击)
+	/// @return 
+	FVector GetDefaultImpulseVector(const float ImpulseFactor,const float ImpulseAngle = 45.f,const float Direction = 1.f) const;
+
+	virtual void UpdateAbilityDescription(const FGameplayTag& AbilityTag, int32 AbilityLevel) override;
+
+	/// 获取技能对应的最大有效生成物体
+	/// @param AbilityLevel 
+	/// @return 
+	virtual int32 GetValidAbilityCount(const int32 AbilityLevel);
 };
