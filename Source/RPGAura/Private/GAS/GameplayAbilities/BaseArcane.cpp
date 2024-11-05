@@ -11,7 +11,8 @@ DEFINE_LOG_CATEGORY_STATIC(UBaseArcaneLog, All, All);
 
 void UBaseArcane::DetectGroundPoints(const FVector& StartCenter)
 {
-	const auto LocalArcaneSpawnNum = GetValidAbilityCount(GetAbilityLevel());
+	// const auto LocalArcaneSpawnNum = GetValidAbilityCount(GetAbilityLevel());
+	const auto LocalArcaneSpawnNum = ArcaneSpawnNum;
 	auto LocalTmpCenter = StartCenter;
 	LocalTmpCenter.Z += 40;
 	TArray<FVector> LocalTmp{};
@@ -58,7 +59,7 @@ void UBaseArcane::SpawnArcaneShards(const FVector& SpawnCenter)
 {
 	if (!GetWorld())
 	{
-		K2_EndAbility();
+		SpawnArcaneShardsEnd();
 		return;
 	}
 	if (GroundPoints.Num() && GetWorld()->GetTimerManager().IsTimerPaused(ArcaneTimeHandle))
@@ -78,6 +79,9 @@ void UBaseArcane::SpawnArcaneShards(const FVector& SpawnCenter)
 		URPGAuraBlueprintFunctionLibrary::ShuffleArray(GroundPoints);
 		// 再执行多重生成碎片
 		GetWorld()->GetTimerManager().UnPauseTimer(ArcaneTimeHandle);
+	}else
+	{
+		SpawnArcaneShardsEnd();
 	}
 }
 
@@ -129,8 +133,7 @@ void UBaseArcane::SpawnArcaneWithDelay()
 	}
 	else
 	{
-		K2_CommitAbility();
-		K2_EndAbility();
+		SpawnArcaneShardsEnd();
 	}
 }
 

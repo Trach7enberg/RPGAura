@@ -34,7 +34,9 @@ public:
 	                        const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility,
 	                        bool bWasCancelled) override;
 
-
+	UFUNCTION(BlueprintImplementableEvent,BlueprintCallable)
+	void SpawnArcaneShardsEnd();
+	
 protected:
 	/// 由Arcane定时器调用的回调函数
 	UFUNCTION()
