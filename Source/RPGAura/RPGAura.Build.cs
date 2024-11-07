@@ -11,7 +11,7 @@ public class RPGAura : ModuleRules
 		PublicDependencyModuleNames.AddRange(new string[]
 		{
 			"Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "GameplayAbilities", "GameplayTags",
-			"GameplayTasks", "NavigationSystem", "Niagara", "MotionWarping", "AIModule",
+			"GameplayTasks", "NavigationSystem", "Niagara", "MotionWarping", "AIModule", "ModelViewViewModel",
 		});
 
 		PublicIncludePaths.AddRange(new string[] {  });
