@@ -63,8 +63,24 @@ public:
 	/// @param Level GE等级
 	/// @param BIsPlayer 是否是玩家
 	UFUNCTION(BlueprintCallable, Category="GAS")
-	void InitializeDefaultAttributes(UAbilitySystemComponent* Asc, ECharacterClass CharacterClass, float Level,
-	                                 bool BIsPlayer = false);
+	void InitializeDefaultAttributes(
+		UAbilitySystemComponent* Asc,
+		ECharacterClass          CharacterClass,
+		float                    Level,
+		bool                     BIsPlayer = false);
+
+	/// 主要用于从磁盘中设置主要属性的SetByCaller然后初始化玩家身上的属性
+	/// @param Asc 
+	/// @param CharacterClass 
+	/// @param Level
+	/// @param Tags
+	/// @param Magnitudes 
+	void InitializeDefaultAttributes(
+		UAbilitySystemComponent*     Asc,
+		ECharacterClass              CharacterClass,
+		float                        Level,
+		const FGameplayTagContainer& Tags,
+		const TArray<float>&         Magnitudes) const;
 
 	/// 从CharacterClassInfo资产中根据角色职业和等级获取相应等级的Xp奖励
 	/// @param CharacterClass 
@@ -94,7 +110,7 @@ public:
 
 	/// 获取AbilityInfo数据资产,结果可能为nullptr
 	/// @return 
-	UTagToAbilityInfoAsset* GetAbilityInfoAsset( );
+	UTagToAbilityInfoAsset* GetAbilityInfoAsset();
 
 protected:
 	// 技能信息资产,其中部分信息由GameMode设置
