@@ -33,26 +33,26 @@ void ABasePlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(ABasePlayerState, AssignableSpellPoints);
 }
 
-void ABasePlayerState::SetPlayerXP(const int32 NewXp)
+void ABasePlayerState::SetPlayerXP(const int32 NewXp, const bool IsReallyChange)
 {
 	// TODO 待设置Clamp
 	PlayerXP = NewXp;
-	PlayerXpChangeDelegate.Broadcast(PlayerXP);
+	PlayerXpChangeDelegate.Broadcast(PlayerXP,IsReallyChange);
 }
 
-void ABasePlayerState::AddToPlayerXP(const int32 AddedXp)
+void ABasePlayerState::AddToPlayerXP(const int32 AddedXp, const bool IsReallyChange)
 {
 	if (!GetGiSubSystem()) { return; }
 	const auto MaxXp = GetGiSubSystem()->GetCharacterDefaultMaxXP();
 	if (GetPlayerCurrentXP() == MaxXp) { return; }
 	PlayerXP = FMath::Clamp(PlayerXP + AddedXp, 0, MaxXp);
-	PlayerXpChangeDelegate.Broadcast(PlayerXP);
+	PlayerXpChangeDelegate.Broadcast(PlayerXP,IsReallyChange);
 }
 
-void ABasePlayerState::AddToAssignableAttributePoints(const int32 AddedValue)
+void ABasePlayerState::AddToAssignableAttributePoints(const int32 AddedValue, const bool IsReallyChange)
 {
 	AssignableAttributePoints = FMath::Max(AssignableAttributePoints + AddedValue, 0);
-	AssignableAttributePointsChangeDelegate.Broadcast(AssignableAttributePoints);
+	AssignableAttributePointsChangeDelegate.Broadcast(AssignableAttributePoints,IsReallyChange);
 }
 
 int32 ABasePlayerState::GetMaximumXPofLevel(const int32 TLevel)
@@ -95,22 +95,22 @@ int32 ABasePlayerState::GetSpellPointsReward(const int32 CharacterLevel, int32 M
 	return Result;
 }
 
-void ABasePlayerState::OnRep_PlayerLevel(int32 OldValue) { PlayerLevelChangeDelegate.Broadcast(PlayerLevel); }
+void ABasePlayerState::OnRep_PlayerLevel(int32 OldValue) { PlayerLevelChangeDelegate.Broadcast(PlayerLevel,true); }
 
 void ABasePlayerState::OnRep_PlayerXP(int32 OldValue)
 {
 	// 当PlayerXP被复制到客户端时,应该广播该值,以便HUD响应
-	PlayerXpChangeDelegate.Broadcast(PlayerXP);
+	PlayerXpChangeDelegate.Broadcast(PlayerXP,true);
 }
 
 void ABasePlayerState::OnRep_AssignableAttributePoints(int32 OldValue)
 {
-	AssignableAttributePointsChangeDelegate.Broadcast(AssignableAttributePoints);
+	AssignableAttributePointsChangeDelegate.Broadcast(AssignableAttributePoints,true);
 }
 
 void ABasePlayerState::OnRep_AssignableSpellPoints(int32 OldValue)
 {
-	AssignableSpellPointsChangeDelegate.Broadcast(AssignableSpellPoints);
+	AssignableSpellPointsChangeDelegate.Broadcast(AssignableSpellPoints,true);
 }
 
 URPGAuraGameInstanceSubsystem* ABasePlayerState::GetGiSubSystem()

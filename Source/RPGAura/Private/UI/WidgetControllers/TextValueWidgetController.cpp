@@ -17,14 +17,14 @@ void UTextValueWidgetController::BindCallBack()
 	const auto MyPs = Cast<ABasePlayerState>(GetWidgetControllerParams().CurrentPlayerState);
 	if (!MyPs) { return; }
 	
-	MyPs->AssignableAttributePointsChangeDelegate.AddLambda([this](int32 NewValue)
+	MyPs->AssignableAttributePointsChangeDelegate.AddLambda([this](int32 NewValue,bool IsReallyChange)
 	{
-		OnAssignableAttributePointsChange.Broadcast(NewValue);
+		OnAssignableAttributePointsChange.Broadcast(NewValue,IsReallyChange);
 	});
 
-	MyPs->AssignableSpellPointsChangeDelegate.AddLambda([this](int32 NewValue)
+	MyPs->AssignableSpellPointsChangeDelegate.AddLambda([this](int32 NewValue,bool IsReallyChange)
 	{
-		OnAssignableSpellPointsChange.Broadcast(NewValue);
+		OnAssignableSpellPointsChange.Broadcast(NewValue,IsReallyChange);
 	});
 }
 
@@ -34,8 +34,8 @@ void UTextValueWidgetController::BroadcastInitialValues()
 	const auto MyPs = Cast<ABasePlayerState>(GetWidgetControllerParams().CurrentPlayerState);
 	if (MyPs)
 	{
-		OnAssignableAttributePointsChange.Broadcast(MyPs->GetAssignableAttributePoints());
-		OnAssignableSpellPointsChange.Broadcast(MyPs->GetAssignableSpellPoints());
+		OnAssignableAttributePointsChange.Broadcast(MyPs->GetAssignableAttributePoints(),true);
+		OnAssignableSpellPointsChange.Broadcast(MyPs->GetAssignableSpellPoints(),true);
 	}
 }
 

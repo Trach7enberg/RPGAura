@@ -10,12 +10,15 @@ void ULevelGlobeWidgetController::BindCallBack()
 	ABasePlayerState* Ps = Cast<ABasePlayerState>(GetWidgetControllerParams().CurrentPlayerState);
 	if (!Ps) { return; }
 
-	Ps->PlayerLevelChangeDelegate.AddLambda([this](int32 NewLevel) { OnLevelChange.Broadcast(NewLevel); });
-
+	Ps->PlayerLevelChangeDelegate.AddLambda([this](int32 NewLevel, bool IsReallyChange)
+	{
+		OnLevelChange.Broadcast(NewLevel, IsReallyChange);
+	});
 }
+
 void ULevelGlobeWidgetController::BroadcastInitialValues()
 {
 	ABasePlayerState* Ps = Cast<ABasePlayerState>(GetWidgetControllerParams().CurrentPlayerState);
 	if (!Ps) { return; }
-	Ps->SetPlayerLevel(Ps->GetPlayerLevel());
+	Ps->SetPlayerLevel(Ps->GetPlayerLevel(),false);
 }

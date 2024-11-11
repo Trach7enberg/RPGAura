@@ -27,5 +27,5 @@ public:
 private:
 	/// 根据角色当前的经验值获得经验条的百分比
 	UFUNCTION()
-	void CalculateXpPercent(int32 Xp);
+	void CalculateXpPercent(int32 Xp, const bool IsReallyChange = true);
 };

@@ -26,7 +26,7 @@ void UXpBarWidgetController::BroadcastInitialValues()
 	Ps->SetPlayerXP(Ps->GetPlayerCurrentXP());
 }
 
-void UXpBarWidgetController::CalculateXpPercent(int32 Xp)
+void UXpBarWidgetController::CalculateXpPercent(int32 Xp, const bool IsReallyChange)
 {
 	if (!IsWidgetControllerParamsValid()) { return; }
 

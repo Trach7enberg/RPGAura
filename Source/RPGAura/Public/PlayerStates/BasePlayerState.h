@@ -52,44 +52,47 @@ public:
 
 	FORCEINLINE int32 GetPlayerCurrentXP() const { return PlayerXP; }
 
-	FORCEINLINE void SetPlayerLevel(const int32 NewPlayerLevel)
+	/// 
+	/// @param NewPlayerLevel 新等级
+	/// @param IsReallyChange 是真的改变了等级吗(例如从磁盘中获取数据设置则为false)
+	FORCEINLINE void SetPlayerLevel(const int32 NewPlayerLevel, const bool IsReallyChange = true)
 	{
 		this->PlayerLevel = NewPlayerLevel;
-		PlayerLevelChangeDelegate.Broadcast(PlayerLevel);
+		PlayerLevelChangeDelegate.Broadcast(PlayerLevel,IsReallyChange);
 	}
 
-	 void SetPlayerXP(const int32 NewXp);
+	 void SetPlayerXP(const int32 NewXp, bool IsReallyChange = true);
 
-	 void AddToPlayerXP(const int32 AddedXp);
+	 void AddToPlayerXP(const int32 AddedXp, const bool IsReallyChange = true);
 
-	FORCEINLINE void AddToPlayerLevel(const int32 AddedLevel)
+	FORCEINLINE void AddToPlayerLevel(const int32 AddedLevel, const bool IsReallyChange = true)
 	{
 		PlayerLevel += AddedLevel;
-		PlayerLevelChangeDelegate.Broadcast(PlayerLevel);
+		PlayerLevelChangeDelegate.Broadcast(PlayerLevel,IsReallyChange);
 	}
 
 	FORCEINLINE int32 GetAssignableAttributePoints() const { return AssignableAttributePoints; }
 
-	FORCEINLINE void SetAssignableAttributePoints(const int32 NewAssignableAttributePoints)
+	FORCEINLINE void SetAssignableAttributePoints(const int32 NewAssignableAttributePoints, const bool IsReallyChange = true)
 	{
 		this->AssignableAttributePoints = FMath::Max(NewAssignableAttributePoints,0);
-		AssignableAttributePointsChangeDelegate.Broadcast(AssignableAttributePoints);
+		AssignableAttributePointsChangeDelegate.Broadcast(AssignableAttributePoints,IsReallyChange);
 	}
 
 	FORCEINLINE int32 GetAssignableSpellPoints() const { return AssignableSpellPoints; }
 
-	FORCEINLINE void SetAssignableSpellPoints(const int32 NewAssignableSpellPoints)
+	FORCEINLINE void SetAssignableSpellPoints(const int32 NewAssignableSpellPoints, const bool IsReallyChange = true)
 	{
 		this->AssignableSpellPoints = FMath::Max(NewAssignableSpellPoints,0);
-		AssignableSpellPointsChangeDelegate.Broadcast(AssignableSpellPoints);
+		AssignableSpellPointsChangeDelegate.Broadcast(AssignableSpellPoints,IsReallyChange);
 	}
 
-	 void AddToAssignableAttributePoints(const int32 AddedValue);
+	 void AddToAssignableAttributePoints(const int32 AddedValue, const bool IsReallyChange = true);
 
-	FORCEINLINE void AddToAssignableSpellPoints(const int32 AddedValue)
+	FORCEINLINE void AddToAssignableSpellPoints(const int32 AddedValue, const bool IsReallyChange = true)
 	{
 		AssignableSpellPoints = FMath::Max(AssignableSpellPoints + AddedValue, 0);
-		AssignableSpellPointsChangeDelegate.Broadcast(AssignableSpellPoints);
+		AssignableSpellPointsChangeDelegate.Broadcast(AssignableSpellPoints,IsReallyChange);
 	}
 
 	/// 获取给定等级能到达的最大经验值数
