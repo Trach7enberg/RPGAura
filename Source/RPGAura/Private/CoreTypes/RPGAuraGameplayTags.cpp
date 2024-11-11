@@ -289,6 +289,24 @@ void FRPGAuraGameplayTags::InitGameplayTags()
 			GameplayTags.GameplayCue_Spawn_ArcaneShards = UGameplayTagsManager::Get().AddNativeGameplayTag(
 				"GameplayCue.Spawn.ArcaneShards", FString(""));
 		}
+
+		{
+			GameplayTags.Widget_Menu_Load_SlotSwitcher_1 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Widget.Menu.Load.SlotSwitcher.1", FString(""));
+			GameplayTags.Widget_Menu_Load_SlotSwitcher_2 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Widget.Menu.Load.SlotSwitcher.2", FString(""));
+			GameplayTags.Widget_Menu_Load_SlotSwitcher_3 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Widget.Menu.Load.SlotSwitcher.3", FString(""));
+
+			GameplayTags.Widget_Menu_Load_Slot = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Widget.Menu.Load.Slot", FString(""));
+			GameplayTags.Widget_Menu_Load_Slot_Enter = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Widget.Menu.Load.Slot.Enter", FString(""));
+			GameplayTags.Widget_Menu_Load_Slot_Taken = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Widget.Menu.Load.Slot.Taken", FString(""));
+			GameplayTags.Widget_Menu_Load_Slot_Vacant = UGameplayTagsManager::Get().AddNativeGameplayTag(
+				"Widget.Menu.Load.Slot.Vacant", FString(""));
+		}
 	}
 
 	// 添加到Vital 标签容器
