@@ -174,7 +174,7 @@ struct FCharacterClassDefaultInfo
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="DefaultAttributes|Secondary")
 	FScalableFloat XPReward = FScalableFloat();
 
-	// 角色的初始被动能力
+	// 角色的初始被动(监听)能力,非被动技能
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="DefaultAttributes|StartUpPassive")
 	TArray<TSubclassOf<UGameplayAbility>> StartUpPassiveAbilities;
 };
@@ -310,7 +310,7 @@ struct FLevelUpInfoStruct
 -------------------------*/
 
 /// 用于广播当人物的经验值改变时的委托,不用于蓝图绑定
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnPlayerInfoChangeSignature, int32);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlayerInfoChangeSignature, int32,bool/*IsReallyChange*/);
 
 /*----------------------------------------------------------
 	UXpBarWidgetController、UTextValueWidgetController使用
@@ -319,8 +319,8 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnPlayerInfoChangeSignature, int32);
 /// 经验值改变时的委托(经验值转换成XpBar的百分比了)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGetXpSignature, float, XpPercent);
 
-/// 属性点、技能点增加奖励的委托(任何使用int32的都可以用这个进行广播)
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnIntegerChangeSignature, int32, Value);
+/// 属性点、技能点增加奖励的委托(任何使用int32的都可以用这个进行广播),IsReallyChange用来表示当前是否值真的在变化,因为有可能数据从磁盘中加载并且广播(这时候应该为false,这样就不会触发XP升级的文字)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnIntegerChangeSignature, int32, Value,bool ,IsReallyChange);
 
 
 /*--------------------------------------------------------------------
@@ -530,3 +530,71 @@ struct FDeBuffInfo
 	}
 };
 
+/*---------------------
+	LoadScreenSave使用
+----------------------*/
+
+/// 用于将角色能力持久化到磁盘的结构信息
+USTRUCT(BlueprintType)
+struct FSavedAbility
+{
+	GENERATED_BODY()
+
+	// 能力的实体类
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TSubclassOf<UGameplayAbility> GameplayAbility;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	FGameplayTag AbilityTag = FGameplayTag();
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	FGameplayTag AbilityType = FGameplayTag();
+
+	UPROPERTY(EditDefauLtsOnly, BLueprintReadWrite)
+	FGameplayTag AbilityStatus = FGameplayTag();
+
+	UPROPERTY(EditDefauLtsOnly, BlueprintReadWrite)
+	FGameplayTag AbilityInputSlot = FGameplayTag();
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	float AbilityLevel = 1;
+
+	friend bool operator==(const FSavedAbility& Lhs, const FSavedAbility& RHS)
+	{
+		return Lhs.AbilityTag == RHS.AbilityTag;
+	}
+
+	friend bool operator!=(const FSavedAbility& Lhs, const FSavedAbility& RHS) { return !(Lhs == RHS); }
+};
+
+/// 用于需要保存地图中Actor的信息结构体
+USTRUCT(BlueprintType)
+struct FSavedActorInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FName ActorName{};
+
+	UPROPERTY()
+	FTransform ActorTransform{};
+
+	/// 将Actor序列化到这个字节数组中(只有当Actor被标记为SaveGame标识符时,才会被序列化)
+	UPROPERTY()
+	TArray<uint8> Bytes;
+
+	friend bool operator==(const FSavedActorInfo& Lhs, const FSavedActorInfo& RHS)
+	{
+		return Lhs.ActorName == RHS.ActorName;
+	}
+};
+
+/// 用于将地图Actor(会有多个)持久化到磁盘的结构
+USTRUCT(BlueprintType)
+struct FSavedActors
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly)
+	TArray<FSavedActorInfo> Actors;
+};
