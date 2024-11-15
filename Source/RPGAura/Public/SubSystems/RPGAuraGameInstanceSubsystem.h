@@ -8,6 +8,7 @@
 #include "RPGAuraGameInstanceSubsystem.generated.h"
 
 
+class ULootTiers;
 class ULevelUpInfoAsset;
 class UTagToAbilityInfoAsset;
 class UPickupMessageAsset;
@@ -112,8 +113,15 @@ public:
 	/// @return 
 	UTagToAbilityInfoAsset* GetAbilityInfoAsset();
 
+	UFUNCTION(BlueprintCallable)
+	ULootTiers* GetLootTiersDataAsset() const;
+	
 protected:
 	// 技能信息资产,其中部分信息由GameMode设置
 	UPROPERTY()
 	TObjectPtr<UTagToAbilityInfoAsset> AbilityInfoAsset;
+
+	// 战利品数据资产
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="DataAsset")
+	TObjectPtr<ULootTiers> LootTiersDataAsset;
 };

@@ -10,6 +10,7 @@
 #include "GAS/Data/CharacterClassInfo.h"
 #include "GAS/Data/PickupMessageAsset.h"
 #include "GAS/Data/TagToAbilityInfoAsset.h"
+#include "GAS/Data/LootTiers.h"
 #include "GAS/Data/LevelUpInfoAsset.h"
 
 DEFINE_LOG_CATEGORY_STATIC(URPGAuraGameInstanceSubsystemLog, All, All);
@@ -39,6 +40,12 @@ void URPGAuraGameInstanceSubsystem::Initialize(FSubsystemCollectionBase& Collect
 	                                                 TEXT(
 	                                                      "/Script/RPGAura.LevelUpInfoAsset'/Game/Blueprints/GAS/Data/DataAssets/DA_LevelUpInfo.DA_LevelUpInfo'"));
 
+	LootTiersDataAsset = LoadObject<ULootTiers>(
+	                                            this,
+	                                            TEXT(
+	                                                 "/Script/RPGAura.LootTiers'/Game/Blueprints/GAS/Data/DataAssets/DA_LootTiers.DA_LootTiers'"));
+
+
 	if (!CharacterClassInfo)
 	{
 		UE_LOG(URPGAuraGameInstanceSubsystemLog, Error, TEXT("[%s]加载角色职业信息资产失败!!"), *GetNameSafe(this));
@@ -55,6 +62,11 @@ void URPGAuraGameInstanceSubsystem::Initialize(FSubsystemCollectionBase& Collect
 	if (!LevelUpInfoAsset)
 	{
 		UE_LOG(URPGAuraGameInstanceSubsystemLog, Error, TEXT("[%s]加载角色等级数据资产表失败"), *GetNameSafe(this));
+	}
+
+	if (!LootTiersDataAsset)
+	{
+		UE_LOG(URPGAuraGameInstanceSubsystemLog, Error, TEXT("[%s]加载战利品掉落物数据资产表失败"), *GetNameSafe(this));
 	}
 }
 
@@ -237,4 +249,4 @@ UTagToAbilityInfoAsset* URPGAuraGameInstanceSubsystem::GetAbilityInfoAsset()
 	return AbilityInfoAsset.Get();
 }
 
-
+ULootTiers* URPGAuraGameInstanceSubsystem::GetLootTiersDataAsset() const { return LootTiersDataAsset.Get(); }
