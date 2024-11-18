@@ -13,9 +13,11 @@
 
 DEFINE_LOG_CATEGORY_STATIC(UBaseBeamSpellLog, All, All);
 
-void UBaseBeamSpell::TracingTarget(const FVector TracingStartPoint,
+void UBaseBeamSpell::TracingTarget(const FVector                          TracingStartPoint,
                                    TMap<AActor*, FGameplayCueParameters>& ActorToGcParam,
-                                   const ETraceTypeQuery TraceChannel, const bool bDebug)
+                                   const ETraceTypeQuery                  TraceChannel,
+                                   const float                            Radius,
+                                   const bool                             bDebug)
 {
 	if (!GetAvatarActorFromActorInfo()) { return; }
 
@@ -23,37 +25,52 @@ void UBaseBeamSpell::TracingTarget(const FVector TracingStartPoint,
 	if (!ComInt) { return; }
 
 	// 击中数组的结果顺序是按照射线击中的顺序来排列的
-	const auto BlockingHit = UKismetSystemLibrary::SphereTraceMulti(this, TracingStartPoint, CursorImpactPoint, 10.f,
-	                                                                TraceChannel, false,
+	const auto BlockingHit = UKismetSystemLibrary::SphereTraceMulti(this,
+	                                                                TracingStartPoint,
+	                                                                CursorImpactPoint,
+	                                                                10.f,
+	                                                                TraceChannel,
+	                                                                false,
 	                                                                ActorsToIgnore,
 	                                                                bDebug
 		                                                                ? EDrawDebugTrace::ForDuration
 		                                                                : EDrawDebugTrace::None,
-	                                                                HitsResults, true);
+	                                                                HitsResults,
+	                                                                true);
 	if (BlockingHit && HitsResults.Num())
 	{
 		// 获取第一个击中的Actor
-		CursorImpactPoint = HitsResults.Last().ImpactPoint;
+		CursorImpactPoint       = HitsResults.Last().ImpactPoint;
 		FirstTraceDetectedActor = HitsResults[0].GetActor();
-		BeamEndLoc = CursorImpactPoint;
+		BeamEndLoc              = CursorImpactPoint;
 		// 如果第一个被击中的Actor实现了战斗接口 ,则CueTarget是这个Actor
 		CueTargetActor = FirstTraceDetectedActor;
 
 		// 从第一个Actor开始,按照给定半径检测附近实现了combat接口并且存活的角色
 		OverlapActors.Reset();
-		URPGAuraBlueprintFunctionLibrary::FindLivePlayersWithinRadius(GetAvatarActorFromActorInfo(), OverlapActors,
-		                                                              TArray<AActor*>{}, 650,
-		                                                              BeamEndLoc, true,
+		URPGAuraBlueprintFunctionLibrary::FindLivePlayersWithinRadius(GetAvatarActorFromActorInfo(),
+		                                                              OverlapActors,
+		                                                              TArray<AActor*>{},
+		                                                              Radius,
+		                                                              BeamEndLoc,
+		                                                              true,
 		                                                              FRPGAuraGameplayTags::Get().Player);
 
 		if (bDebug)
 		{
-			UKismetSystemLibrary::DrawDebugSphere(this, FirstTraceDetectedActor->GetActorLocation(), 650.f, 16,
-			                                      FLinearColor::White, 6.f);
-			GEngine->AddOnScreenDebugMessage(1, 10, FColor::Green,
+			UKismetSystemLibrary::DrawDebugSphere(this,
+			                                      FirstTraceDetectedActor->GetActorLocation(),
+			                                      650.f,
+			                                      16,
+			                                      FLinearColor::White,
+			                                      6.f);
+			GEngine->AddOnScreenDebugMessage(1,
+			                                 10,
+			                                 FColor::Green,
 			                                 FString::Printf(
-				                                 TEXT("[Limited -> %d]OverlapActors: %d"), ChainReactionNum,
-				                                 OverlapActors.Num()));
+			                                                 TEXT("[Limited -> %d]OverlapActors: %d"),
+			                                                 ChainReactionNum,
+			                                                 OverlapActors.Num()));
 		}
 
 		if (!CanApplyGE() || !OverlapActors.Num())
@@ -74,21 +91,22 @@ void UBaseBeamSpell::TracingTarget(const FVector TracingStartPoint,
 		{
 			// 给被射线击中的第一个角色启用被电击的动画
 			StartSufferAsc->TryActivateAbilitiesByTag(FGameplayTagContainer{
-				FRPGAuraGameplayTags::Get().Abilities_Effects_HitReact_InShock
-			});
+				                                          FRPGAuraGameplayTags::Get().Abilities_Effects_HitReact_InShock
+			                                          });
 		}
 
 		// 按照离当前玩家最近的位置开始进行排序 (这样MST最终的射线结果就会是从距离最短到最大依次有序)
 		OverlapActors.Sort([this](const AActor& A, const AActor& B)
 		{
-			return (A.GetActorLocation() - BeamEndLoc).Length() < (B.GetActorLocation() - BeamEndLoc).Length();
+			return (A.GetActorLocation() - BeamEndLoc).Length() < (B.GetActorLocation() - BeamEndLoc)
+					.Length();
 		});
 
 		// 从射线检测到的第一个角色开始,依次离当前角色最近的边集合
 		// 注意:CloseEdges的Index代表OverlapActors,而对应的索引中的元素代表索引位置到这个边的最近举例,并且CloseEdges[StartPos]出发结点,权值无穷大
 		// 例如:CloseEdges[0] = FCloseEdge{1,457},意思是从OverlapActors[0]到OverlapActors[1]的最近的边
 		TArray<FCloseEdge> CloseEdges{};
-		const auto StartPos = 1;
+		const auto         StartPos = 1;
 		FindBeamChain(CloseEdges, StartPos, bDebug);
 
 		for (int i = 0; i < CloseEdges.Num(); ++i)
@@ -103,13 +121,14 @@ void UBaseBeamSpell::TracingTarget(const FVector TracingStartPoint,
 	}
 }
 
-FGameplayCueParameters UBaseBeamSpell::MakeBeamGameplayCueParameters(AActor* Source,
-                                                                     USceneComponent* InTargetComp, const FVector& Loc)
+FGameplayCueParameters UBaseBeamSpell::MakeBeamGameplayCueParameters(AActor*          Source,
+                                                                     USceneComponent* InTargetComp,
+                                                                     const FVector&   Loc)
 {
 	FGameplayCueParameters Parameters{};
-	Parameters.SourceObject = Source;
+	Parameters.SourceObject          = Source;
 	Parameters.TargetAttachComponent = InTargetComp;
-	Parameters.Location = Loc;
+	Parameters.Location              = Loc;
 
 	return Parameters;
 }
@@ -118,7 +137,8 @@ AActor* UBaseBeamSpell::GetStartCueTarget() { return CueTargetActor.Get(); }
 
 
 void UBaseBeamSpell::FindBeamChain(TArray<FCloseEdge>& CloseEdges,
-                                   const int StartPos, const bool bDebug) const
+                                   const int           StartPos,
+                                   const bool          bDebug) const
 {
 	if (OverlapActors.Num() < 2) { return; }
 	if (StartPos == 0) { return; }
@@ -147,11 +167,28 @@ void UBaseBeamSpell::FindBeamChain(TArray<FCloseEdge>& CloseEdges,
 			// if (i == j) { continue; }
 			auto Distance = (OverlapActors[j]->GetActorLocation() - OverlapActors[i]->
 				GetActorLocation()).Length();
-			Distance = (FMath::IsNearlyZero(Distance)) ? Max : Distance;
+			Distance     = (FMath::IsNearlyZero(Distance)) ? Max : Distance;
 			const auto f = FString::Printf(
-				TEXT("结点:%-2d -> |结点%2d : [%-23s]| -> 权重%-6.1f"), i + 1, j + 1, *OverlapActors[j]->GetName(),
-				Distance);
-			if (bDebug) { UE_LOG(UBaseBeamSpellLog, Warning, TEXT("%s"), *f); }
+			                               TEXT("结点:%-2d -> |结点%2d : [%-23s]| -> 权重%-6.1f"),
+			                               i + 1,
+			                               j + 1,
+			                               *OverlapActors[j]->GetName(),
+			                               Distance);
+			if (bDebug)
+			{
+				 auto SPos = OverlapActors[i]->GetActorLocation();
+				SPos.Z += FMath::FRandRange(-50.f,50.f);
+				auto EPos = OverlapActors[j]->GetActorLocation();
+				EPos.Z += FMath::FRandRange(-50.f,50.f);
+				UKismetSystemLibrary::DrawDebugArrow(this,
+				                                     SPos,
+				                                     EPos,
+				                                     1000,
+				                                     FLinearColor::White,
+				                                     .5f,
+				                                     3);
+				UE_LOG(UBaseBeamSpellLog, Warning, TEXT("%s"), *f);
+			}
 			Elem.Add(Distance);
 		}
 		Graph.Add(Elem);
@@ -170,8 +207,8 @@ void UBaseBeamSpell::FindBeamChain(TArray<FCloseEdge>& CloseEdges,
 	// Prim算法实现MST
 	for (int i = 0; i < Vertex - 1; ++i)
 	{
-		int32 MinDistance = Max;
-		int LowCostIndex = -1;
+		int32 MinDistance  = Max;
+		int   LowCostIndex = -1;
 		// 从最近边集合里找出一个权值最小的顶点
 		for (int j = 0; j < Vertex; ++j)
 		{
@@ -179,7 +216,7 @@ void UBaseBeamSpell::FindBeamChain(TArray<FCloseEdge>& CloseEdges,
 
 			if (CloseEdges[j].LowCost < MinDistance)
 			{
-				MinDistance = CloseEdges[j].LowCost;
+				MinDistance  = CloseEdges[j].LowCost;
 				LowCostIndex = j;
 			}
 		}
@@ -194,7 +231,7 @@ void UBaseBeamSpell::FindBeamChain(TArray<FCloseEdge>& CloseEdges,
 			if (AlreadyAddToMst[k]) { continue; }
 			if (Graph[LowCostIndex][k] < CloseEdges[k].LowCost)
 			{
-				CloseEdges[k].Adjvex = LowCostIndex;
+				CloseEdges[k].Adjvex  = LowCostIndex;
 				CloseEdges[k].LowCost = Graph[LowCostIndex][k];
 			}
 		}
@@ -207,16 +244,23 @@ void UBaseBeamSpell::FindBeamChain(TArray<FCloseEdge>& CloseEdges,
 		{
 			if (i == Start) { continue; }
 			const auto LineStart = OverlapActors[i]->GetActorLocation();
-			auto LineEnd = OverlapActors[CloseEdges[i].Adjvex]->GetActorLocation();
-			LineEnd.RotateAngleAxis(FMath::RandRange(-80, 80), FVector::RightVector);
+			auto       LineEnd   = OverlapActors[CloseEdges[i].Adjvex]->GetActorLocation();
+			LineEnd.RotateAngleAxis(FMath::RandRange(-100, 100), FVector::RightVector);
 			UE_LOG(LogTemp, Warning, TEXT("%f"), CloseEdges[i].LowCost);
-			UKismetSystemLibrary::DrawDebugArrow(this, LineStart, LineEnd
-			                                     , 1200,
-			                                     FLinearColor::Green, 5, 4);
+			UKismetSystemLibrary::DrawDebugArrow(this,
+			                                     LineStart,
+			                                     LineEnd,
+			                                     1200,
+			                                     FLinearColor::Green,
+			                                     5,
+			                                     4);
 			UKismetSystemLibrary::DrawDebugString(
-				this, (LineEnd - LineStart).GetSafeNormal() * (CloseEdges[i].LowCost / 3.f),
-				FString::Printf(TEXT("[%d]%.1f"), i, CloseEdges[i].LowCost),
-				OverlapActors[i], FLinearColor::Green, 5);
+			                                      this,
+			                                      (LineEnd - LineStart).GetSafeNormal() * (CloseEdges[i].LowCost / 3.f),
+			                                      FString::Printf(TEXT("[%d]%.1f"), i, CloseEdges[i].LowCost),
+			                                      OverlapActors[i],
+			                                      FLinearColor::Green,
+			                                      5);
 		}
 	}
 }
@@ -230,7 +274,7 @@ bool UBaseBeamSpell::CanEnableBeamChainReaction()
 int32 UBaseBeamSpell::GetValidChainNum() const { return FMath::Min(OverlapActors.Num(), ChainReactionNum); }
 
 void UBaseBeamSpell::StartBeamChainReactionCue(TMap<AActor*, FGameplayCueParameters>& ActorToGcParam,
-                                               const FGameplayTag GameplayCueTag)
+                                               const FGameplayTag                     GameplayCueTag)
 {
 	if (!CanEnableBeamChainReaction()) { return; }
 	for (auto& Pair : ActorToGcParam)
@@ -240,8 +284,8 @@ void UBaseBeamSpell::StartBeamChainReactionCue(TMap<AActor*, FGameplayCueParamet
 		{
 			// 启用受害者被电击的动画
 			SufferAsc->TryActivateAbilitiesByTag(FGameplayTagContainer{
-				FRPGAuraGameplayTags::Get().Abilities_Effects_HitReact_InShock
-			});
+				                                     FRPGAuraGameplayTags::Get().Abilities_Effects_HitReact_InShock
+			                                     });
 		}
 
 		const auto ComInt = Cast<ICombatInterface>(Pair.Key);
@@ -255,7 +299,7 @@ void UBaseBeamSpell::StartBeamChainReactionCue(TMap<AActor*, FGameplayCueParamet
 }
 
 void UBaseBeamSpell::RemoveBeamChainReactionCue(TMap<AActor*, FGameplayCueParameters>& ActorToGcParam,
-                                                const FGameplayTag GameplayCueTag)
+                                                const FGameplayTag                     GameplayCueTag)
 {
 	for (auto& Pair : ActorToGcParam)
 	{
@@ -268,12 +312,14 @@ void UBaseBeamSpell::RemoveBeamChainReactionCue(TMap<AActor*, FGameplayCueParame
 	ActorToGcParam.Reset();
 }
 
-void UBaseBeamSpell::RemoveAllBeamCue(const FGameplayTag StartCueTag, const FGameplayTag GameplayCueTag,
-                                      const bool bRemoveStartCue)
+void UBaseBeamSpell::RemoveAllBeamCue(const FGameplayTag StartCueTag,
+                                      const FGameplayTag GameplayCueTag,
+                                      const bool         bRemoveStartCue)
 {
 	if (bRemoveStartCue)
 	{
-		UGameplayCueFunctionLibrary::RemoveGameplayCueOnActor(GetStartCueTarget(), StartCueTag,
+		UGameplayCueFunctionLibrary::RemoveGameplayCueOnActor(GetStartCueTarget(),
+		                                                      StartCueTag,
 		                                                      StartBeamGameplayCueParam);
 	}
 
@@ -299,7 +345,7 @@ void UBaseBeamSpell::ApplyBeamGE()
 {
 	if (!CanApplyGE() || !OverlapActors.Num()) { return; }
 	const auto LocalTmpDeBuffChance = DeBuffChance;
-	DeBuffChance = (bIsDeBuffSet) ? 0.f : DeBuffChance;
+	DeBuffChance                    = (bIsDeBuffSet) ? 0.f : DeBuffChance;
 
 	const auto LocalNum = GetValidChainNum();
 	for (int i = 0; i < LocalNum; ++i)

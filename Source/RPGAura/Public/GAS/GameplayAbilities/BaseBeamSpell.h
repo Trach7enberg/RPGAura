@@ -65,14 +65,17 @@ public:
 	                                                     UPARAM(REF)const FVector& Loc);
 
 	/// 多重射线检测 TODO 技能升级后才允许穿透,默认等级不带穿透效果
-	/// @param TracingStartPoint
+	/// @param TracingStartPoint 射线起始点
 	/// @param ActorToGcParam 
-	/// @param TraceChannel
-	/// @param bDebug 
+	/// @param TraceChannel 射线追踪通道
+	/// @param Radius 搜索半径
+	/// @param bDebug 绘制Debug输出
 	UFUNCTION(BlueprintCallable)
-	void TracingTarget(const FVector TracingStartPoint,
+	void TracingTarget(const FVector                                      TracingStartPoint,
 	                   UPARAM(REF) TMap<AActor*, FGameplayCueParameters>& ActorToGcParam,
-	                   ETraceTypeQuery TraceChannel, bool bDebug = true);
+	                   ETraceTypeQuery                                    TraceChannel,
+	                   const float                                        Radius = 650.f,
+	                   bool                                               bDebug = true);
 
 	/// 启动射线的链式反应
 	/// @param ActorToGcParam 
