@@ -14,6 +14,8 @@
 #include "CharacterBase.generated.h"
 
 
+class UBaseGameInstance;
+class ARPGAuraGameModeBase;
 class ABasePlayerController;
 class UBaseAbilitySystemComponent;
 class UNiagaraComponent;
@@ -52,27 +54,32 @@ public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	// ~ ICombatInterface
-	FOnDeathSignature OnDeathSignature;
+	FOnDeathSignature            OnDeathSignature;
 	FOnShockStateChangeSignature OnShockStateChangeSignature;
-	virtual int32 GetCharacterLevel() override { return 0; };
-	virtual ECharacterClass GetCharacterClass() override;
+	virtual int32                GetCharacterLevel() override { return 0; };
+	virtual ECharacterClass      GetCharacterClass() override;
 
-	virtual FVector GetCombatSocketLocation(const FGameplayTag& GameplayTag) override;
-	virtual void UpdateCharacterFacingTarget(const FVector& TargetLoc) override;
-	virtual UAnimMontage* GetHitReactAnim() override;
-	virtual UAnimMontage* GetStunAnim() override;
-	virtual UAnimMontage* GetInShockAnim() override;
-	virtual UAnimMontage* GetDeathAnim() override;
+	virtual FVector                 GetCombatSocketLocation(const FGameplayTag& GameplayTag) override;
+	virtual void                    UpdateCharacterFacingTarget(const FVector& TargetLoc) override;
+	virtual UAnimMontage*           GetHitReactAnim() override;
+	virtual UAnimMontage*           GetStunAnim() override;
+	virtual UAnimMontage*           GetInShockAnim() override;
+	virtual UAnimMontage*           GetDeathAnim() override;
 	virtual TArray<FMontageWithTag> GetAttackAnims() override;
-	virtual UAnimMontage* GetSummonAnim() override;
-	virtual int32 GetMaxSummonsCount() override;
-	virtual int32 GetCurrentSummonsCount() override;
-	virtual void UpdateCurrentSummonsCount(int32 NewCount) override;
-	virtual AActor* GetCombatTarget() override;
-	virtual void SetCombatTarget(AActor* CombatTarget) override;
+	virtual UAnimMontage*           GetSummonAnim() override;
+	virtual int32                   GetMaxSummonsCount() override;
+	virtual int32                   GetCurrentSummonsCount() override;
+	virtual void                    UpdateCurrentSummonsCount(int32 NewCount) override;
+	virtual AActor*                 GetCombatTarget() override;
+	virtual void                    SetCombatTarget(AActor* CombatTarget) override;
 	/// 角色死亡 , 只在服务器上调用
-	virtual void Die() override;
-	virtual bool IsCharacterDie() override;
+	virtual void            Die(const FVector& Impulse = FVector{}, const bool IsFinalBlow = false) override;
+	virtual bool            IsCharacterDie() override;
+	virtual UNiagaraSystem* GetBloodEffect() override;
+	virtual void            StartSummonAnim() override;
+	virtual void            ShowVfx(FGameplayTag Tag) override;
+	virtual void            StopVfx(const FGameplayTag& Tag) override;
+
 	/// 在角色头顶显示伤害
 	/// 对于在服务器控制的角色将会在服务器上执行,对于客户端控制的角色将在服务器上调用这个函数然后客户端执行,无论怎么样确保显示
 	/// @param Damage 需要显示的伤害
@@ -80,22 +87,19 @@ public:
 	/// @param bCriticalHit
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void ShowDamageNumber(const float Damage, bool bBlockedHit = false, bool bCriticalHit = false) override;
-	virtual UNiagaraSystem* GetBloodEffect() override;
-	virtual void StartSummonAnim() override;
-	virtual void ShowVfx(FGameplayTag Tag) override;
-	virtual void StopVfx(const FGameplayTag& Tag) override;
 	UFUNCTION(NetMulticast, Reliable)
-	virtual void AddDeathImpulse(const FVector& Impulse) override;
-	virtual void AddKnockBack(const FVector& Direction) override;
-	virtual void SetCastShockAnimState(const bool Enabled) override;
-	virtual bool GetCastShockAnimState() override;
-	virtual bool GetInShockHitState() override;
-	virtual void SetInShockHitState(const bool Enabled) override;
-	virtual USkeletalMeshComponent* GetWeaponMesh() override;
-	virtual FOnDeathSignature& GetPreOnDeathDelegate() override;
+	virtual void                          AddDeathImpulse(const FVector& Impulse) override;
+	virtual void                          AddKnockBack(const FVector& Direction) override;
+	virtual void                          SetCastShockAnimState(const bool Enabled) override;
+	virtual bool                          GetCastShockAnimState() override;
+	virtual bool                          GetInShockHitState() override;
+	virtual void                          SetInShockHitState(const bool Enabled) override;
+	virtual USkeletalMeshComponent*       GetWeaponMesh() override;
+	virtual FOnDeathSignature&            GetPreOnDeathDelegate() override;
 	virtual FOnShockStateChangeSignature& GetOnShockStateChangeDelegate() override;
-	virtual void ShowMagicCircle(UMaterialInterface* DecalMaterial) override;
-	virtual void HideMagicCircle() override;
+	virtual void                          ShowMagicCircle(UMaterialInterface* DecalMaterial) override;
+	virtual void                          HideMagicCircle() override;
+	virtual void                          SpawnLoot() override;
 	// ~ ICombatInterface
 
 	virtual void Destroyed() override;
@@ -119,6 +123,10 @@ protected:
 	/// DeBuff特效的大小
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="VFX", meta=(AllowPreserveRatio))
 	FVector DeBuffVfxScale = FVector(1.0f);
+
+	/// 角色死亡时的等待时间
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
+	float DeathTime = 3.f;
 
 	// 当前角色能拥有召唤物的最大数量
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
@@ -168,6 +176,9 @@ protected:
 	// 当前角色是否在被电击
 	UPROPERTY()
 	bool BIsInShockHitReact = false;
+	
+	/// 当前角色是否死亡
+	bool bIsDie;
 
 	// 角色的受击动画
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Combat")
@@ -229,9 +240,18 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Combat")
 	TObjectPtr<UTimelineComponent> SummonTimelineComponent;
 
+	/// 角色死亡定时器
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
+	FTimerHandle DeathTimer{};
+
+	/// 生成战利品定时器
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat")
+	FTimerHandle SpawnLootTimer{};
+
 	/// 管理当前角色生成特效的特效池
 	UPROPERTY()
 	TMap<FGameplayTag, UNiagaraComponent*> VfxComponentPool;
+	
 	/// 给角色授予能力
 	void AddCharacterAbilities();
 
@@ -266,9 +286,15 @@ protected:
 	/// @return 
 	virtual ABasePlayerController* GetMyController();
 
+	/// 
+	/// @return 
+	virtual ARPGAuraGameModeBase* GetMyGameMode();
+
+	virtual UBaseGameInstance* GetMyGi();
+
 	/// 多播RPC,服务器和客户端都会调用,用于处理角色死亡
 	UFUNCTION(NetMulticast, Reliable)
-	virtual void MulticastHandleDeath();
+	virtual void MulticastHandleDeath(const FVector& Impulse = FVector{}, const bool IsFinalBlow = false);
 
 	/// 
 	/// @param VfxTag 
@@ -277,10 +303,11 @@ protected:
 	/// @param LocationType 
 	/// @param SingleUse 除非必要,不单次使用
 	UFUNCTION(NetMulticast, Reliable)
-	virtual void MulticastVfx(const FGameplayTag& VfxTag, UNiagaraSystem* Vfx,
-	                          FTransform VfxTransform = FTransform{},
+	virtual void MulticastVfx(const FGameplayTag&   VfxTag,
+	                          UNiagaraSystem*       Vfx,
+	                          FTransform            VfxTransform = FTransform{},
 	                          EAttachLocation::Type LocationType = EAttachLocation::Type::KeepRelativeOffset,
-	                          const bool SingleUse = false);
+	                          const bool            SingleUse    = false);
 
 	/// 多播进行停止特效的播放
 	UFUNCTION(NetMulticast, Reliable)
@@ -292,8 +319,6 @@ protected:
 	virtual void MulticastStopVfxWithTag(const FGameplayTag& Tag);
 
 private:
-	/// 当前角色是否死亡
-	bool bIsDie;
 
 	// 溶解材质实例蓝图里的参数名字
 	FName ScalarParam = "Dissolve";
@@ -313,6 +338,12 @@ private:
 	UPROPERTY()
 	TObjectPtr<ABasePlayerController> BasePlayerController;
 
+	UPROPERTY()
+	TObjectPtr<ARPGAuraGameModeBase> BaseGameMode;
+
+	UPROPERTY()
+	TObjectPtr<UBaseGameInstance> MyGi;
+
 	// 时间线组件
 	UPROPERTY()
 	TObjectPtr<UTimelineComponent> DissolveTimelineComponent;
@@ -324,6 +355,13 @@ private:
 	/// 武器的动态溶解材质实例
 	UPROPERTY()
 	TObjectPtr<UMaterialInstanceDynamic> MaterialInstanceDynamic_Weapon;
+	
+	/// 用于暂存生成掉落物的方向数组
+	UPROPERTY()
+	TArray<FVector> SpawnLootDirections{};
+
+	UPROPERTY()
+	int32  SpawnLootDireIndex{};
 
 	/// 当ASC 被授予或者被完全移除HitReact标签时的回调函数
 	/// @param Tag 指定标签被移除或者被添加的标签
@@ -352,7 +390,9 @@ private:
 	/// @param Value 值
 	/// @param ParameterName 参数名
 	void SetScalarParameterValue(
-		UMaterialInstanceDynamic* MaterialInstance, const float Value, const FName ParameterName);
+		UMaterialInstanceDynamic* MaterialInstance,
+		const float               Value,
+		const FName               ParameterName);
 
 	// 初始化溶解时间线组件
 	void InitDissolveTimeLine();

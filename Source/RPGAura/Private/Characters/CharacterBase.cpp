@@ -12,12 +12,18 @@
 #include "Components/WeaponLogicBaseComponent.h"
 #include "Controller/BasePlayerController.h"
 #include "CoreTypes/RPGAuraGameplayTags.h"
+#include "FunctionLibrary/RPGAuraBlueprintFunctionLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameInstance/BaseGameInstance.h"
+#include "GameModes/RPGAuraGameModeBase.h"
 #include "GAS/AbilitySystemComp/BaseAbilitySystemComponent.h"
 #include "GAS/Data/CharacterClassInfo.h"
+#include "GAS/Data/LootTiers.h"
 #include "Interfaces/HighLightInterface.h"
 #include "Kismet/GameplayStatics.h"
+#include "Pickup/BasePickup.h"
 #include "PlayerStates/BasePlayerState.h"
+#include "RPGAura/RPGAura.h"
 #include "SubSystems/RPGAuraGameInstanceSubsystem.h"
 #include "Subsystems/SubsystemBlueprintLibrary.h"
 #include "UI/WidgetComponents/DamageTextComponent.h"
@@ -28,21 +34,21 @@ ACharacterBase::ACharacterBase()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	CharacterLevel = 1;
-	SelfLifeSpan = 0.1f;
-	MaxWalkingSpeed = 600.f;
-	bIsDie = false;
+	CharacterLevel      = 1;
+	SelfLifeSpan        = 0.1f;
+	MaxWalkingSpeed     = 600.f;
+	bIsDie              = false;
 	CurrentSummonsCount = 0;
-	MaxSummonsCount = 5;
+	MaxSummonsCount     = 5;
 
 	// 角色能改变导航网格,不会让一堆角色撞在一起
 	SetCanAffectNavigationGeneration(true);
 
-	WeaponLogicBaseComponent = CreateDefaultSubobject<UWeaponLogicBaseComponent>("WeaponLogicComponent");
+	WeaponLogicBaseComponent  = CreateDefaultSubobject<UWeaponLogicBaseComponent>("WeaponLogicComponent");
 	DissolveTimelineComponent = CreateDefaultSubobject<UTimelineComponent>("DissolveTimelineComponent");
-	SummonTimelineComponent = CreateDefaultSubobject<UTimelineComponent>("SummonTimelineComponent");
-	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>("MotionWarping");
-	NiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>("NiagaraComponent");
+	SummonTimelineComponent   = CreateDefaultSubobject<UTimelineComponent>("SummonTimelineComponent");
+	MotionWarpingComponent    = CreateDefaultSubobject<UMotionWarpingComponent>("MotionWarping");
+	NiagaraComponent          = CreateDefaultSubobject<UNiagaraComponent>("NiagaraComponent");
 	NiagaraComponent->SetAutoActivate(false);
 
 	if (GetMesh()) { GetMesh()->SetRelativeRotation(FRotator(0, -90, 0)); }
@@ -81,17 +87,18 @@ void ACharacterBase::AddCharacterAbilities()
 	const FCharacterClassDefaultInfo CcdI = GiSubSystem->CharacterClassInfo->FindClassDefaultInfo(CharacterClass);
 	// 赋予相应角色的初始能力
 	Asc->AddCharacterDefaultAbilities(
-		CcdI.PrimaryStartUpAbilities,
-		GetCharacterLevel());
+	                                  CcdI.PrimaryStartUpAbilities,
+	                                  GetCharacterLevel());
 
 	// 赋予并激活角色相应的初始被动能力
 	Asc->AddCharacterDefaultAbilities(
-		CcdI.StartUpPassiveAbilities,
-		GetCharacterLevel(), true);
+	                                  CcdI.StartUpPassiveAbilities,
+	                                  GetCharacterLevel(),
+	                                  true);
 }
 
 void ACharacterBase::InitAttributes(const TSubclassOf<UGameplayEffect> AttributesGameplayEffect,
-                                    const float Level) const
+                                    const float                        Level) const
 {
 	if (!GetAbilitySystemComponent() || !AttributesGameplayEffect)
 	{
@@ -113,9 +120,12 @@ void ACharacterBase::InitAllAttributes(bool BIsPlayer)
 		return;
 	}
 	auto GiSubSystem = Cast<URPGAuraGameInstanceSubsystem>(
-		USubsystemBlueprintLibrary::GetGameInstanceSubsystem(this, URPGAuraGameInstanceSubsystem::StaticClass()));
+	                                                       USubsystemBlueprintLibrary::GetGameInstanceSubsystem(this,
+		                                                       URPGAuraGameInstanceSubsystem::StaticClass()));
 	if (!GiSubSystem) { UE_LOG(ACharacterBaseLog, Error, TEXT("获取GameInstance子系统失败!")); }
-	GiSubSystem->InitializeDefaultAttributes(GetAbilitySystemComponent(), CharacterClass, GetCharacterLevel(),
+	GiSubSystem->InitializeDefaultAttributes(GetAbilitySystemComponent(),
+	                                         CharacterClass,
+	                                         GetCharacterLevel(),
 	                                         BIsPlayer);
 }
 
@@ -133,13 +143,16 @@ void ACharacterBase::RegisterGameplayTagEvent()
 	GetAbilitySystemComponent()->RegisterGameplayTagEvent(FRPGAuraGameplayTags::Get().Abilities_Effects_HitReact_Normal)
 	                           .
 	                           AddUObject(
-		                           this, &ACharacterBase::OnGrantedTag_HitReact);
+	                                      this,
+	                                      &ACharacterBase::OnGrantedTag_HitReact);
 
 	GetAbilitySystemComponent()->RegisterGameplayTagEvent(FRPGAuraGameplayTags::Get().Abilities_DeBuff_Burn).AddUObject(
-		this, &ACharacterBase::OnGrantedTag_DeBuffBurn);
+	 this,
+	 &ACharacterBase::OnGrantedTag_DeBuffBurn);
 
 	GetAbilitySystemComponent()->RegisterGameplayTagEvent(FRPGAuraGameplayTags::Get().Abilities_DeBuff_Stun).AddUObject(
-		this, &ACharacterBase::OnGrantedTag_DeBuffStun);
+	 this,
+	 &ACharacterBase::OnGrantedTag_DeBuffStun);
 }
 
 ABasePlayerState* ACharacterBase::GetMyPlayerState()
@@ -175,6 +188,30 @@ ABasePlayerController* ACharacterBase::GetMyController()
 	return BasePlayerController.Get();
 }
 
+ARPGAuraGameModeBase* ACharacterBase::GetMyGameMode()
+{
+	if (!BaseGameMode)
+	{
+		const auto Gm = Cast<ARPGAuraGameModeBase>(UGameplayStatics::GetGameMode(this));
+		if (!Gm) { return nullptr; }
+
+		BaseGameMode = Gm;
+	}
+	return BaseGameMode.Get();
+}
+
+UBaseGameInstance* ACharacterBase::GetMyGi()
+{
+	if (!MyGi)
+	{
+		const auto Gi = GetGameInstance<UBaseGameInstance>();
+		if (!Gi) { return nullptr; }
+
+		MyGi = Gi;
+	}
+	return MyGi.Get();
+}
+
 void ACharacterBase::StopVfx(const FGameplayTag& Tag) { MulticastStopVfxWithTag(Tag); }
 
 void ACharacterBase::MulticastStopVfxWithTag_Implementation(const FGameplayTag& Tag)
@@ -196,16 +233,18 @@ bool ACharacterBase::CanHighLight()
 
 
 UNiagaraSystem* ACharacterBase::GetBloodEffect() { return BloodEffect; }
-void ACharacterBase::StartSummonAnim() { StartSummonTimeline(); }
+void            ACharacterBase::StartSummonAnim() { StartSummonTimeline(); }
 
 void ACharacterBase::ShowVfx(const FGameplayTag Tag)
 {
 	if (!Tag.IsValid()) { return; }
 	if (const auto Vfx = DeBuffVfxMap.Find(Tag))
 	{
-		UE_LOG(ACharacterBaseLog, Error, TEXT("[DeBuffVfx]: %s"), *Tag.GetTagName().ToString());
+		UE_LOG(ACharacterBaseLog, Warning, TEXT("[DeBuffVfx]: %s"), *Tag.GetTagName().ToString());
 		// DeBuff特效是持续性的,不是一次性并且坐标是相对的不是世界系
-		MulticastVfx(Tag, Vfx->Get(), {FRotator{}, FVector{}, FVector(DeBuffVfxScale)},
+		MulticastVfx(Tag,
+		             Vfx->Get(),
+		             {FRotator{}, FVector{}, FVector(DeBuffVfxScale)},
 		             EAttachLocation::KeepRelativeOffset);
 	}
 }
@@ -256,7 +295,7 @@ USkeletalMeshComponent* ACharacterBase::GetWeaponMesh()
 	return WeaponLogicBaseComponent->GetWeaponMesh();
 }
 
-FOnDeathSignature& ACharacterBase::GetPreOnDeathDelegate() { return OnDeathSignature; }
+FOnDeathSignature&            ACharacterBase::GetPreOnDeathDelegate() { return OnDeathSignature; }
 FOnShockStateChangeSignature& ACharacterBase::GetOnShockStateChangeDelegate() { return OnShockStateChangeSignature; }
 
 void ACharacterBase::ShowMagicCircle(UMaterialInterface* DecalMaterial)
@@ -272,6 +311,88 @@ void ACharacterBase::HideMagicCircle()
 	GetMyController()->HideMagicDecal();
 }
 
+void ACharacterBase::SpawnLoot()
+{
+	if (!GetMyGiSubSystem() || !GetWorld()) { return; }
+
+	const auto Asset = GetMyGiSubSystem()->GetLootTiersDataAsset();
+	if (!Asset) { return; }
+
+	TArray<FLootItem> LootItems{};
+	Asset->GetLootItems(LootItems);
+
+	SpawnLootDirections.Reset();
+	SpawnLootDireIndex = 0;
+	URPGAuraBlueprintFunctionLibrary::GetVectorBySpread(FMath::FRandRange(300, 360.f),
+	                                                    LootItems.Num(),
+	                                                    GetActorForwardVector(),
+	                                                    SpawnLootDirections);
+	if (SpawnLootDirections.Num() != LootItems.Num()) { return; }
+
+	const auto     Distance = 200.f;
+	FTimerDelegate SpawnLootDelegate{};
+
+	const auto TmpActorLocation = GetActorLocation();
+
+	SpawnLootDelegate.BindLambda([this,LootItems, TmpActorLocation]()
+	{
+		if (!IsValid(this) || !LootItems.IsValidIndex(SpawnLootDireIndex))
+		{
+			GetWorldTimerManager().ClearTimer(SpawnLootTimer);
+			return;
+		}
+
+		const auto LocDistance  = FMath::FRandRange(50.f, 100.f);
+		auto       CurrentPoint = SpawnLootDirections[SpawnLootDireIndex];
+		FHitResult Hr{};
+		UKismetSystemLibrary::LineTraceSingleByProfile(
+		                                               this,
+		                                               TmpActorLocation,
+		                                               TmpActorLocation + CurrentPoint * LocDistance,
+		                                               COLLISION_PRESET_DETECT_GROUND_POINTS,
+		                                               false,
+		                                               {},
+		                                               EDrawDebugTrace::None,
+		                                               Hr,
+		                                               true,
+		                                               FLinearColor::White,
+		                                               FLinearColor::Red,
+		                                               3.f
+		                                              );
+
+		// 修正点 TODO 需要修改垂直方向向量位置...  
+		CurrentPoint = (Hr.bBlockingHit) ? Hr.ImpactPoint : TmpActorLocation + CurrentPoint * LocDistance;
+		UE_LOG(ACharacterBaseLog, Warning, TEXT("%s 生成物下标[%d]"), TEXT(__FUNCTION__), SpawnLootDireIndex);
+		FActorSpawnParameters SpawnParameters{};
+		CurrentPoint.Z                                 = 100.f;
+		SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		if (auto Loot = GetWorld()->SpawnActor<ABasePickup>(LootItems[SpawnLootDireIndex].LootClass,
+		                                                    CurrentPoint,
+		                                                    CurrentPoint.Rotation(),
+		                                                    SpawnParameters))
+		{
+			if (LootItems[SpawnLootDireIndex].bLootLevelOverride) { Loot->SetActorLevel(GetCharacterLevel()); }
+			auto ImpulsiveDire = (Loot->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+			ImpulsiveDire = ImpulsiveDire.RotateAngleAxis(FMath::FRandRange(45.f, 90.f), ImpulsiveDire.RightVector);
+			auto Result = ImpulsiveDire * 400;
+			Loot->EnablePickUpPhysics(Result);
+		}
+		SpawnLootDireIndex++;
+	});
+
+	GetWorldTimerManager().SetTimer(SpawnLootTimer, SpawnLootDelegate, .1f, true);
+	for (int j = 0; j < LootItems.Num(); ++j)
+	{
+		// UKismetSystemLibrary::DrawDebugSphere(this,
+		//                                       GetActorLocation() + Directions[j] * Distance,
+		//                                       20,
+		//                                       12,
+		//                                       FLinearColor::Red,
+		//                                       3,
+		//                                       3);
+	}
+}
+
 ECharacterClass ACharacterBase::GetCharacterClass() { return CharacterClass; }
 
 FVector ACharacterBase::GetCombatSocketLocation(const FGameplayTag& GameplayTag)
@@ -283,7 +404,8 @@ FVector ACharacterBase::GetCombatSocketLocation(const FGameplayTag& GameplayTag)
 		if (WeaponLogicBaseComponent->DoesNeedWeapon())
 		{
 			return WeaponLogicBaseComponent->GetWeaponSocketLocByName(
-				WeaponLogicBaseComponent->GetWeaponTipSocketName());
+			                                                          WeaponLogicBaseComponent->
+			                                                          GetWeaponTipSocketName());
 		}
 		return GetMesh()->GetSocketLocation(AttackSocketName_BodyTip);
 	}
@@ -303,12 +425,12 @@ void ACharacterBase::UpdateCharacterFacingTarget(const FVector& TargetLoc)
 	MotionWarpingComponent->AddOrUpdateWarpTargetFromLocation(WarpTargetName, TargetLoc);
 }
 
-UAnimMontage* ACharacterBase::GetHitReactAnim() { return HitReactAnimMontage.Get(); }
-UAnimMontage* ACharacterBase::GetStunAnim() { return StunAnimMontage.Get(); }
-UAnimMontage* ACharacterBase::GetInShockAnim() { return HitReactLoopAnimMontage.Get(); }
-UAnimMontage* ACharacterBase::GetDeathAnim() { return DeathAnimMontage; }
+UAnimMontage*           ACharacterBase::GetHitReactAnim() { return HitReactAnimMontage.Get(); }
+UAnimMontage*           ACharacterBase::GetStunAnim() { return StunAnimMontage.Get(); }
+UAnimMontage*           ACharacterBase::GetInShockAnim() { return HitReactLoopAnimMontage.Get(); }
+UAnimMontage*           ACharacterBase::GetDeathAnim() { return DeathAnimMontage; }
 TArray<FMontageWithTag> ACharacterBase::GetAttackAnims() { return AttackMontageWithTagArray; }
-UAnimMontage* ACharacterBase::GetSummonAnim() { return SummonAnimMontage; }
+UAnimMontage*           ACharacterBase::GetSummonAnim() { return SummonAnimMontage; }
 
 int32 ACharacterBase::GetMaxSummonsCount() { return MaxSummonsCount; }
 
@@ -354,9 +476,11 @@ void ACharacterBase::LifeSpanExpired()
 	Super::LifeSpanExpired();
 }
 
-void ACharacterBase::MulticastVfx_Implementation(const FGameplayTag& VfxTag, UNiagaraSystem* Vfx,
-                                                 const FTransform VfxTransform,
-                                                 const EAttachLocation::Type LocationType, const bool SingleUse)
+void ACharacterBase::MulticastVfx_Implementation(const FGameplayTag&         VfxTag,
+                                                 UNiagaraSystem*             Vfx,
+                                                 const FTransform            VfxTransform,
+                                                 const EAttachLocation::Type LocationType,
+                                                 const bool                  SingleUse)
 {
 	if (!VfxTag.IsValid() || !Vfx || !NiagaraComponent) { return; }
 
@@ -364,9 +488,14 @@ void ACharacterBase::MulticastVfx_Implementation(const FGameplayTag& VfxTag, UNi
 	if (!NiagaraComp)
 	{
 		auto LocalNiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAttached(
-			Vfx, GetRootComponent(), NAME_None, VfxTransform.GetLocation(),
-			VfxTransform.Rotator(), LocationType,
-			SingleUse, SingleUse);
+		                                                                     Vfx,
+		                                                                     GetRootComponent(),
+		                                                                     NAME_None,
+		                                                                     VfxTransform.GetLocation(),
+		                                                                     VfxTransform.Rotator(),
+		                                                                     LocationType,
+		                                                                     SingleUse,
+		                                                                     SingleUse);
 		NiagaraComp = &LocalNiagaraComp;
 		if (!SingleUse) { VfxComponentPool.Add(VfxTag, *NiagaraComp); }
 	}
@@ -382,9 +511,13 @@ FORCEINLINE UAbilitySystemComponent* ACharacterBase::GetAbilitySystemComponent()
 
 void ACharacterBase::OnGrantedTag_HitReact(const FGameplayTag Tag, int32 NewTagCount)
 {
-	GEngine->AddOnScreenDebugMessage(1, 2, FColor::Red,
+	GEngine->AddOnScreenDebugMessage(1,
+	                                 2,
+	                                 FColor::Red,
 	                                 FString::Printf(
-		                                 TEXT("TagName: [%s] , NewTagCount: [%d]"), *Tag.ToString(), NewTagCount));
+	                                                 TEXT("TagName: [%s] , NewTagCount: [%d]"),
+	                                                 *Tag.ToString(),
+	                                                 NewTagCount));
 }
 
 void ACharacterBase::OnGrantedTag_DeBuffBurn(const FGameplayTag Tag, int32 NewTagCount)
@@ -399,14 +532,18 @@ void ACharacterBase::OnGrantedTag_DeBuffBurn(const FGameplayTag Tag, int32 NewTa
 		// TODO 需要判断是DeBuff特效,然后再停用DeBuff特效? 
 		// MulticastStopVfx();
 	}
-	UE_LOG(ACharacterBaseLog, Error, TEXT("获得DeBuff!,Actor: [%s] , DeBuff: [%s] , NewTagCount: [%d]"),
-	       *GetNameSafe(this), *Tag.ToString(), NewTagCount);
+	UE_LOG(ACharacterBaseLog,
+	       Warning,
+	       TEXT("获得DeBuff!,Actor: [%s] , DeBuff: [%s] , NewTagCount: [%d]"),
+	       *GetNameSafe(this),
+	       *Tag.ToString(),
+	       NewTagCount);
 }
 
 void ACharacterBase::OnGrantedTag_DeBuffStun(const FGameplayTag Tag, int32 NewTagCount)
 {
-	const auto Stunning = NewTagCount > 0;
-	const auto LocalWalkingSpeed = (Stunning) ? 0.f : MaxWalkingSpeed;
+	const auto Stunning                  = NewTagCount > 0;
+	const auto LocalWalkingSpeed         = (Stunning) ? 0.f : MaxWalkingSpeed;
 	GetCharacterMovement()->MaxWalkSpeed = LocalWalkingSpeed;
 	// 避免眩晕期间角色输入,让角色进行转向
 	GetCharacterMovement()->bOrientRotationToMovement = !Stunning;
@@ -418,7 +555,7 @@ void ACharacterBase::OnGrantedTag_DeBuffStun(const FGameplayTag Tag, int32 NewTa
 		// TODO 需要判断是DeBuff特效,然后再停用DeBuff特效? 
 		// MulticastStopVfx();
 	}
-	UE_LOG(LogTemp, Error, TEXT("获得DeBuff![%s] -> 数量[%d]"), *Tag.ToString(), NewTagCount);
+	UE_LOG(LogTemp, Warning, TEXT("获得DeBuff![%s] -> 数量[%d]"), *Tag.ToString(), NewTagCount);
 }
 
 void ACharacterBase::SetDissolveMaterial()
@@ -430,7 +567,7 @@ void ACharacterBase::SetDissolveMaterial()
 	}
 
 	MaterialInstanceDynamic_Character = UMaterialInstanceDynamic::Create(DissolveMaterialInstanceCharacter, this);
-	MaterialInstanceDynamic_Weapon = UMaterialInstanceDynamic::Create(DissolveMaterialInstanceWeapon, this);
+	MaterialInstanceDynamic_Weapon    = UMaterialInstanceDynamic::Create(DissolveMaterialInstanceWeapon, this);
 
 	// TODO 角色的身上材质插槽可能有多个,目前全部只用同一个溶解材质
 	for (int i = 0; i < GetMesh()->GetMaterials().Num(); ++i)
@@ -441,10 +578,9 @@ void ACharacterBase::SetDissolveMaterial()
 }
 
 void ACharacterBase::SetScalarParameterValue(
-	UMaterialInstanceDynamic* MaterialInstance, const float Value, const FName ParameterName)
-{
-	MaterialInstance->SetScalarParameterValue(ParameterName, Value);
-}
+	UMaterialInstanceDynamic* MaterialInstance,
+	const float               Value,
+	const FName               ParameterName) { MaterialInstance->SetScalarParameterValue(ParameterName, Value); }
 
 
 void ACharacterBase::InitDissolveTimeLine()
@@ -518,7 +654,7 @@ void ACharacterBase::StartSummonTimeline() const
 void ACharacterBase::SummonTimelineUpdateFunc(float Output) { GetMesh()->SetRelativeScale3D(FVector(Output)); }
 void ACharacterBase::SummonTimelineFinishedFunc() {}
 
-void ACharacterBase::Die() { MulticastHandleDeath(); }
+void ACharacterBase::Die(const FVector& Impulse, const bool IsFinalBlow) { MulticastHandleDeath(Impulse, IsFinalBlow); }
 
 bool ACharacterBase::IsCharacterDie() { return bIsDie; }
 
@@ -535,7 +671,8 @@ void ACharacterBase::ShowDamageNumber_Implementation(const float Damage, bool bB
 	DamageTextComponent->RegisterComponent();
 	DamageTextComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	DamageTextComponent->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
-	DamageTextComponent->SetRelativeLocation(FVector(FMath::RandRange(10, 50), FMath::RandRange(10, 50),
+	DamageTextComponent->SetRelativeLocation(FVector(FMath::RandRange(10, 50),
+	                                                 FMath::RandRange(10, 50),
 	                                                 FMath::RandRange(10, 50)));
 	// Detach之后就会在原地
 	// DamageText->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
@@ -547,8 +684,9 @@ void ACharacterBase::ShowDamageNumber_Implementation(const float Damage, bool bB
 		DamageTextComponent->SetDamageTextColor(FLinearColor::Yellow);
 		DamageTextComponent->SetHitMessageTextColor(FLinearColor::Yellow);
 		HitMessageText = FText::FromString(
-			DamageTextComponent->HitMessage_Critical.ToString() + DamageTextComponent->HitMessage_Blocked.ToString() +
-			"!");
+		                                   DamageTextComponent->HitMessage_Critical.ToString() + DamageTextComponent->
+		                                   HitMessage_Blocked.ToString() +
+		                                   "!");
 	}
 	else if (bCriticalHit)
 	{
@@ -567,11 +705,12 @@ void ACharacterBase::ShowDamageNumber_Implementation(const float Damage, bool bB
 }
 
 
-void ACharacterBase::MulticastHandleDeath_Implementation()
+void ACharacterBase::MulticastHandleDeath_Implementation(const FVector& Impulse, const bool IsFinalBlow)
 {
 	bIsDie = true;
 	OnDeathSignature.Broadcast(this);
 	WeaponLogicBaseComponent->DetachWeapon();
+	SpawnLoot();
 
 	// TODO 已在多播函数内,待决定是否需要使用多播进行停止 
 	MulticastStopVfx();
@@ -584,6 +723,8 @@ void ACharacterBase::MulticastHandleDeath_Implementation()
 
 	// 设置武器物理开启
 	WeaponLogicBaseComponent->SetWeaponPhysics(true);
+	// TODO 如果已经触发击退,则不应该添加死亡冲击? 
+	if (IsFinalBlow) { AddDeathImpulse(Impulse); }
 
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
 
@@ -597,14 +738,13 @@ void ACharacterBase::MulticastHandleDeath_Implementation()
 void ACharacterBase::AddDeathImpulse_Implementation(const FVector& Impulse)
 {
 	auto LocalImpulse = Impulse;
-	UKismetSystemLibrary::DrawDebugArrow(this, GetActorLocation(), GetActorLocation() + LocalImpulse, 1000,
-	                                     FLinearColor::Red, 3, 2);
+
 	if (!bIsDie) { return; }
 	if (GetMesh())
 	{
-		// TODO 待修改硬编码值
-		// LocalImpulse.Z += 8000;
-		GetMesh()->AddImpulse(LocalImpulse, NAME_None, true);
+		// TODO 待修改硬编码值,哥布林所需要的浮空力度与其他敌人不一样
+		LocalImpulse.Z = 900;
+		GetMesh()->AddImpulse(LocalImpulse * 5, NAME_None, true);
 	}
 	if (WeaponLogicBaseComponent) { WeaponLogicBaseComponent->AddWeaponImpulse(Impulse, NAME_None, true); }
 }
