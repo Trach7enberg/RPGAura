@@ -86,7 +86,7 @@ public:
 
 	/// 只在服务器上调用角色死亡
 	UFUNCTION(BlueprintCallable)
-	virtual void Die() = 0;
+	virtual void Die(const FVector& Impulse = FVector::ZeroVector, const bool IsFinalBlow = false) = 0;
 
 	UFUNCTION(BlueprintCallable)
 	virtual bool IsCharacterDie() = 0;
@@ -175,4 +175,8 @@ public:
 	/// 
 	UFUNCTION(BlueprintCallable)
 	virtual void HideMagicCircle() = 0;
+
+	/// 生成战利品
+	UFUNCTION(BlueprintCallable)
+	virtual void SpawnLoot() = 0;
 };
