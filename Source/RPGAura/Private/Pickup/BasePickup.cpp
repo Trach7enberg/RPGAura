@@ -8,23 +8,26 @@
 #include "GameplayEffect.h"
 #include "Components/SphereComponent.h"
 #include "CoreTypes/RPGAuraGameplayTags.h"
+#include "Kismet/GameplayStatics.h"
+
+DEFINE_LOG_CATEGORY_STATIC(ABasePickupLog, All, All);
 
 ABasePickup::ABasePickup()
 {
 	PrimaryActorTick.bCanEverTick = false;
-	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
+	StaticMeshComponent           = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
 	SetRootComponent(StaticMeshComponent);
 	StaticMeshComponent->SetRelativeScale3D(FVector(0.3f));
 
 	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
 	SphereComponent->SetupAttachment(GetRootComponent());
-	SphereComponent->SetRelativeLocation(FVector(0,13.333333,36.666665));
+	SphereComponent->SetRelativeLocation(FVector(0, 13.333333, 36.666665));
 	SphereComponent->InitSphereRadius(140.0f);
-	SphereComponent->SetHiddenInGame(false);
+	SphereComponent->SetHiddenInGame(true);
 
-	ActorLevel = 1.f;
+	ActorLevel              = 1.f;
 	bEnableEffectsToEnemies = false;
-	PickupThenDestroy = true;
+	PickupThenDestroy       = true;
 }
 
 
@@ -40,7 +43,8 @@ void ABasePickup::ClientApplyGEToTarget(AActor* Actor, TSubclassOf<UGameplayEffe
 	if (!bEnableEffectsToEnemies && Actor->ActorHasTag(FRPGAuraGameplayTags::Get().Enemy)) { return; }
 
 	UAbilitySystemComponent* ActorAsc = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor);
-	if (!ActorAsc || !GeClass) { return; }
+	if (!ActorAsc || !GeClass || !PickUpConsumeSound) { return; }
+	UGameplayStatics::SpawnSoundAtLocation(this, PickUpConsumeSound, GetActorLocation());
 
 	// Handle是GE上下文的一个包装,提供方便的操作,核心数据是一个叫Data的变量,这个就是实际的GE上下文
 	FGameplayEffectContextHandle EffectContextHandle = ActorAsc->MakeEffectContext();
@@ -57,7 +61,7 @@ void ABasePickup::ClientApplyGEToTarget(AActor* Actor, TSubclassOf<UGameplayEffe
 	const FActiveGameplayEffectHandle ActiveGeHandle = ActorAsc->ApplyGameplayEffectSpecToSelf(*GeSpec.Data.Get());
 
 	const auto BIsInfiniteActive = GeSpec.Data.Get()->Def.Get()->DurationPolicy ==
-		EGameplayEffectDurationType::Infinite;
+			EGameplayEffectDurationType::Infinite;
 
 	// 效果是无限的才需要保存,用于之后移除效果
 	if (BIsInfiniteActive) { CurrentActiveGameplayEffectHandle = ActiveGeHandle; }
@@ -65,15 +69,46 @@ void ABasePickup::ClientApplyGEToTarget(AActor* Actor, TSubclassOf<UGameplayEffe
 	if (PickupThenDestroy && !BIsInfiniteActive) { Destroy(); }
 }
 
-void ABasePickup::OnBeginOverBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-                                   UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
-                                   const FHitResult& SweepResult)
+void ABasePickup::EnablePickUpPhysics(const FVector& Impulsive) const
 {
+	if (!StaticMeshComponent || !PickUpSpawnSound) { return; }
+
+	UGameplayStatics::SpawnSoundAtLocation(this, PickUpSpawnSound, GetActorLocation());
+
+	StaticMeshComponent->SetEnableGravity(true);
+	StaticMeshComponent->SetSimulatePhysics(true);
+	StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::Type::PhysicsOnly);
+	StaticMeshComponent->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+	StaticMeshComponent->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
+
+	StaticMeshComponent->SetAngularDamping(1.8f); // 角速度阻尼,防止物体持续滚动
+
+	StaticMeshComponent->AddImpulse(Impulsive, NAME_None, true);
+
+	UE_LOG(ABasePickupLog, Warning, TEXT("拾取物等级%.1f"), GetActorLevel());
+}
+
+void ABasePickup::OnBeginOverBegin(UPrimitiveComponent* OverlappedComponent,
+                                   AActor*              OtherActor,
+                                   UPrimitiveComponent* OtherComp,
+                                   int32                OtherBodyIndex,
+                                   bool                 bFromSweep,
+                                   const FHitResult&    SweepResult)
+{
+	if (!bIsOnGround && OtherActor && (OtherActor->GetRootComponent()->GetCollisionObjectType() ==
+		ECollisionChannel::ECC_WorldStatic || OtherActor->GetRootComponent()->GetCollisionObjectType() ==
+		ECollisionChannel::ECC_WorldDynamic))
+	{
+		UGameplayStatics::SpawnSoundAtLocation(this, PickUpHitSound, GetActorLocation());
+		bIsOnGround = true;
+	}
 	ClientApplyGEToTarget(OtherActor, CurrentGameplayEffectClass);
 }
 
-void ABasePickup::OnEndOverBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-                                 UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+void ABasePickup::OnEndOverBegin(UPrimitiveComponent* OverlappedComponent,
+                                 AActor*              OtherActor,
+                                 UPrimitiveComponent* OtherComp,
+                                 int32                OtherBodyIndex)
 {
 	const auto TempAsc = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
 	if (TempAsc && CurrentActiveGameplayEffectHandle.IsValid())
