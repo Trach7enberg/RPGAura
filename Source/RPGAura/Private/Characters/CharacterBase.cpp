@@ -51,6 +51,10 @@ ACharacterBase::ACharacterBase()
 	NiagaraComponent          = CreateDefaultSubobject<UNiagaraComponent>("NiagaraComponent");
 	NiagaraComponent->SetAutoActivate(false);
 
+	// 设置不受贴花影响
+	GetCapsuleComponent()->SetReceivesDecals(false);
+	GetMesh()->SetReceivesDecals(false);
+
 	if (GetMesh()) { GetMesh()->SetRelativeRotation(FRotator(0, -90, 0)); }
 }
 
