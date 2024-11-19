@@ -32,7 +32,7 @@ public:
 	/// 玩家当前是否能升级
 	/// @return 
 	virtual bool CanBeLevelUp() = 0;
-	
+
 	/// 玩家升级
 	virtual void LevelUp() = 0;
 
@@ -60,4 +60,12 @@ public:
 	/// 获取当前角色可分配的法术点
 	/// @return 
 	virtual int32 GetCurrentAssignableSpellPoints() = 0;
+
+	/// 保存进度 
+	/// @param CheckPointTag 
+	UFUNCTION(BlueprintCallable)
+	virtual void SaveProgress(const FName& CheckPointTag) = 0;
+
+	/// 加载角色的信息进度(包括GAS的能力、属性等)
+	virtual void LoadProgress() = 0;
 };
