@@ -52,13 +52,14 @@ public:
 	virtual void AddToAttributesPoints(int32 Points) override;
 	virtual int32 GetCurrentAssignableAttributePoints() override;
 	virtual int32 GetCurrentAssignableSpellPoints() override;
+	virtual void SaveProgress(const FName& CheckPointTag) override;
+	virtual void LoadProgress() override;
 	// ~ IPlayerInterface
 
 
 protected:
 	virtual void BeginPlay() override;
-
-
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Camera")
 	UCameraComponent* CameraComponent;
 
@@ -67,6 +68,8 @@ protected:
 
 	/// 初始化当前ACS的能力组件、属性集和ACS的AbilityActorInfo
 	virtual void InitAbilityActorInfo() override;
+
+	virtual void MulticastHandleDeath(const FVector& Impulse = FVector{}, const bool IsFinalBlow = false) override;
 
 	/// 角色是否处于释放电击法术动画状态
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Animation")
