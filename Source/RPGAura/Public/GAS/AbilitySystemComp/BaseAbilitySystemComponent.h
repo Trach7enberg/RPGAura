@@ -6,6 +6,9 @@
 #include "AbilitySystemComponent.h"
 #include "BaseAbilitySystemComponent.generated.h"
 
+enum class ECharacterClass : uint8;
+class ULoadScreenSave;
+struct FSavedAbility;
 struct FTagToAbilityInfo;
 class URPGAuraGameInstanceSubsystem;
 struct FAbilityDescription;
@@ -14,8 +17,10 @@ class FAbilityInfoSignature;
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnGetAssetTagsDelegate, const FGameplayTagContainer& /* AssetTags */);
 
 // 能力的状态改变时的广播
-DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnAbilityStatusChanged, const FGameplayTag& /* AbilityTag */,
-                                       const FGameplayTag& /* AbilityStatusTag */, int32 /*AbilityLevel*/);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnAbilityStatusChanged,
+                                       const FGameplayTag& /* AbilityTag */,
+                                       const FGameplayTag& /* AbilityStatusTag */,
+                                       int32 /*AbilityLevel*/);
 
 // 广播被动能力结束的委托,以便被动能力能响应回调函数
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnDeActivePassiveAbility, const FGameplayTag& /* PassiveAbilityTag*/);
@@ -49,15 +54,19 @@ public:
 	/// @param Abilities 能力列表
 	/// @param CharacterLevel
 	/// @param ActiveWhenGive
-	void AddCharacterDefaultAbilities(const TArray<TSubclassOf<UGameplayAbility>>& Abilities, float CharacterLevel = 1,
-	                                  const bool ActiveWhenGive = false);
+	void AddCharacterDefaultAbilities(
+		const TArray<TSubclassOf<UGameplayAbility>>& Abilities,
+		float                                        CharacterLevel = 1,
+		const bool                                   ActiveWhenGive = false);
 
 	/// 给玩家添加一个默认能力(通过能力类上的StarUp标签来给予)
 	/// @param AbilityClass 能力类
 	/// @param CharacterLevel
 	/// @param ActiveWhenGive 给予能力时是否激活能力
-	void AddCharacterDefaultAbility(const TSubclassOf<UGameplayAbility>& AbilityClass, float CharacterLevel = 1,
-	                                bool ActiveWhenGive = false);
+	void AddCharacterDefaultAbility(
+		const TSubclassOf<UGameplayAbility>& AbilityClass,
+		float                                CharacterLevel = 1,
+		bool                                 ActiveWhenGive = false);
 
 	/// 处理InputAction按下时的能力触发问题
 	/// @param InputTag 输入的游戏标签
@@ -87,8 +96,9 @@ public:
 	/// @param AbilitySpec 
 	/// @param TargetTag 
 	/// @return 
-	static FGameplayTag GetTagFromAbilitySpecDynamicTags(const FGameplayAbilitySpec& AbilitySpec,
-	                                                     const FGameplayTag& TargetTag);
+	static FGameplayTag GetTagFromAbilitySpecDynamicTags(
+		const FGameplayAbilitySpec& AbilitySpec,
+		const FGameplayTag&         TargetTag);
 
 	/// 从AbilitySpec中获取Abilities Status标签
 	/// @param AbilitySpec 
@@ -143,28 +153,45 @@ public:
 
 	/// 客户端广播更新法术菜单的法术按钮信息
 	/// @param Info 
-	UFUNCTION(Client,Reliable)
+	UFUNCTION(Client, Reliable)
 	void ClientOnSpellButtonAbilityInfoChange(const FTagToAbilityInfo& Info);
+
+	/// 获取角色当前相关的能力信息,以便序列化到磁盘
+	/// @param AbilityToSave 
+	void GetAbilityToSave(TArray<FSavedAbility>& AbilityToSave);
+
+	/// 从磁盘所记录的数据中加载当前的角色能力
+	/// @param LoadScreenSave
+	void AddAbilitiesFromLoadData(ULoadScreenSave* LoadScreenSave);
+
+	/// [用于从磁盘中加载]监听被动能力时赋予并且激活角色的监听被动能力,(例如监听升级事件的被动能力) 
+	/// @param CharacterClass 角色的职业
+	/// @param AbilityLevel 能力等级
+	void AddListenPassiveAbilities(const ECharacterClass CharacterClass, const float AbilityLevel);
+
 protected:
 	/// 当前ACS被应用任意的GE到自己身上时触发的回调函数
 	/// @param AbilitySystemComponent 
 	/// @param GameplayEffectSpec 
 	/// @param ActiveEffectHandle 
 	UFUNCTION(Client, Reliable)
-	void ClientOnGEAppliedToSelf(UAbilitySystemComponent* AbilitySystemComponent,
-	                             const FGameplayEffectSpec& GameplayEffectSpec,
-	                             FActiveGameplayEffectHandle ActiveEffectHandle);
+	void ClientOnGEAppliedToSelf(
+		UAbilitySystemComponent*    AbilitySystemComponent,
+		const FGameplayEffectSpec&  GameplayEffectSpec,
+		FActiveGameplayEffectHandle ActiveEffectHandle);
 
 	/// 该函数会在GiveAbility后被调用(对ActivateAbilities进行网络复制)
 	virtual void OnRep_ActivateAbilities() override;
-	
+
 	/// 角色的能力状态改变时候的广播
 	/// @param AbilityTag 
 	/// @param AbilityStatusTag
 	/// @param AbilityLevel 
 	UFUNCTION(Client, Reliable)
-	void ClientOnAbilityStatusChanged(const FGameplayTag& AbilityTag, const FGameplayTag& AbilityStatusTag,
-	                                  int32 AbilityLevel);
+	void ClientOnAbilityStatusChanged(
+		const FGameplayTag& AbilityTag,
+		const FGameplayTag& AbilityStatusTag,
+		int32               AbilityLevel);
 
 	/// 客户端切换、装备技能
 	/// @param NewAbilityInfo 准备装到新插槽上的能力的技能信息
@@ -174,9 +201,13 @@ protected:
 	/// @param OldInputSlot 新插槽位置上已装备技能(如果装备了)的插槽位置
 	/// @param bIsSwapAbilitySlot 是否在技能位上互换两个技能的位置
 	UFUNCTION(Client, Reliable)
-	void ClientEquipAbility(const FTagToAbilityInfo& NewAbilityInfo, const FTagToAbilityInfo& OldAbilityInfo,
-	                        const FGameplayTag& EquipAbilityAreaType,
-	                        const FGameplayTag& NewInputSlot, const FGameplayTag& OldInputSlot, const bool bIsSwapAbilitySlot);
+	void ClientEquipAbility(
+		const FTagToAbilityInfo& NewAbilityInfo,
+		const FTagToAbilityInfo& OldAbilityInfo,
+		const FGameplayTag&      EquipAbilityAreaType,
+		const FGameplayTag&      NewInputSlot,
+		const FGameplayTag&      OldInputSlot,
+		const bool               bIsSwapAbilitySlot);
 
 	/// 从标签容器中删除给定的目标标签
 	/// @param TagContainer 
@@ -188,8 +219,10 @@ protected:
 	/// @param TagContainer 给定的标签容器
 	/// @param TagToAdded
 	/// @param RemovedTag 需要在TagContainer中移除的标签
-	void AddTagToAbilitySpecContainer(FGameplayTagContainer& TagContainer, const FGameplayTag TagToAdded,
-	                                  const FGameplayTag& RemovedTag = FGameplayTag{});
+	void AddTagToAbilitySpecContainer(
+		FGameplayTagContainer& TagContainer,
+		const FGameplayTag     TagToAdded,
+		const FGameplayTag&    RemovedTag = FGameplayTag{});
 
 	/// 通过(AbilityTag)更新指定能力状态
 	/// @param AbilityTag
