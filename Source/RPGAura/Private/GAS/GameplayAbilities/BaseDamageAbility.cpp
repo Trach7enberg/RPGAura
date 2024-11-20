@@ -28,7 +28,7 @@ void UBaseDamageAbility::CauseDamage(AActor* Suffer, FDamageEffectParams& Effect
 		return;
 	}
 
-	// 以当前Instigator的方向为冲击向量
+	// 以当前Instigator的方向为冲击向量,如果冲击向量没有被设置
 	if (EffectParams.ImpulseVector.IsNearlyZero())
 	{
 		EffectParams.ImpulseVector = GetDefaultImpulseVector(KnockBackFactor);
