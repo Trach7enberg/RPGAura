@@ -27,10 +27,10 @@ public:
 	// ~ IHighLightInterface
 
 	// ~ ICombatInterface
-	virtual int32 GetCharacterLevel() override { return CharacterLevel; };
-	virtual void Die() override;
+	virtual int32   GetCharacterLevel() override { return CharacterLevel; };
+	virtual void    Die(const FVector& Impulse = FVector{}, const bool IsFinalBlow = false) override;
 	virtual AActor* GetCombatTarget() override;
-	virtual void SetCombatTarget(AActor* NewCombatTarget) override;
+	virtual void    SetCombatTarget(AActor* NewCombatTarget) override;
 	// ~ ICombatInterface
 
 	virtual void PossessedBy(AController* NewController) override;
@@ -44,6 +44,14 @@ public:
 	/// 仅广播血条值一次,用于初始化血条
 	UFUNCTION(BlueprintCallable, Category = "Widget")
 	void BroadCastHealthBarInit() const;
+
+	/// 
+	/// @param InClass 
+	void SetEnemyCharacterClass(ECharacterClass InClass);
+
+	/// 
+	/// @param Level 
+	void SetEnemyLevel(int32 Level);
 
 protected:
 	virtual void BeginPlay() override;

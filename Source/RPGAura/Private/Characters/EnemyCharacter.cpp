@@ -155,10 +155,10 @@ void AEnemyCharacter::UnHighLightActor()
 	WeaponLogicBaseComponent->UnHighLight();
 }
 
-void AEnemyCharacter::Die()
+void AEnemyCharacter::Die(const FVector& Impulse, const bool IsFinalBlow)
 {
 	if (CurrentAiController) { CurrentAiController->GetBlackboardComponent()->SetValueAsBool("IsDead", true); }
-	Super::Die();
+	Super::Die(Impulse,IsFinalBlow);
 }
 
 AActor* AEnemyCharacter::GetCombatTarget() { return CombatTarget.Get(); }
@@ -183,7 +183,10 @@ void AEnemyCharacter::PossessedBy(AController* NewController)
 	}
 }
 
-void AEnemyCharacter::OnMouseOver(AActor* TouchedActor) { Super::HighLight(); }
+void AEnemyCharacter::OnMouseOver(AActor* TouchedActor)
+{
+	Super::HighLight();
+}
 
 void AEnemyCharacter::EndMouseOver(AActor* TouchedActor) { Super::UnHighLight(); }
 
@@ -221,4 +224,14 @@ void AEnemyCharacter::BroadCastHealthBarInit() const
 		MyAs->GetCurrentHealth(), false);
 	OnMaxHealthAttributeChanged.Broadcast(
 		MyAs->GetMaxHealth(), false);
+}
+
+void AEnemyCharacter::SetEnemyCharacterClass(const ECharacterClass InClass)
+{
+	CharacterClass = InClass;
+}
+
+void AEnemyCharacter::SetEnemyLevel(const int32 Level)
+{
+	CharacterLevel = Level;
 }
