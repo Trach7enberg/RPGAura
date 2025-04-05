@@ -64,7 +64,7 @@ void AAuraCharacter::InitAbilityActorInfo()
 {
 	Super::InitAbilityActorInfo();
 	const auto MyPlayerState = GetPlayerState<ABasePlayerState>();
-	if (!MyPlayerState || !GetMyGameMode())
+	if (!MyPlayerState)
 	{
 		UE_LOG(AAuraCharacterLog, Error, TEXT("%s:MyPlayerState 不能为null"), *GetName());
 		return;
@@ -84,7 +84,10 @@ void AAuraCharacter::InitAbilityActorInfo()
 
 
 	LoadProgress();
-	GetMyGameMode()->LoadWorldState(GetWorld());
+	if (GetMyGameMode())
+	{
+		GetMyGameMode()->LoadWorldState(GetWorld());
+	}
 
 	RegisterGameplayTagEvent();
 }
